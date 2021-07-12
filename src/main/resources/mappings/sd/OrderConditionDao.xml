@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wolfking.jeesite.modules.sd.dao.OrderConditionDao">
+
+
+
+        <select id="getOrderInfo" resultType="com.wolfking.jeesite.modules.sd.entity.OrderConditionStatus">
+            /*#mycat:db_type=master*/
+            SELECT
+            status,servicepoint_id,engineer_id
+            FROM
+            sd_order_condition
+            WHERE
+            order_id = #{orderId}
+            <if test="quarter!=null and quarter!=''">
+                and quarter = #{quarter}
+            </if>
+        </select>
+
+
+</mapper>

@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.wolfking.jeesite.modules.sd.dao.OrderItemCompleteDao">
+    <sql id="OrderItemCompleteColumns">
+        id,
+        order_id,
+        product_id as 'product.id',
+        item_no,
+        pic_json,
+        upload_qty,
+        complete_flag,
+        unit_barcode,
+        out_barcode,
+        quarter,
+        del_flag,
+        create_by as "createBy.id",
+        create_date,
+        update_by as "updateBy.id",
+        update_date
+    </sql>
+
+    <select id="findList" resultType="com.wolfking.jeesite.modules.sd.entity.OrderItemComplete">
+        SELECT
+          <include refid="OrderItemCompleteColumns"/>
+        FROM sd_order_item_complete
+        WHERE del_flag = 0
+        ORDER BY id
+    </select>
+
+    <select id="get" resultType="com.wolfking.jeesite.modules.sd.entity.OrderItemComplete">
+        SELECT
+           <include refid="OrderItemCompleteColumns" />
+        FROM
+           sd_order_item_complete
+        WHERE
+           id = #{id}
+    </select>
+
+    <select id="getByOrderId" resultType="com.wolfking.jeesite.modules.sd.entity.OrderItemComplete">
+        SELECT
+        <include refid="OrderItemCompleteColumns"/>
+        FROM sd_order_item_complete
+        <where>
+            order_id = #{orderId}
+        AND del_flag = 0
+            <if test="quarter != null and quarter != '' ">
+                AND quarter = #{quarter}
+            </if>
+        </where>
+        ORDER BY product_id, id
+    </select>
+
+    <select id="getProductQty" resultType="java.lang.Integer">
+        SELECT
+              COUNT(id)
+        FROM  sd_order_item_complete
+        <where>
+            order_id = #{orderId}
+            AND product_id = #{productId}
+            AND del_flag = 0
+            <if test="quarter != null and quarter != '' ">
+                AND quarter = #{quarter}
+            </if>
+        </where>
+    </select>
+
+    <select id="getById" resultType="com.wolfking.jeesite.modules.sd.entity.OrderItemComplete">
+        SELECT
+              <include refid="OrderItemCompleteColumns" />
+        FROM  sd_order_item_complete
+        WHERE id = #{id}
+              AND del_flag = 0
+            <if test="quarter != null and quarter != '' ">
+              AND quarter = #{quarter}
+            </if>
+    </select>
+
+    <update id="update">
+        update sd_order_item_complete
+        set
+          pic_json    = #{picJson},
+          upload_qty  = #{uploadQty},
+          update_by   = #{updateBy.id},
+          update_date = #{updateDate}
+        where
+          id = #{id}
+    </update>
+
+    <insert id="insert" keyProperty="id" useGeneratedKeys="true">
+        insert into sd_order_item_complete (
+            order_id,
+            product_id,
+            item_no,
+            pic_json,
+            upload_qty,
+            complete_flag,
+            unit_barcode,
+            out_barcode,
+            quarter,
+            create_by,
+            create_date,
+            update_by,
+            update_date
+        ) values(
+            #{orderId},
+            #{product.id},
+            #{itemNo},
+            #{picJson},
+            #{uploadQty},
+            #{completeFlag},
+            #{unitBarcode},
+            #{outBarcode},
+            #{quarter},
+            #{createBy.id},
+            #{createDate},
+            #{updateBy.id},
+            #{updateDate}
+        )
+    </insert>
+
+    <delete id="delete">
+        UPDATE sd_order_item_complete
+        SET
+          del_flag    = 1,
+          update_by   = #{updateBy.id},
+          update_date = #{updateDate}
+        WHERE
+              id = #{id}
+        <if test="quarter != null and quarter != '' ">
+            AND quarter = #{quarter}
+        </if>
+    </delete>
+    <update id="updateBarCode">
+        update sd_order_item_complete
+        set
+          unit_barcode = #{unitBarcode},
+          update_by   = #{updateBy.id},
+          update_date = #{updateDate}
+        where
+          id = #{id}
+    </update>
+</mapper>

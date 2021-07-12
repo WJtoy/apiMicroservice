@@ -1,0 +1,155 @@
+package com.wolfking.jeesite.modules.sd.utils;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
+import com.wolfking.jeesite.common.utils.SpringContextHolder;
+import com.kkl.kklplus.utils.StringUtils;
+import com.wolfking.jeesite.modules.md.entity.CacheDataTypeEnum;
+import com.wolfking.jeesite.modules.md.entity.Product;
+import com.wolfking.jeesite.modules.md.entity.ServiceType;
+import com.wolfking.jeesite.modules.md.service.ServiceTypeService;
+import com.wolfking.jeesite.modules.md.utils.ProductUtils;
+import com.wolfking.jeesite.modules.sd.entity.OrderItem;
+import com.wolfking.jeesite.modules.sys.entity.Dict;
+import com.wolfking.jeesite.ms.utils.MSDictUtils;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+public class OrderItemUtils {
+
+    private static ServiceTypeService serviceTypeService = SpringContextHolder.getBean(ServiceTypeService.class);
+
+    /**
+     * OrderItem列表转成json字符串
+     *
+     * @param orderItems
+     * @return
+     */
+    public static String toOrderItemsJson(List<OrderItem> orderItems) {
+        String json = null;
+        if (orderItems != null && orderItems.size() > 0) {
+            Gson gson = new GsonBuilder().registerTypeAdapter(OrderItem.class, OrderItemNewAdapter.getInstance()).create();
+            json = gson.toJson(orderItems, new TypeToken<List<OrderItem>>() {
+            }.getType());
+            /**
+             *  因为myCat1.6不支持在json或text类型的字段中存储英文括号，故将所有的英文括号替换成中文括号.
+             */
+            json = json.replace("(", "（");
+            json = json.replace(")", "）");
+        }
+        return json;
+    }
+
+    /**
+     * json字符串转成OrderItem列表
+     *
+     * @param json
+     * @return
+     */
+    public static List<OrderItem> fromOrderItemsJson(String json) {
+        List<OrderItem> orderItems = null;
+        if (StringUtils.isNotEmpty(json)) {
+            Gson gson = new GsonBuilder().registerTypeAdapter(OrderItem.class, OrderItemNewAdapter.getInstance()).create();
+            orderItems = gson.fromJson(json, new TypeToken<List<OrderItem>>() {
+            }.getType());
+        }
+        return orderItems != null ? orderItems : Collections.EMPTY_LIST;
+    }
+
+    /**
+     * 设置列表中orderitem的某些属性，如服务类型、产品
+     *
+     * @param orderItems     OrderItem列表
+     * @param cacheDataTypes CacheDataTypeEnum的集合
+     * @return 设置好属性的OrderItem列表
+     */
+    public static List<OrderItem> setOrderItemProperties(List<OrderItem> orderItems, Set<CacheDataTypeEnum> cacheDataTypes) {
+        if (orderItems != null && orderItems.size() > 0 && cacheDataTypes != null && cacheDataTypes.size() > 0) {
+            Map<Long, ServiceType> serviceTypeMap = serviceTypeService.getAllServiceTypeMap();
+            Map<Long, Product> productMap = ProductUtils.getAllProductMap();
+            Map<String, Dict> expressCompanyMap = MSDictUtils.getDictMap("express_type");
+            ServiceType serviceType = null;
+            Product product = null;
+            Dict expressCompany = null;
+            for (OrderItem item : orderItems) {
+                if (CacheDataTypeEnum.isExists(cacheDataTypes, CacheDataTypeEnum.SERVICETYPE)) {
+                    serviceType = serviceTypeMap.get(item.getServiceType().getId());
+                    item.setServiceType(serviceType);
+                }
+                if (CacheDataTypeEnum.isExists(cacheDataTypes, CacheDataTypeEnum.PRODUCT)) {
+                    product = productMap.get(item.getProductId());
+                    item.setProduct(product);
+                }
+                if (CacheDataTypeEnum.isExists(cacheDataTypes, CacheDataTypeEnum.EXPPRESSCOMPANY) &&
+                        item.getExpressCompany() != null && StringUtils.isNotEmpty(item.getExpressCompany().getValue())) {
+                    expressCompany = expressCompanyMap.get(item.getExpressCompany().getValue());
+                    item.setExpressCompany(expressCompany);
+                }
+            }
+        }
+        return orderItems;
+    }
+
+    /**
+     * json字符串转成带有完工条码的OrderItem列表（报表使用）
+     *
+     * @param json
+     * @return
+     */
+//    public static List<UnitBarCodeOrderItem> fromUnitCodeOrderItemsJson(String json) {
+//        List<UnitBarCodeOrderItem> orderItems = null;
+//        if (StringUtils.isNotEmpty(json)) {
+//            Gson gson = new GsonBuilder().registerTypeAdapter(UnitBarCodeOrderItem.class, UnitBarCodeItemAdapter.getInstance()).create();
+//            orderItems = gson.fromJson(json, new TypeToken<List<UnitBarCodeOrderItem>>() {
+//            }.getType());
+//        }
+//        return orderItems != null ? orderItems : Collections.EMPTY_LIST;
+//    }
+
+    /**
+     * 设置列表中UnitBarCodeOrderItem的某些属性，如服务类型、产品（报表使用）
+     *
+     * @param unitBarCodeOrderItems     UnitBarCodeOrderItem列表
+     * @param cacheDataTypes CacheDataTypeEnum的集合
+     * @return 设置好属性的UnitBarCodeOrderItem列表
+     */
+//    public static List<UnitBarCodeOrderItem> setUnitCodeOrderItemProperties(Map<Long,Map<Long,List<String>>> barcodesMap,List<UnitBarCodeOrderItem> unitBarCodeOrderItems, Set<CacheDataTypeEnum> cacheDataTypes) {
+//        if (unitBarCodeOrderItems != null && unitBarCodeOrderItems.size() > 0 && cacheDataTypes != null && cacheDataTypes.size() > 0) {
+//            Map<Long, ServiceType> serviceTypeMap = serviceTypeService.getAllServiceTypeMap();
+//            Map<Long, Product> productMap = ProductUtils.getAllProductMap();
+//            Map<String, Dict> expressCompanyMap = MSDictUtils.getDictMap("express_type");
+//            ServiceType serviceType = null;
+//            Product product = null;
+//            Dict expressCompany = null;
+//            for (UnitBarCodeOrderItem item : unitBarCodeOrderItems) {
+//                Map<Long, List<String>> longListMap = barcodesMap.get(item.getOrderId());
+//                if (longListMap != null) {
+//                    List<String> codes = longListMap.get(item.getProductId());
+//                    if (codes != null) {
+//                        item.setUnitBarCodes(codes);
+//                        item.setUnitBarcode(StringUtils.join(codes.toArray(),","));
+//                    }
+//                }
+//                if (CacheDataTypeEnum.isExists(cacheDataTypes, CacheDataTypeEnum.SERVICETYPE)) {
+//                    serviceType = serviceTypeMap.get(item.getServiceType().getId());
+//                    item.setServiceType(serviceType);
+//                }
+//                if (CacheDataTypeEnum.isExists(cacheDataTypes, CacheDataTypeEnum.PRODUCT)) {
+//                    product = productMap.get(item.getProductId());
+//                    item.setProduct(product);
+//                }
+//                if (CacheDataTypeEnum.isExists(cacheDataTypes, CacheDataTypeEnum.EXPPRESSCOMPANY) &&
+//                        item.getExpressCompany() != null && StringUtils.isNotEmpty(item.getExpressCompany().getValue())) {
+//                    expressCompany = expressCompanyMap.get(item.getExpressCompany().getValue());
+//                    item.setExpressCompany(expressCompany);
+//                }
+//            }
+//        }
+//        return unitBarCodeOrderItems;
+//    }
+
+}

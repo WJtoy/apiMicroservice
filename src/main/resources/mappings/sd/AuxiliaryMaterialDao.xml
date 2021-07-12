@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.wolfking.jeesite.modules.sd.dao.AuxiliaryMaterialDao">
+
+    <sql id="auxiliaryMaterialColumns">
+        a.id,
+        a.order_id,
+        a.category_id   AS "category.id",
+        a.product_id    AS "product.id",
+        a.material_id   AS "material.id",
+        a.price         AS "material.price",
+        a.custom_price_flag AS "material.type",
+        a.qty,
+        a.subtotal,
+        a.unit,
+        a.create_by     AS "createBy.id",
+        a.create_date,
+        a.update_by     AS "updateBy.id",
+        a.update_date,
+        a.quarter,
+        a.del_flag
+    </sql>
+
+    <select id="get" resultType="AuxiliaryMaterial">
+        SELECT
+          <include refid="auxiliaryMaterialColumns"/>
+        FROM sd_auxiliary_material a
+        WHERE a.id = #{id}
+    </select>
+
+    <select id="getAuxiliaryMaterialsByOrderId" resultType="AuxiliaryMaterial">
+        SELECT
+          <include refid="auxiliaryMaterialColumns"/>
+        FROM sd_auxiliary_material a
+        <where>
+            a.order_id = #{orderId}
+            <if test="quarter != null and quarter != ''.toString()">
+                AND a.quarter = #{quarter}
+            </if>
+            <if test="delFlag != null">
+              AND a.del_flag = #{delFlag}
+            </if>
+        </where>
+    </select>
+
+    <select id="hasAuxiliaryMaterials" resultType="Integer">
+        SELECT
+              COUNT(0)
+        FROM  sd_auxiliary_material a
+        <where>
+            a.order_id = #{orderId}
+            <if test="quarter != null and quarter != ''.toString()">
+                AND a.quarter = #{quarter}
+            </if>
+              AND a.del_flag = 0
+        </where>
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO sd_auxiliary_material
+        (
+          order_id,
+          category_id,
+          product_id,
+          material_id,
+          price,
+          qty,
+          subtotal,
+          unit,
+          custom_price_flag,
+          create_by,
+          create_date,
+          update_by,
+          update_date,
+          quarter
+        )
+        VALUES
+        (
+          #{orderId},
+          #{category.id},
+          #{product.id},
+          #{material.id},
+          #{material.price},
+          #{qty},
+          #{subtotal},
+          #{unit},
+          #{material.type},
+          #{createBy.id},
+          #{createDate},
+          #{createBy.id},
+          #{createDate},
+          #{quarter}
+        )
+    </insert>
+
+    <update id="update" parameterType="AuxiliaryMaterial">
+        UPDATE sd_auxiliary_material
+        <set>
+            price = #{material.price},
+            qty = #{qty},
+            subtotal = #{subtotal},
+            unit = #{unit},
+            update_by   = #{updateBy.id},
+            update_date = #{updateDate},
+            del_flag    = 0
+        </set>
+        <where>
+            id = #{id}
+            <if test="quarter != null and quarter != ''.toString()">
+                AND quarter = #{quarter}
+            </if>
+        </where>
+    </update>
+
+    <delete id="delete">
+        UPDATE sd_auxiliary_material
+        SET
+            del_flag    = 1,
+            update_by   = #{updateBy.id},
+            update_date = #{updateDate}
+        <where>
+            id = #{id}
+            <if test="quarter != null and quarter != '' ">
+                AND quarter = #{quarter}
+            </if>
+        </where>
+    </delete>
+
+    <delete id="deleteByOrderId">
+        UPDATE sd_auxiliary_material
+        SET
+        del_flag    = 1,
+        update_by   = #{updateById},
+        update_date = #{updateDate}
+        <where>
+            order_id = #{orderId}
+            <if test="quarter != null and quarter != '' ">
+                AND quarter = #{quarter}
+            </if>
+        </where>
+    </delete>
+
+
+</mapper>

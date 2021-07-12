@@ -1,0 +1,30 @@
+syntax="proto3";
+
+option java_package = "com.wolfking.jeesite.modules.mq.dto";
+option java_outer_classname = "MQPushMessage";
+
+enum PushMessageType {
+    //透传
+    TransparentTransmission = 0;
+    //通知
+    Notification = 1;
+}
+
+message PushMessage{
+    //消息ID
+    int64 messageId = 1;
+    //消息类型： 1：通知,0:透传消息. 默认为0 注：IOS只有通知.
+    PushMessageType pushMessageType = 2;
+    //用户ID
+    int64 userId = 3;
+    //消息内容，通知栏中显示的内容
+    string description = 4;
+    //消息类型：0:接单消息，1:派单消息
+    int32 messageType = 5;
+    //消息触发时间（13位时间戳）,读卡消息为读卡时间
+    int64 timestamp = 6;
+    //主题
+    string subject = 7;
+    //消息附加内容
+    string content = 8;
+}

@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wolfking.jeesite.modules.sys.dao.SequenceDao">
+    <sql id="sequenceColumns">
+        a.id,
+        a.code,
+        a.prefix,
+        a.date_format,
+        a.date_separator,
+        a.digit_bit,
+        a.suffix,
+        a.separator,
+        a.previous_date,
+        a.previous_digit,
+        a.create_by as "createBy.id",
+        a.create_date,
+        a.update_by as "updateBy.id",
+        a.update_date,
+        a.remarks,
+        a.del_flag
+    </sql>
+
+    <select id="get" resultType="Sequence">
+        select <include refid="sequenceColumns"/>
+        from sys_sequence a
+        where a.id =#{id}
+             and a.del_flag = 0
+    </select>
+
+    <select id="getByCode" parameterType="String" resultType="Sequence">
+        select
+            a.id,
+            a.code,
+            a.prefix,
+            a.date_format,
+            a.date_separator,
+            a.digit_bit,
+            a.suffix,
+            a.separator,
+            a.previous_date,
+            a.previous_digit
+        from sys_sequence a
+        where a.code =#{code}
+        and a.del_flag = 0
+    </select>
+
+    <select id="findAllList" resultType="Sequence">
+        select <include refid="sequenceColumns"/>
+        from sys_sequence a
+        where a.del_flag = 0
+        order by a.code
+    </select>
+
+    <select id="findList" resultType="Sequence">
+        select <include refid="sequenceColumns"/>
+        from sys_sequence a
+        WHERE a.del_flag = 0
+        <if test="code != null and code !=''.toString()">
+            and a.code like
+            <if test="dbName == 'oracle'.toString()">'%'||#{code}||'%'</if>
+            <if test="dbName == 'mssql'.toString()">'%'+#{code}+'%'</if>
+            <if test="dbName == 'mysql'.toString()">CONCAT('%', #{code}, '%')</if>
+        </if>
+        <if test="remarks != null and remarks !=''.toString()">
+            and a.remarks like
+            <if test="dbName == 'oracle'.toString()">'%'||#{remarks}||'%'</if>
+            <if test="dbName == 'mssql'.toString()">'%'+#{remarks}+'%'</if>
+            <if test="dbName == 'mysql'.toString()">CONCAT('%', #{remarks}, '%')</if>
+        </if>
+        <choose>
+            <when test="page !=null and page.orderBy != null and page.orderBy != ''.toString()">
+                ORDER BY ${page.orderBy}
+            </when>
+            <otherwise>
+                ORDER BY a.code
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id ="NextIDValue"  resultType="Long">
+        select next value for ${code} as id
+    </select>
+
+
+    <!-- 插入-->
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO sys_sequence(
+         code,
+         prefix,
+         date_format,
+         date_separator,
+         digit_bit,
+         suffix,
+         `separator`,
+         previous_date,
+         create_by,
+         create_date,
+         update_by,
+         update_date,
+         remarks,
+         del_flag
+        ) VALUES (
+         #{code},
+         #{prefix},
+         #{dateFormat},
+         #{dateSeparator},
+         #{digitBit},
+         #{suffix},
+         #{separator},
+         #{previousDate},
+         #{createBy.id},
+         #{createDate},
+         #{updateBy.id},
+         #{updateDate},
+         #{remarks},
+         #{delFlag}
+        )
+    </insert>
+
+    <!-- 更新 -->
+    <update id="update">
+        UPDATE sys_sequence SET
+         code = #{code},
+         prefix=#{prefix},
+         date_format=#{dateFormat},
+         date_separator=#{dateSeparator},
+         digit_bit =#{digitBit},
+         suffix=#{suffix},
+         `separator`=#{separator},
+         update_by=#{updateBy.id},
+         update_date=now(),
+         remarks=#{remarks}
+        WHERE id = #{id}
+    </update>
+
+    <update id="updatePreviousDigit">
+        update sys_sequence
+        set previous_digit = #{previousDigit},
+            <if test="previousDate != null and previousDate !=''.toString()">
+                previous_date=#{previousDate},
+            </if>
+            update_by=#{updateBy.id},
+            update_date=now()
+        where id =#{id}
+    </update>
+
+    <!-- 逻辑删除 -->
+    <update id="delete">
+        UPDATE sys_sequence SET
+        del_flag = #{DEL_FLAG_DELETE}
+        WHERE id = #{id}
+    </update>
+
+
+</mapper>

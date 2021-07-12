@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wolfking.jeesite.modules.sd.dao.OrderCrushDao">
+
+	<!-- 按订单关闭 -->
+	<update id="closeOrderCurshByOrderId">
+		update sd_order_crush
+		<set>
+			status = #{status},
+			close_by = #{closeBy.id},
+			close_name = #{closeBy.name},
+			close_date = #{closeDate},
+			<if test="closeRemark !=null and closeRemark != ''.toString() ">
+				close_remark = #{closeRemark},
+			</if>
+		</set>
+		where
+		quarter = #{quarter}
+		and order_id = #{orderId}
+		and status in (0,2)
+	</update>
+
+</mapper>

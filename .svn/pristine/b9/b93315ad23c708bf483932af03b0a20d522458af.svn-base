@@ -1,0 +1,38 @@
+package com.wolfking.jeesite.ms.mapper.md;
+
+import com.kkl.kklplus.entity.md.MDCustomerMaterial;
+import com.wolfking.jeesite.modules.md.entity.*;
+import ma.glasnost.orika.CustomMapper;
+import ma.glasnost.orika.MappingContext;
+import org.springframework.stereotype.Component;
+
+import java.util.Optional;
+
+@Component
+public class MDCustomerMaterialMapper extends CustomMapper<MDCustomerMaterial, CustomerMaterial> {
+    @Override
+    public void mapAtoB(MDCustomerMaterial a, CustomerMaterial b, MappingContext context) {
+        b.setId(a.getId());
+        b.setPrice(a.getPrice());
+        b.setIsReturn(a.getIsReturn());
+        b.setCustomer((a.getCustomerId()==null || a.getCustomerId()<=0) ? new Customer(): new Customer(a.getCustomerId()));
+        b.setProduct((a.getProductId() ==null || a.getProductId()<=0)? new Product() : new Product(a.getProductId()));
+        b.setMaterial((a.getMaterialId() ==null || a.getMaterialId()<=0) ? new Material() : new Material(a.getMaterialId()));
+        b.setRemarks(a.getRemarks());
+    }
+
+    @Override
+    public void mapBtoA(CustomerMaterial b, MDCustomerMaterial a, MappingContext context) {
+        a.setId(b.getId());
+        a.setPrice(b.getPrice());
+        a.setIsReturn(b.getIsReturn());
+        a.setCustomerId(Optional.ofNullable(b.getCustomer()).map(Customer::getId).orElse(null));
+        a.setProductId(Optional.ofNullable(b.getProduct()).map(Product::getId).orElse(null));
+        a.setMaterialId(Optional.ofNullable(b.getMaterial()).map(Material::getId).orElse(null));
+        a.setRemarks(b.getRemarks());
+        a.setCreateById(b.getCreateBy()==null?null:b.getCreateBy().getId());
+        a.setCreateDate(b.getCreateDate());
+        a.setUpdateById(b.getUpdateBy()==null?null:b.getUpdateBy().getId());
+        a.setUpdateDate(b.getUpdateDate());
+    }
+}

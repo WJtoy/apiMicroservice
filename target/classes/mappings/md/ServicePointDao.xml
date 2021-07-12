@@ -1,0 +1,321 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.wolfking.jeesite.modules.md.dao.ServicePointDao">
+    <sql id="servicePointColumns">
+            s.id,
+            s.servicepoint_no,
+            s.name,
+            s.contact_info1,
+            s.contact_info2,
+            s.contract_date,
+            s.developer,
+            s.address,
+            s.area_id as "area.id",
+            s.grade,
+            s.level as "level.value",
+            '' as "level.label",
+            s.sign_flag ,
+            s.order_count,
+            s.plan_count,
+            s.break_count,
+            s.Longitude,
+            s.latitude,
+            s.qq,
+            s.attachment1,
+            s.attachment2,
+            s.attachment3,
+            s.attachment4,
+            s.sub_address,
+            s.primary_id as "primary.id",
+            s.property,
+            s.scale ,
+            s.description ,
+            s.create_by AS "createBy.id",
+            s.create_date,
+            s.update_by ,
+            s.update_date ,
+            s.remarks ,
+            s.del_flag,
+            s.short_message_flag,
+            s.auto_complete_order,
+            s.use_defaultprice,
+            s.sub_engineer_count,
+            s.plan_remark,
+            s.insurance_flag,
+            s.app_insurance_flag,
+            s.time_liness_flag,
+            s.for_tmall,
+            s.status  AS "status.value",
+            s.auto_plan_flag,
+            s.capacity
+    </sql>
+
+    <sql id="areaColumns">
+        a.name as "area.name",
+        a.full_name as "area.fullName"
+    </sql>
+
+    <sql id="primaryColumns">
+        e.name as "primary.name",
+        e.app_flag as "primary.appFlag",
+        e.contact_info as "primary.contactInfo",
+        e.level as "primary.level.value"
+    </sql>
+
+    <sql id="fiColumns">
+        fi.id AS "finance.id",
+        fi.invoice_flag AS "finance.invoiceFlag",
+        fi.discount as "finance.discount",
+        fi.payment_type as "finance.paymentType.value",
+        '' as "finance.paymentType.label",
+        fi.bank as "finance.bank.value",
+        '' as "finance.bank.label",
+        fi.branch as "finance.branch",
+        fi.bank_no as "finance.bankNo",
+        fi.bank_owner as "finance.bankOwner",
+        fi.bank_issue as "finance.bankIssue.value",
+        '' as "finance.bankIssue.label",
+        fi.balance as "finance.balance",
+        fi.last_pay_date as "finance.lastPayDate",
+        fi.last_pay_amount as "finance.lastPayAmount",
+        fi.order_payment_amount as "finance.orderPaymentAmount",
+        fi.debts_amount as "finance.debtsAmount",
+        fi.debts_descrption as "finance.debtsDescrption",
+        fi.refund_amount as "finance.refundAmount",
+        fi.replenish_amount as "finance.replenishAmount",
+        fi.total_amount as "finance.totalAmount",
+        fi.invoice_flag as "finance.invoiceFlag",
+        fi.discount_flag as "finance.discountFlag",
+        fi.unit as "finance.unit.value",
+        '' as "finance.unit.label"
+    </sql>
+
+    <sql id="FIJoins">
+        INNER JOIN md_servicepoint_finance fi ON s.id=fi.id
+    </sql>
+
+    <!-- 以下是安维人员管理 -->
+    <sql id="engineerColumns">
+        e.id,
+        e.servicepoint_id as "servicePoint.id",
+        s.servicepoint_no as "servicePoint.servicePointNo",
+        s.name as "servicePoint.name",
+        e.name,
+        e.contact_info,
+        e.area_id as "area.id",
+        ea.name as "area.name",
+        ea.full_name as "area.fullName",
+        e.address,
+        e.grade,
+        e.qq,
+        e.master_flag,
+        e.app_flag,
+        u.app_loged,
+        e.level as "level.value",
+        '' as "level.label",
+        e.order_count,
+        e.plan_count,
+        e.break_count,
+        e.create_by AS "createBy.id",
+        e.create_date,
+        e.update_by ,
+        e.update_date ,
+        e.remarks ,
+        e.del_flag,
+        e.for_tmall,
+        u.id as accountId
+    </sql>
+
+    <sql id="engineerColumnsWithoutServicePoint">
+        e.id,
+        e.servicepoint_id as "servicePoint.id",
+        e.name,
+        e.contact_info,
+        e.area_id as "area.id",
+        ea.name as "area.name",
+        ea.full_name as "area.fullName",
+        e.address,
+        e.grade,
+        e.qq,
+        e.master_flag,
+        e.app_flag,
+        u.app_loged,
+        e.level as "level.value",
+        '' as "level.label",
+        e.order_count,
+        e.plan_count,
+        e.break_count,
+        e.create_by AS "createBy.id",
+        e.create_date,
+        e.update_by ,
+        e.update_date ,
+        e.remarks ,
+        e.del_flag,
+        e.for_tmall,
+        u.id as accountId
+    </sql>
+
+    <sql id="priceColumn">
+        p.id,
+        p.servicepoint_id as "servicePoint.id",
+        s.servicepoint_no as "servicePoint.servicePointNo",
+        s.name as "servicePoint.name",
+        p.product_id as "product.id",
+        <!--
+        sp.name as "product.name",
+        -->
+        p.service_type_id as "serviceType.id",
+        st.name as "serviceType.name",
+        st.code as "serviceType.code",
+        p.price,
+        p.discount_price,
+        p.unit,
+        p.price_type,
+        p.create_by as "createBy.id",
+        p.create_date,
+        p.update_by as "updateBy.id",
+        p.update_date,
+        p.remarks,
+        p.del_flag
+    </sql>
+
+    <sql id="priceColumnWithoutServicePoint">
+        p.id,
+        p.servicepoint_id as "servicePoint.id",
+        <!--
+        s.servicepoint_no as "servicePoint.servicePointNo",
+        s.name as "servicePoint.name",
+        -->
+        p.product_id as "product.id",
+        <!--
+        sp.name as "product.name",
+        -->
+        p.service_type_id as "serviceType.id",
+        <!-- 调用微服务获取服务类型
+        st.name as "serviceType.name",
+        st.code as "serviceType.code",
+        -->
+        p.price,
+        p.discount_price,
+        p.unit,
+        p.price_type as "priceType.value",
+        p.create_by as "createBy.id",
+        p.create_date,
+        p.update_by as "updateBy.id",
+        p.update_date,
+        p.remarks,
+        p.del_flag,
+        p.customize_flag
+    </sql>
+
+    <select id="getFinanceNew" resultType="ServicePointFinance">
+        SELECT fi.id AS "id",
+                fi.invoice_flag AS "invoiceFlag",
+                fi.discount as "discount",
+                fi.payment_type as "paymentType.value",
+                '' as "paymentType.label",
+                fi.bank as "bank.value",
+                '' as "bank.label",
+                fi.branch as "branch",
+                fi.bank_no as "bankNo",
+                fi.bank_owner as "bankOwner",
+                fi.bank_issue as "bankIssue.value",
+                '' as "bankIssue.label",
+                fi.balance as "balance",
+                fi.last_pay_date as "lastPayDate",
+                fi.last_pay_amount as "lastPayAmount",
+                fi.order_payment_amount as "orderPaymentAmount",
+                fi.debts_amount as "debtsAmount",
+                fi.debts_descrption as "debtsDescrption",
+                fi.refund_amount as "refundAmount",
+                fi.replenish_amount as "replenishAmount",
+                fi.total_amount as "totalAmount",
+                fi.invoice_flag as "invoiceFlag",
+                fi.discount_flag as "discountFlag",
+                fi.unit as "unit.value",
+                '' as "unit.label"
+        FROM md_servicepoint_finance fi
+        where fi.id = #{id}
+    </select>
+
+    <select id="getFinanceFromMaster" resultType="ServicePointFinance">
+        /*!mycat:db_type=master*/
+        SELECT fi.id AS "id",
+                fi.invoice_flag AS "invoiceFlag",
+                fi.discount as "discount",
+                fi.payment_type as "paymentType.value",
+                '' as "paymentType.label",
+                fi.bank as "bank.value",
+                '' as "bank.label",
+                fi.branch as "branch",
+                fi.bank_no as "bankNo",
+                fi.bank_owner as "bankOwner",
+                fi.bank_issue as "bankIssue.value",
+                '' as "bankIssue.label",
+                fi.balance as "balance",
+                fi.last_pay_date as "lastPayDate",
+                fi.last_pay_amount as "lastPayAmount",
+                fi.order_payment_amount as "orderPaymentAmount",
+                fi.debts_amount as "debtsAmount",
+                fi.debts_descrption as "debtsDescrption",
+                fi.refund_amount as "refundAmount",
+                fi.replenish_amount as "replenishAmount",
+                fi.total_amount as "totalAmount",
+                fi.invoice_flag as "invoiceFlag",
+                fi.discount_flag as "discountFlag",
+                fi.unit as "unit.value",
+                '' as "unit.label"
+        FROM md_servicepoint_finance fi
+        where fi.id = #{id}
+    </select>
+
+    <select id="getFinanceForRestBalance" resultType="ServicePointFinance">
+        SELECT
+        a.order_payment_amount,
+        a.debts_amount,
+        a.refund_amount,
+        a.replenish_amount,
+        a.balance,
+        a.daily_balance,
+        a.last_pay_date,
+        a.total_amount,
+        a.invoice_flag,
+        a.insurance_amount
+        FROM
+        md_servicepoint_finance a
+        WHERE
+        a.id =#{id}
+    </select>
+
+    <select id="getAmounts" resultType="ServicePointFinance">
+        SELECT
+            a.id,
+            a.order_payment_amount,
+            a.debts_amount,
+            a.refund_amount,
+            a.replenish_amount,
+            a.balance,
+            a.total_amount,
+            a.insurance_amount,
+            a.bank_issue              AS 'bankIssue.value',
+            a.deposit,
+            a.deposit_recharge
+        FROM
+            md_servicepoint_finance a
+        WHERE
+            a.id =#{id}
+    </select>
+
+    <!-- 更新网点银行账号信息 -->
+    <update id="updateServicePointFIBankAccountInfo">
+        UPDATE md_servicepoint_finance
+        SET
+          bank = #{bank.value},
+          branch = #{branch},
+          bank_no = #{bankNo},
+          bank_owner = #{bankOwner}
+        WHERE id = #{id}
+    </update>
+
+</mapper>

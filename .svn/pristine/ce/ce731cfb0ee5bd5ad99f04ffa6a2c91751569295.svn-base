@@ -1,0 +1,271 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 返件 -->
+<mapper namespace="com.wolfking.jeesite.modules.sd.dao.OrderMaterialReturnDao">
+    <!-- 单头 -->
+    <resultMap id="MaterialReturnHeadResult" type="MaterialReturn">
+        <id property="id" column="id"/>
+        <result property="quarter" column="quarter" />
+        <result property="masterId" column="master_id"/>
+        <result property="returnNo" column="return_no"/>
+        <result property="orderId" column="order_id"/>
+        <result property="productId" column="product_id"/>
+        <result property="totalPrice" column="total_price"/>
+        <result property="remarks" column="remarks"/>
+        <result property="createDate" column="create_date"/>
+        <!-- order -->
+        <result property="orderNo" column="order_no"/>
+        <result property="thrdNo" column="thrd_no"/>
+        <result property="orderCreator" column="order_creator"/>
+        <!-- user -->
+        <result property="userName" column="user_name"/>
+        <result property="userPhone" column="user_phone"/>
+        <result property="userAddress" column="user_address"/>
+        <result property="expressNo" column="express_no"/>
+        <!-- receivor -->
+        <result property="receivor" column="receivor"/>
+        <result property="receivorPhone" column="receivor_phone"/>
+        <result property="receivorAddress" column="receivor_address"/>
+        <result property="signAt" column="sign_at"/>
+        <!-- close -->
+        <result property="closeDate" column="close_date"/>
+        <result property="closeRemark" column="close_remark"/>
+        <!-- pending -->
+        <result property="pendingDate" column="pending_date"/>
+        <result property="pendingContent" column="pending_content"/>
+
+        <association property="customer"  column="master_customer" javaType="Customer" >
+            <result property="id" column="customer_id"/>
+        </association>
+        <association property="product"  column="master_product" javaType="Product" >
+            <result property="id" column="product_id"/>
+        </association>
+        <association property="pendingType"  column="master_pendingType" javaType="Dict" >
+            <result property="value" column="pending_type"/>
+        </association>
+        <association property="area"  column="master_area" javaType="Area" >
+            <result property="id" column="area_id"/>
+        </association>
+        <association property="subArea"  column="master_subArea" javaType="Area" >
+            <result property="id" column="sub_area_id"/>
+        </association>
+        <association property="applyType"  column="master_applyType" javaType="Dict" >
+            <result property="value" column="apply_type"/>
+        </association>
+        <association property="status"  column="master_status" javaType="Dict" >
+            <result property="value" column="status_value"/>
+        </association>
+        <association property="expressCompany"  column="master_expressCompany" javaType="Dict" >
+            <result property="value" column="express_company"/>
+        </association>
+        <association property="createBy"  column="detail_createBy" javaType="User" >
+            <id property="id" column="create_by"/>
+        </association>
+        <association property="closeBy"  column="detail_closeBy" javaType="User" >
+            <id property="id" column="close_by"/>
+        </association>
+    </resultMap>
+
+    <!-- 包含单头，单身 -->
+    <resultMap id="MaterialReturnFormResult" type="MaterialReturn" extends="MaterialReturnHeadResult">
+        <collection property="items" ofType="MaterialReturnItem">
+            <id property="id" column="item_id"/>
+            <result property="qty" column="item_qty"/>
+            <result property="price" column="item_price"/>
+            <result property="totalPrice" column="item_total_price"/>
+            <association property="material"  column="item_material" javaType="Material" >
+                <id property="id" column="material_id"/>
+                <!--                <result property="name" column="material_name"/>-->
+            </association>
+            <association property="product"  column="item_product" javaType="Product" >
+                <id property="id" column="item_product_id"/>
+            </association>
+        </collection>
+    </resultMap>
+
+    <!-- 包含单头，单身及图片 -->
+    <resultMap id="MaterialReturnResult" type="MaterialReturn" extends="MaterialReturnFormResult">
+        <collection property="attachments" ofType="MaterialAttachment">
+            <id property="id" column="attachment_id"/>
+            <result property="filePath" column="attachment_filePath"/>
+            <result property="remarks" column="attachment_remarks"/>
+        </collection>
+    </resultMap>
+
+
+    <!-- 读取订单返件状态信息，判断是否可客评 -->
+    <select id="getMaterialReturnListForGrade" resultType="MaterialReturn">
+        select
+            m.id,
+            m.status as 'status.value',
+            m.master_id
+        from sd_material_return m
+        where
+            <if test="quarter != null and quarter != ''.toString()">m.quarter = #{quarter} and</if>
+            m.order_id = #{orderId}
+    </select>
+
+    <!-- 按id取得返件单（不包含图片） -->
+    <select id="getReturnFormById" resultMap="MaterialReturnFormResult">
+        SELECT
+            m.id,
+            m.quarter,
+            m.return_no,
+            m.order_id,
+            m.status AS status_value,
+            m.master_id,
+            m.total_price,
+            m.apply_type,
+            m.product_id,
+            m.express_company,
+            m.express_no,
+            m.create_by,
+            m.create_date,
+            m.remarks,
+            m.order_creator,
+            m.sign_at,
+            <if test="withOrder != null and withOrder == 1">
+            m.order_no,
+            m.thrd_no,
+            m.customer_id,
+            m.user_name,
+            m.user_phone,
+            m.area_id,
+            m.sub_area_id,
+            m.user_address,
+            </if>
+            <if test="withPending != null and withPending == 1">
+            m.pending_type,
+            m.pending_date,
+            m.pending_content,
+            </if>
+            <if test="withReceivor != null and withReceivor == 1">
+            m.receivor,
+            m.receivor_phone,
+            m.receivor_address,
+            </if>
+            <if test="withClose != null and withClose == 1">
+            m.close_by,
+            m.close_date,
+            m.close_remark,
+            </if>
+            i.id AS item_id,
+            i.material_id,
+            i.product_id as item_product_id,
+            i.qty AS item_qty,
+            i.price as item_price,
+            i.total_price as item_total_price
+        from sd_material_return m
+        left join sd_material_return_item i
+        on <if test="quarter != null and quarter != ''.toString()">m.quarter = #{quarter} and</if>
+            m.id = i.form_id
+        where
+        <if test="quarter != null and quarter != ''.toString()">m.quarter = #{quarter} and </if>
+        <choose>
+            <when test="id != null">
+                m.id = #{id}
+            </when>
+            <when test="masterId != null">
+                m.master_id = #{masterId}
+            </when>
+            <otherwise></otherwise>
+        </choose>
+        limit 1000
+    </select>
+    <!-- 图片 -->
+    <select id="findAttachementsByReturnId" resultType="MaterialAttachment">
+        select
+            a.id,a.file_path,a.create_date,a.remarks
+        from
+            sd_material_attachment a
+        inner join sd_materialmaster_attachment m
+        on	<if test="quarter != null and quarter != ''.toString()">
+            m.quarter = #{quarter}  and a.quarter = #{quarter} and
+        </if>
+            a.id = m.attachment_id
+        where
+            m.materialmaster_id = #{returnId}
+        order by
+            a.create_date
+    </select>
+
+    <!-- 图片 -->
+    <insert id="insertMaterialAttach">
+        insert into sd_material_attachment(
+            id,
+            order_id,
+            file_path,
+            remarks,
+            create_by,
+            create_date,
+            quarter
+        ) values(
+            #{id},
+            #{orderId},
+            #{filePath},
+            #{remarks},
+            #{createBy.id},
+            #{createDate},
+            #{quarter}
+        )
+    </insert>
+
+    <insert id="insertMaterialMasterAttachMap">
+        insert into sd_materialmaster_attachment (
+            materialmaster_id,
+            attachment_id,
+            quarter
+        ) values(
+            #{returnId},
+            #{attachmentId},
+            #{quarter}
+        )
+    </insert>
+
+    <!-- 更新反件申请 -->
+    <update id="updateMaterialReturn" parameterType="java.util.HashMap">
+        update
+            sd_material_return
+        <set>
+            <if test="status != null and status.value != null and status.value != ''.toString()" >
+                status = CONVERT(#{status.value},SIGNED),
+            </if>
+            <if test="expressCompany != null" >
+                express_company = #{expressCompany.value},
+            </if>
+            <if test="expressNo != null" >
+                express_no = #{expressNo},
+            </if>
+            <if test="sendBy != null" >
+                send_by = #{sendBy.id},
+            </if>
+            <if test="sendDate != null" >
+                send_date = #{sendDate},
+            </if>
+            <if test="updateBy != null" >
+                update_by = #{updateBy.id},
+            </if>
+            <if test="updateDate != null" >
+                update_date = #{updateDate},
+            </if>
+            <if test="closeBy != null" >
+            close_by = #{closeBy.id},
+            </if>
+            <if test="closeDate != null" >
+            close_date = #{closeDate},
+            </if>
+            <if test="closeRemark != null and closeRemark != ''.trim()" >
+            close_remark = #{closeRemark},
+            </if>
+            <if test="signAt != null" >
+                sign_at = #{signAt},
+            </if>
+        </set>
+        where
+            <if test="quarter != null and quarter != ''.toString()">quarter = #{quarter} and</if>
+            id = #{id}
+    </update>
+
+    <!-- close end -->
+
+</mapper>

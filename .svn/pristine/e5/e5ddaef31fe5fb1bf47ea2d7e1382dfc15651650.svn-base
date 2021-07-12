@@ -1,0 +1,42 @@
+package com.wolfking.jeesite.modules.sd.utils;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
+import com.kkl.kklplus.utils.StringUtils;
+import com.wolfking.jeesite.modules.sd.entity.OrderAdditionalInfo;
+
+public class OrderAdditionalInfoUtils {
+
+    private static final Gson orderAdditionalInfoGson = new GsonBuilder().registerTypeAdapter(OrderAdditionalInfo.class, OrderAdditionalInfoAdapter.getInstance()).create();
+
+    /**
+     * OrderAdditionalInfo转成json字符串
+     */
+    public static String toOrderAdditionalInfoJson(OrderAdditionalInfo info) {
+        String json = null;
+        if (info != null) {
+            json = orderAdditionalInfoGson.toJson(info, new TypeToken<OrderAdditionalInfo>() {
+            }.getType());
+            /**
+             * 因为myCat1.6不支持在json或text类型的字段中存储英文括号，故将所有的英文括号替换成中文括号.
+             */
+            json = json.replace("(", "（");
+            json = json.replace(")", "）");
+        }
+        return json;
+    }
+
+    /**
+     * json字符串转成OrderAdditionalInfo列表
+     */
+    public static OrderAdditionalInfo fromOrderAdditionalInfoJson(String json) {
+        OrderAdditionalInfo info = null;
+        if (StringUtils.isNotEmpty(json)) {
+            info = orderAdditionalInfoGson.fromJson(json, new TypeToken<OrderAdditionalInfo>() {
+            }.getType());
+        }
+        return info;
+    }
+
+}

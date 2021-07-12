@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wolfking.jeesite.modules.sys.dao.AreaDao">
+    <!--  mark on 2020-12-14
+	<sql id="areaColumns">
+		a.id,
+		a.parent_id AS "parent.id",
+		a.parent_ids,
+		a.code,
+		a.name,
+		a.full_name,
+		a.sort,
+		a.type,
+		a.remarks,
+		a.create_by AS "createBy.id",
+		a.create_date,
+		a.update_by AS "updateBy.id",
+		a.update_date,
+		a.del_flag,
+		p.name AS "parent.name"
+	</sql>
+	
+	<sql id="areaJoins">
+		LEFT JOIN sys_area p ON p.id = a.parent_id
+    </sql>
+
+	<sql id="specAreaJoins">
+		LEFT JOIN sys_area p ON p.id = a.parent_id
+	</sql>
+    
+	<select id="get" resultType="com.wolfking.jeesite.modules.sys.entity.Area">
+		SELECT
+			<include refid="areaColumns"/>
+		FROM sys_area a
+			<include refid="areaJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="com.wolfking.jeesite.modules.sys.entity.Area">
+		SELECT
+			<include refid="areaColumns"/>
+		FROM sys_area a
+			<include refid="areaJoins"/>
+		<where>
+			a.del_flag = 0
+			<if test="type != 0">
+				AND a.type=#{type}
+			</if>
+			<if test="name != ''.toString()">
+				AND a.name=#{name}
+			</if>
+			<if test="parent != null and parent.name != ''.toString()">
+				AND p.name=#{parent.name}
+			</if>
+			 ${sqlMap.dsf}
+		</where>
+		ORDER BY a.code
+	</select>
+
+	按区域类型返回清单
+	<select id="findListByType" resultType="Area">
+		SELECT
+		<include refid="areaColumns"/>
+		FROM sys_area a
+		<include refid="areaJoins"/>
+		WHERE a.type = #{type}
+			AND a.del_flag = 0
+		ORDER BY a.sort,a.code
+		limit 60000
+	</select>
+	
+	<select id="findAllList" resultType="com.wolfking.jeesite.modules.sys.entity.Area">
+		SELECT
+			<include refid="areaColumns"/>
+		FROM sys_area a
+		<include refid="areaJoins"/>
+		WHERE a.del_flag = 0
+		ORDER BY a.code
+		limit 80000
+	</select>
+	
+	<select id="findByParentIdsLike" resultType="com.wolfking.jeesite.modules.sys.entity.Area">
+		SELECT
+			a.id,
+			a.parent_id AS "parent.id",
+			a.parent_ids
+		FROM sys_area a
+		WHERE a.del_flag = 0 AND a.parent_ids LIKE #{parentIds}
+		ORDER BY a.code
+		limit 10000
+	</select>
+
+	<select id="findListByUserIdOrAreaId" parameterType="Map" resultType="com.wolfking.jeesite.modules.sys.entity.Area">
+		SELECT
+			<include refid="areaColumns"/>
+		FROM sys_area a
+			<include refid="areaJoins"/>
+			LEFT JOIN sys_user_area c
+			ON a.id = c.area_id
+		WHERE a.del_flag = 0
+			<if test="areaId != null">
+				AND c.area_id = #{areaId}
+			</if>
+			<if test="userId != null">
+				AND c.user_id = #{userId}
+			</if>
+		ORDER BY a.code
+	</select>
+	
+	<insert id="insert" useGeneratedKeys="true" keyProperty="id">
+		INSERT INTO sys_area(
+			parent_id, 
+			parent_ids, 
+			code, 
+			name,
+			full_name,
+			sort,
+			type, 
+			create_by, 
+			create_date, 
+			update_by, 
+			update_date, 
+			remarks, 
+			del_flag
+		) VALUES (
+			#{parent.id}, 
+			#{parentIds}, 
+			#{code}, 
+			#{name}, 
+			#{fullName},
+			#{sort},
+			#{type}, 
+			#{createBy.id}, 
+			#{createDate}, 
+			#{updateBy.id}, 
+			#{updateDate}, 
+			#{remarks}, 
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE sys_area SET 
+			parent_id = #{parent.id}, 
+			parent_ids = #{parentIds}, 
+			code = #{code}, 
+			name = #{name}, 
+			full_name = #{fullName},
+			sort = #{sort},
+			type = #{type}, 
+			update_by = #{updateBy.id}, 
+			update_date = #{updateDate}, 
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="updateParentIds">
+		UPDATE sys_area SET 
+			parent_id = #{parent.id}, 
+			parent_ids = #{parentIds}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE sys_area SET 
+			del_flag = 1
+		WHERE id = #{id} OR parent_ids LIKE 
+					<if test="dbName == 'oracle'.toString()">'%,'||#{id}||',%'</if>
+					<if test="dbName == 'mssql'.toString()">'%,'+#{id}+',%'</if>
+					<if test="dbName == 'mysql'.toString()">CONCAT('%,', #{id}, ',%')</if>
+	</update>
+
+	- 查询区域清单,主要是用来查询网点及安维的区域清单,当为安维查询区域时不需要返回type -
+	<select id="findAreasForServicePointOrEngineer" resultType="Area">
+		SELECT
+			a.id,
+			a.parent_id as "parent.id",
+			a.parent_ids,
+			a.name,
+			a.full_name,
+			a.code,
+			a.type
+		from sys_area a
+		where  a.id in
+			<foreach collection="ids" item="item" index="index" open="(" close=")" separator=",">
+				${item}
+			</foreach>
+		order by a.code
+	</select>
+	-->
+</mapper>

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wolfking.jeesite.modules.sd.dao.OrderAdditionalInfoDao">
+
+    <select id="getOrderAdditionalInfo"  resultType="String">
+        select order_info_json
+        FROM sd_order
+        <where>
+            <if test="quarter != null  and quarter != ''.toString()">
+                quarter = #{quarter}
+            </if>
+            AND id = #{orderId}
+        </where>
+    </select>
+
+    <update id="updateOrderAdditionalInfo" parameterType="Map">
+        UPDATE sd_order
+        SET order_info_json = #{orderInfoJson}
+        <where>
+            <if test="quarter != null  and quarter != ''.toString()">
+                quarter = #{quarter}
+            </if>
+            AND id = #{orderId}
+        </where>
+    </update>
+
+</mapper>

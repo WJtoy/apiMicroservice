@@ -1,0 +1,195 @@
+//sd_order_servicepoint
+//网点订单数据更新消息模型
+syntax="proto3";
+
+option java_package = "com.wolfking.jeesite.modules.mq.dto";
+option java_outer_classname = "MQOrderServicePointMessage";
+
+//数据操作类型
+enum OperationType {
+
+    // 创建(抢单，派单，改派)
+    Create = 0;
+
+    // 修改上门信息
+    UpdateServiceInfo = 1;
+
+    // 网点改派师傅
+    ChangeEngineer = 2;
+
+    // 客服预约时间
+    Pending = 3;
+
+    // 安维app预约时间
+    AppPending = 4;
+
+    // 上门服务
+    OnSiteService = 5;
+
+    // 客评
+    Grade = 6;
+
+    // 对账
+    Charge = 7;
+
+    // 以下为其他涉及子状态变更的操作
+
+    // 回退
+    GoBackToAccept = 8;
+
+    // 确认上门
+    ConfirmOnSiteService = 9;
+
+    // 退单申请
+    OrderReturnRequest = 10;
+
+    // 驳回申请
+    RejectReturnRequest = 11;
+
+    // 退单确认
+    ApproveReturnRequest = 12;
+
+    // 工单取消
+    CancelOrder = 13;
+
+    // APP完成
+    OrderAppComplete = 14;
+
+    // 回访失败
+    FollowUpFail = 15;
+
+    // 删除上门
+    DelOnSiteService = 16;
+    // end 以下为其他涉及子状态变更的操作
+
+    //订单标记异常
+    AbnormalyFlag = 17;
+
+    //相关单据处理，如催单，加急，投诉等
+    RelatedForm = 18;
+
+    //好评单
+    PraiseForm = 19;
+}
+
+message ServicePointMessage{
+
+    // 操作类型
+    OperationType operationType = 1;
+
+    // ID
+    int64 id = 2;
+
+    // 分片
+    string quarter = 3;
+
+    // 订单Id
+    int64 orderId = 4;
+
+    // 操作人
+    int64 operationBy = 5;
+
+    // 操作时间
+    int64 operationAt = 6;
+
+    // 订单信息
+    OrderInfo orderInfo = 7;
+
+    // 子状态
+    int32 subStatus = 8;
+
+    // 用户信息
+    UserInfo userInfo = 9;
+
+    // 网点信息
+    ServicePointInfo servicePointInfo = 10;
+
+    //
+    // 其他
+    //
+
+    // 上门标记
+    int32 serviceFlag = 11;
+
+    // 派单时间
+    int64 planDate = 12;
+
+    // 预约时间
+    int64 appointmentDate = 13;
+    //重置预约时间为null
+    int32 resetAppointmentDate = 17;
+
+    // 网点处理时间
+    int64 reservationDate = 14;
+
+    // 完成时间
+    int64 closeDate = 15;
+
+    // 对账时间
+    int64 chargeDate = 16;
+
+    int32 pendingType = 18;
+
+    //是否更新网点
+    //删除上门服务时，同步更新sd_order_plan.service_flag，同网点有不同师傅上门，
+    //删除其中一个师傅上门记录，不应更新网点的service_flag，需要更新安维的servcie_flag
+    int32 updateServicePoint = 19;
+    //是否更新安维
+    int32 updateEngineer = 20;
+
+    // 2020-02-14 新增
+    // 安维账号类型，1-主账号
+    int32 masterFlag = 21;
+    // 异常标记
+    int32 abnormalyFlag = 22;
+    // 投诉标记
+    int32 complainFlag = 23;
+    //加急等级id
+    int32 urgentLevelId = 24;
+    // app完工类型
+    string appCompleteType = 25;
+    // 催单状态
+    int32 reminderFlag = 26;
+    // 销售渠道
+    int32 orderChannel = 27;
+    // 数据来源
+    int32 dataSource = 28;
+    // 好评单状态
+    int32 praiseStatus = 29;
+}
+
+
+// 订单基本信息
+message OrderInfo {
+    // 订单号
+    string orderNo = 1;
+    // 订单类型 1:安装 2:维修
+    int32 orderServiceType = 2;
+    // 区域(区县级)
+    int64 areaId = 3;
+    string areaName = 4;
+    // 订单状态
+    int32 status = 5;
+}
+
+// 用户基本信息
+message UserInfo {
+    string userName = 1;
+    string phone = 2;
+    string address = 3;
+}
+
+// 网点基本信息
+message ServicePointInfo {
+    int64 servicePointId = 1;
+    int64 engineerId = 2;
+    //更改前网点id
+    int64 prevServicePointId = 3;
+
+    //派单，改派，抢单，突击时用到以下属性
+    //派单顺序
+    int32 planOrder = 4;
+    //派单类型
+    int32 planType = 5;
+
+}

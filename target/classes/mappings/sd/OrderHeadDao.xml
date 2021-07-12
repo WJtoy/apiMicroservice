@@ -1,0 +1,266 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.wolfking.jeesite.modules.sd.dao.OrderHeadDao">
+
+    <resultMap id="OrderResult" type="Order" >
+        <id property="id" column="id"/>
+        <result property="b2bOrderId" column="b2b_order_id"/>
+        <result property="workCardId" column="workcard_id" />
+        <result property="orderNo" column="order_no" />
+        <result property="remarks" column="remarks" />
+        <result property="verificationCode" column="verification_code" />
+        <result property="confirmDoor" column="confirm_door" />
+        <result property="description" column="description" />
+        <result property="repeateNo" column="repeate_no" />
+        <result property="quarter" column="quarter" />
+        <result property="totalQty" column="total_qty" />
+        <result property="writeOff" column="write_off" />
+        <result property="itemsPb" column="orderitem_json"/>
+        <result property="additionalInfoPb" column="order_info_json"/>
+        <result property="parentBizOrderId" column="parent_biz_order_id"/>
+        <association property="dataSource"  column="data_source" javaType="Dict" >
+            <result property="value" column="data_source"/>
+        </association>
+        <association property="orderType"  column="order_type" javaType="Dict" >
+            <result property="label" column="order_type_label"/>
+            <result property="value" column="order_type"/>
+        </association>
+        <association property="b2bShop"  column="order_b2bShop" javaType="B2bCustomerMap" >
+            <result property="shopId" column="shop_id"/>
+        </association>
+        <association property="orderChannel"  column="order_orderChannel" javaType="Dict" >
+            <result property="value" column="order_channel"/>
+        </association>
+    </resultMap>
+
+    <!-- 以下是sd_order_head数据处理方法 -->
+
+    <insert id="insert" parameterType="Order">
+        INSERT INTO sd_order_head(
+            quarter,
+            id,
+            order_channel,
+            data_source,
+            workcard_id,
+            <if test="b2bOrderId != null and b2bOrderId != 0">
+                b2b_order_id,
+            </if>
+            parent_biz_order_id,
+            order_no,
+            <if test="b2bShop != null and b2bShop.shopId != null">
+                shop_id,
+            </if>
+            total_qty,
+            order_type,
+            remarks,
+            verification_code,
+            confirm_door,
+            description,
+            order_info_json,
+            repeate_no,
+            write_off,
+            orderitem_json
+        ) VALUES (
+            #{quarter},
+            #{id},
+            <choose>
+                <when test="orderChannel == null or orderChannel.intValue == 0">
+                    1,
+                </when>
+                <otherwise>
+                    #{orderChannel.intValue},
+                </otherwise>
+            </choose>
+            #{dataSource.intValue},
+            #{workCardId},
+            <if test="b2bOrderId != null and b2bOrderId != 0">
+                #{b2bOrderId},
+            </if>
+            #{parentBizOrderId},
+            #{orderNo},
+            <if test="b2bShop != null and b2bShop.shopId != null">
+                #{b2bShop.shopId},
+            </if>
+            #{totalQty},
+            #{orderType.value},
+            #{remarks},
+            #{verificationCode},
+            #{confirmDoor},
+            #{description},
+            #{additionalInfoPb},
+            #{repeateNo},
+            #{writeOff},
+            #{itemsPb}
+        );
+    </insert>
+
+    <update id="updateOrder" parameterType="java.util.HashMap">
+        update sd_order_head
+        <set >
+            <if test="totalQty != null" >
+                total_qty = #{totalQty},
+            </if>
+            <if test="orderType != null and orderType.value != null and orderType.value != ''.toString()" >
+                order_type = #{orderType.value},
+            </if>
+            <if test="verificationCode != null and verificationCode != ''.toString()" >
+                verification_code = #{verificationCode},
+            </if>
+            <if test="confirmDoor != null" >
+                confirm_door = #{confirmDoor},
+            </if>
+            <if test="operationAppFlag != null" >
+                operation_app_flag = #{operationAppFlag},
+            </if>
+            <if test="trackingFlag != null" >
+                tracking_flag = #{trackingFlag},
+            </if>
+            <if test="remarks != null" >
+                remarks = #{remarks},
+            </if>
+            <if test="description != null" >
+                description = #{description},
+            </if>
+            <if test="feedback != null and feedback.id != null and feedback.id != 0 " >
+                feedback_id = #{feedback.id},
+            </if>
+            <if test="feedbackDate != null" >
+                feedback_date = #{feedbackDate},
+            </if>
+            <if test="_parameter.containsKey('additionalInfoPb')" >
+                order_info_json = #{additionalInfoPb},
+            </if>
+            <if test="_parameter.containsKey('itemsPb')">
+                orderitem_json = #{itemsPb},
+            </if>
+            <if test="_parameter.containsKey('shopId')">
+                shop_id = #{shopId},
+            </if>
+            <if test="_parameter.containsKey('orderChannel')">
+                order_channel = #{orderChannel},
+            </if>
+            <if test="_parameter.containsKey('workCardId')">
+                workcard_id = #{workCardId},
+            </if>
+            <if test="_parameter.containsKey('parentBizOrderId')">
+                parent_biz_order_id = #{parentBizOrderId},
+            </if>
+        </set>
+        where
+            <if test="quarter != null and quarter != ''.toString()">
+                quarter = #{quarter} and
+            </if>
+            id = #{id}
+    </update>
+
+
+    <!-- order from OrderDao-->
+    <sql id="selectOrder">
+		SELECT
+            o.id,
+            o.quarter,
+            o.b2b_order_id,
+            o.workcard_id,
+            o.parent_biz_order_id,
+            o.data_source,
+            o.order_no,
+            o.total_qty,
+            o.order_type,
+            o.remarks,
+            o.verification_code,
+            o.confirm_door,
+            o.description,
+            o.repeate_no,
+            o.write_off,
+            o.shop_id,
+            o.order_channel,
+            '' as order_type_label,
+            order_info_json,
+            orderitem_json
+        FROM sd_order_head o
+    </sql>
+
+    <!-- 返回订单完整数据 -->
+    <select id="getOrderById" resultMap="OrderResult">
+        /*getOrderById*/
+        <include refid="selectOrder"/>
+        WHERE
+        <if test="quarter != null and quarter != ''.toString()"> o.quarter = #{quarter} and </if>
+        o.id = #{orderId}
+        limit 1
+    </select>
+
+    <!-- 返回订单完整数据 -->
+    <select id="getOrderItemsById" resultType="Order">
+		SELECT
+			o.id,
+			o.quarter,
+			o.orderitem_json AS "itemsPb"
+		FROM
+			sd_order_head o
+		WHERE
+			o.quarter = #{quarter}
+			and o.id = #{orderId}
+	</select>
+
+    <select id="getOrderFromMasterById" resultMap="OrderResult">
+        /*#mycat:db_type=master*/<include refid="selectOrder"/>
+        WHERE
+        <if test="quarter != null and quarter != ''.toString()"> o.quarter = #{quarter} and </if>
+        o.id = #{orderId}
+        limit 1
+    </select>
+
+    <!-- 获取订单分片 -->
+    <select id="getOrderQuarter" resultType="java.lang.String">
+		select quarter
+		from sd_order_head
+		where id = #{orderId}
+		limit 1
+	</select>
+
+    <!-- 根据订单号获得订单id及分片 -->
+    <select id="getOrderIdByNo" resultType="java.util.Map">
+        select
+            id,order_no,quarter
+        from
+            sd_order_head
+        <where>
+            <if test="quarter != null and quarter != ''.trim()">
+                and quarter = #{quarter}
+            </if>
+            and order_no = #{orderNo}
+        </where>
+        limit 1
+    </select>
+
+    <!-- B2B -->
+    <!-- get order no refer by workcard id -->
+    <select id="getB2BOrderNo" resultType="java.util.HashMap">
+        select id,order_no,quarter
+        from sd_order_head
+        <where>
+            <if test="quarter != null and quarter !=''.trim()">
+                and quarter = #{quarter}
+            </if>
+            and workcard_id = #{workCardId}
+            <if test="dataSource != null and dataSource > 0 ">
+                and data_source = #{dataSource}
+            </if>
+        </where>
+        limit 1
+    </select>
+
+    <update id="updateOrderAdditionalInfo">
+        UPDATE sd_order_head
+        SET
+        order_info_json = #{additionalInfoPb}
+        <where>
+            <if test="quarter != null  and quarter != ''.trim()">
+                quarter = #{quarter}
+            </if>
+            AND id = #{id}
+        </where>
+    </update>
+
+</mapper>

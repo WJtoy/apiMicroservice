@@ -1,0 +1,402 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wolfking.jeesite.modules.sd.dao.OrderComplainDao">
+	<!-- 投诉单 -->
+	<resultMap id="OrderComplainResult" type="OrderComplain">
+		<id property="id" column="id"/>
+		<result property="quarter" column="quarter" />
+		<result property="orderId" column="order_id" />
+		<result property="orderNo" column="order_no" />
+		<result property="productCategoryId" column="product_category_id" />
+		<result property="complainNo" column="complain_no" />
+		<result property="quarter" column="quarter" />
+		<result property="userName" column="user_name" />
+		<result property="userPhone" column="user_phone" />
+		<result property="userAddress" column="user_address" />
+		<result property="appointDate" column="appoint_date" />
+
+		<!-- 申请 -->
+		<result property="complainObject" column="complain_object" />
+		<result property="complainBy" column="complain_by" />
+		<result property="complainDate" column="complain_date" />
+		<result property="complainItem" column="complain_item" />
+		<result property="complainRemark" column="complain_remark" />
+		<result property="attachmentQty" column="attachment_qty" />
+		<!--判定 -->
+
+		<result property="judgeObject" column="judge_object" />
+		<result property="judgeDate" column="judge_date" />
+		<result property="judgeItem" column="judge_item" />
+		<result property="judgeRemark" column="judge_remark" />
+		<result property="judgeAttachmentQty" column="judge_attachment_qty" />
+
+		<!-- 结案 -->
+		<result property="completeResult" column="complete_result" />
+		<result property="completeDate" column="complete_date" />
+		<result property="completeRemark" column="complete_remark" />
+		<result property="completeAttachmentQty" column="complete_attachment_qty" />
+		<!--申诉-->
+		<result property="appealDate" column="appeal_date" />
+		<result property="appealRemark" column="appeal_remark" />
+
+		<!-- 赔偿 -->
+		<result property="compensateResult" column="compensate_result" />
+		<result property="customerAmount" column="customer_amount" />
+		<result property="userAmount" column="user_amount" />
+
+		<!-- 罚款 -->
+		<result property="amerceResult" column="amerce_result" />
+		<result property="servicePointAmount" column="servicepoint_amount" />
+		<result property="kefuAmount" column="kefu_amount" />
+
+		<result property="createDate" column="create_date" />
+		<result property="updateDate" column="update_date" />
+
+		<association property="judgeBy"  column="judge_by" javaType="User" >
+			<id property="id" column="judge_by"/>
+			<result property="name" column="judge_by_name"/>
+		</association>
+
+
+		<association property="appealBy"  column="appeal_by" javaType="User" >
+			<id property="id" column="appeal_by"/>
+			<id property="name" column="appeal_by_name"/>
+		</association>
+
+		<association property="completeBy"  column="complete_by" javaType="User" >
+			<id property="id" column="complete_by"/>
+			<result property="name" column="complete_by_name"/>
+		</association>
+		<association property="kefu"  column="order_kefu" javaType="User" >
+			<id property="id" column="kefu_id"/>
+			<result property="name" column="kefu_name"/>
+		</association>
+		<association property="customer" column="order_customer" javaType="Customer" >
+			<id property="id" column="customer_id" />
+		</association>
+		<association property="servicePoint"  column="order_servicePoint" javaType="ServicePoint" >
+			<id property="id" column="servicepoint_id" />
+		</association>
+		<association property="complainType" column="complain_type" javaType="Dict">
+			<result property="value" column="complain_type"/>
+		</association>
+		<association property="status"  column="complain_status" javaType="Dict" >
+			<result property="value" column="status"/>
+		</association>
+		<association property="createBy"  column="order_create_by" javaType="User" >
+			<id property="id" column="create_by" />
+			<result property="name" column="create_name"/>
+		</association>
+		<association property="updateBy"  column="update_by" javaType="User" >
+			<id property="id" column="update_by" />
+			<result property="name" column="update_name"/>
+		</association>
+
+	</resultMap>
+
+	<resultMap id="ComplainAttachmentResult" type="OrderComplainAttachment">
+		<id property="id" column="id"/>
+		<result property="complainId" column="complain_id" />
+		<result property="quarter" column="quarter" />
+		<result property="attachmentType" column="attachment_type" />
+		<result property="fileName" column="file_name" />
+		<result property="filePath" column="file_path" />
+		<result property="createDate" column="create_date" />
+		<association property="createBy"  column="create_by" javaType="User" >
+			<id property="id" column="create_by" />
+			<result property="name" column="create_name"/>
+		</association>
+	</resultMap>
+
+	<!-- 选择的区域 -->
+	<sql id="selectedAreaFilter">
+		<if test="area != null and area.id != null and area.id > 0">
+			<choose>
+				<when test="areaLevel == 0">
+					AND o.province_id = #{area.id}
+				</when>
+				<when test="areaLevel == 1">
+					AND o.city_id = #{area.id}
+				</when>
+				<when test="areaLevel == 2">
+					AND o.area_id = #{area.id}
+				</when>
+				<when test="areaLevel == 3">
+					<if test="area.parent != null and area.parent.id != null and area.parent.id > 0">
+						and o.area_id = #{area.parent.id}
+					</if>
+					AND o.sub_area_id = #{area.id}
+				</when>
+				<otherwise>
+				</otherwise>
+			</choose>
+		</if>
+	</sql>
+	<!-- 用户负责区域 -->
+	<sql id="RegionFilter">
+		<choose>
+			<when test="regionFilterType == 'province'.toString() and provinceList != null and provinceList.size > 0">
+				<choose>
+					<when test="provinceList.size == 1">
+						and o.province_id = #{provinceList[0]}
+					</when>
+					<otherwise>
+						AND o.province_id IN <foreach collection="provinceList" item="provinceId" index="index" open="(" close=")" separator=",">${provinceId}</foreach>
+					</otherwise>
+				</choose>
+			</when>
+			<when test="regionFilterType == 'city'.toString() and cityList != null and cityList.size > 0">
+				<choose>
+					<when test="cityList.size == 1">
+						and o.city_id = #{cityList[0]}
+					</when>
+					<otherwise>
+						AND o.city_id IN <foreach collection="cityList" item="cityId" index="index" open="(" close=")" separator=",">${cityId}</foreach>
+					</otherwise>
+				</choose>
+			</when>
+			<when test="regionFilterType == 'area'.toString() and areaList != null and areaList.size > 0">
+				<choose>
+					<when test="areaList.size == 1">
+						and o.area_id = #{areaList[0]}
+					</when>
+					<otherwise>
+						AND o.area_id IN <foreach collection="areaList" item="areaId" index="index" open="(" close=")" separator=",">${areaId}</foreach>
+					</otherwise>
+				</choose>
+			</when>
+		</choose>
+	</sql>
+	<!-- 用户负责所有区域 -->
+	<sql id="allUserRegion">
+		<if test="regionFilterCount > 1">
+			<trim prefix="AND" prefixOverrides="AND|OR">
+				AND (
+				<if test="areaList != null">
+					<choose>
+						<when test="areaList.size == 1">
+							o.area_id = #{areaList[0]}
+						</when>
+						<otherwise>
+							o.area_id IN
+							<foreach collection="areaList" item="areaItem" index="index" open="(" close=")"
+									 separator=",">${areaItem}</foreach>
+						</otherwise>
+					</choose>
+				</if>
+				<if test="cityList != null">
+					<choose>
+						<when test="cityList.size == 1">
+							or o.city_id = #{cityList[0]}
+						</when>
+						<otherwise>
+							or o.city_id IN
+							<foreach collection="cityList" item="cityItem" index="index" open="(" close=")"
+									 separator=",">${cityItem}</foreach>
+						</otherwise>
+					</choose>
+				</if>
+				<if test="provinceList != null">
+					<choose>
+						<when test="provinceList.size == 1">
+							or o.province_id = #{provinceList[0]}
+						</when>
+						<otherwise>
+							or o.province_id IN
+							<foreach collection="provinceList" item="provinceItem" index="index" open="(" close=")"
+									 separator=",">${provinceItem}</foreach>
+						</otherwise>
+					</choose>
+				</if>
+				)
+			</trim>
+		</if>
+	</sql>
+	<!-- 客户类型 -->
+	<sql id="customerTypeFilter">
+		<if test="customerType != null">
+			inner join md_customer_info ci on ci.vip_flag = #{customerType} and ci.customer_id = o.customer_id
+		</if>
+	</sql>
+	<!-- 可突击订单 -->
+	<sql id="rushFilter">
+		<if test="rushType != null">
+			and o.can_rush = #{rushType}
+		</if>
+	</sql>
+
+	<sql id="selectDetailOrderComplain">
+		SELECT
+			o.id,
+			o.quarter,
+			o.order_id,
+			o.product_category_id,
+			o.area_id as "area.id",
+			o.order_no,
+			o.complain_no,
+			o.complain_type,
+			o.status,
+			o.customer_id,
+			o.servicepoint_id,
+			o.user_name,
+			o.user_phone,
+			o.user_address,
+			o.kefu_id,
+			o.kefu_name,
+			o.complain_object,
+			o.complain_by,
+			o.complain_date,
+			o.complain_item,
+			o.complain_remark,
+			o.attachment_qty,
+			o.judge_object,
+			o.judge_by,
+			o.judge_by_name,
+			o.judge_date,
+			o.judge_item,
+			o.judge_remark,
+			o.judge_attachment_qty,
+			o.complete_result,
+			o.complete_remark,
+			o.complete_by,
+			o.complete_by_name,
+			o.complete_date,
+			o.complete_attachment_qty,
+			o.compensate_result,
+			o.customer_amount,
+			o.user_amount,
+			o.amerce_result,
+			o.servicepoint_amount,
+			o.kefu_amount,
+			o.create_by,
+			'' as create_name,
+			o.appeal_date,
+			o.appeal_by,
+			o.appeal_by_name,
+			o.appeal_remark,
+			o.appoint_date
+		FROM sd_order_complain o
+	</sql>
+
+	<sql id="complainSql">
+		<include refid="selectDetailOrderComplain"/>
+		<if test="createBy != null and createBy.id != null and createBy.id != 0">
+			INNER JOIN md_productcategory_user mpu
+			ON mpu.product_category_id = o.product_category_id AND mpu.user_id = #{createBy.id}
+			<choose>
+				<when test="customerType != null and customerType == 1">
+					inner join sys_user_customer uc
+					on uc.user_id = #{createBy.id} and o.customer_id = uc.customer_id
+				</when>
+				<when test="customerType != null">
+					inner join md_customer_info ci on ci.vip_flag = #{customerType} and ci.customer_id = o.customer_id
+				</when>
+			</choose>
+		</if>
+		<where>
+			<choose>
+				<when test="orderNoSearchType == 1 or isPhone == 1 or complainNoSearchType == 1">
+					<if test="orderNoSearchType == 1">
+						AND o.order_no = #{orderNo}
+					</if>
+					<if test="isPhone == 1">
+						AND o.user_phone = #{userPhone}
+					</if>
+					<if test="complainNoSearchType == 1">
+						AND o.complain_no = #{complainNo}
+					</if>
+					<!-- 选择的查询区域
+					<include refid="selectedAreaFilter" />
+					-->
+					<!-- 账号负责区域 -->
+					<include refid="RegionFilter" />
+					<if test="searchType !=null and searchType == 'appoint'.toString()">
+						and o.appoint_date > #{currentTime}
+					</if>
+					<if test="searchType !=null and searchType == 'dealing'.toString()">
+						<![CDATA[ and o.appoint_date <= #{currentTime} ]]>
+					</if>
+					<!-- 加载待完成投诉单列表 过滤出有判定日期的投诉单 -->
+					<if test="judgeBy !=null and judgeBy.id==-1">
+						<![CDATA[ and o.appoint_date <= #{currentTime} ]]>
+						AND o.judge_by > 0
+					</if>
+					<if test="status != null and status.intValue > 0">
+						AND o.status = #{status.intValue}
+					</if>
+				</when>
+				<otherwise>
+					<if test="beginDate != null and endDate != null">
+						AND o.complain_date BETWEEN #{beginDate} AND #{endDate}
+					</if>
+					<choose>
+						<when test="completeBeginDate != null and completeEndDate != null">
+							AND o.complete_date BETWEEN #{completeBeginDate} AND #{completeEndDate}
+						</when>
+						<when test="completeBeginDate != null">
+							<![CDATA[ AND o.complete_date >= #{completeBeginDate}]]>
+						</when>
+						<when test="completeEndDate != null">
+							<![CDATA[ AND o.complete_date <= #{completeEndDate}]]>
+						</when>
+					</choose>
+					<!-- 选择的查询区域 -->
+					<include refid="selectedAreaFilter" />
+					<!-- 账号负责区域 -->
+					<include refid="RegionFilter" />
+					<if test="status != null and status.value != null and status.value != ''.toString()">
+						AND o.status = #{status.intValue}
+					</if>
+					<if test="productCategoryId != null and productCategoryId > 0">
+						and o.product_category_id = #{productCategoryId}
+					</if>
+					<!-- 加载待完成投诉单列表 过滤出有判定日期的投诉单 -->
+					<if test="judgeBy !=null and judgeBy.id==-1">
+						<![CDATA[ and o.appoint_date <= #{currentTime} ]]>
+						AND o.judge_by > 0
+					</if>
+					<if test="complainBy != null and complainBy != ''.trim()">
+						and o.complain_by like CONCAT(#{complainBy},'%')
+					</if>
+					<if test="customer != null and customer.id != null and customer.id >0">
+						AND o.customer_id = #{customer.id}
+					</if>
+					<if test="servicePoint != null and servicePoint.id != null and servicePoint.id >0">
+						and o.servicepoint_id = #{servicePoint.id}
+					</if>
+					<if test="complainType != null and complainType.value != null and complainType.value != ''.toString()">
+						AND o.complain_type = convert(#{complainType.value},SIGNED)
+					</if>
+					<if test="userName!=null and userName!=''.toString() ">
+						AND o.user_name like CONCAT(#{userName},'%')
+					</if>
+					<if test="complainObject!=null and complainObject.value!=null  and complainObject.value != ''.toString()">
+						AND complain_object &amp; #{complainObjectValue}=#{complainObjectValue}
+					</if>
+					<if test="complainItem!=null and complainItem.value!=null  and complainItem.value != ''.toString()">
+						AND complain_item &amp; #{complainItemValue}=#{complainItemValue}
+					</if>
+					<if test="judgeObject!=null and judgeObject.value!=null  and judgeObject.value != ''.toString()">
+						AND judge_object &amp; #{judgeObjectValue}=#{judgeObjectValue}
+					</if>
+					<if test="judgeItem!=null and judgeItem.value!=null  and judgeItem.value != ''.toString()">
+						AND judge_item &amp; #{judgeItemValue}=#{judgeItemValue}
+					</if>
+
+					<if test="kefu != null and kefu.name != null and kefu.name != ''.toString()">
+						AND o.kefu_name = #{kefu.name}
+					</if>
+					<if test="searchType !=null and searchType == 'appoint'.toString()">
+						and o.appoint_date > #{currentTime}
+					</if>
+					<if test="searchType !=null and searchType == 'dealing'.toString()">
+						<![CDATA[ and o.appoint_date <= #{currentTime} ]]>
+					</if>
+				</otherwise>
+			</choose>
+			<!-- 可突击订单 -->
+			<include refid="rushFilter"/>
+		</where>
+	</sql>
+
+</mapper>

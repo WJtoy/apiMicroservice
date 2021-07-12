@@ -1,0 +1,944 @@
+package com.wolfking.jeesite.modules.sd.entity;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.google.common.collect.Lists;
+import com.google.gson.annotations.JsonAdapter;
+import com.kkl.kklplus.entity.b2bcenter.md.B2BDataSourceEnum;
+import com.wolfking.jeesite.common.config.redis.GsonIgnore;
+import com.wolfking.jeesite.common.persistence.LongIDBaseEntity;
+import com.wolfking.jeesite.common.utils.DateUtils;
+import com.kkl.kklplus.utils.StringUtils;
+import com.wolfking.jeesite.modules.md.entity.Product;
+import com.wolfking.jeesite.modules.md.entity.ServiceType;
+import com.wolfking.jeesite.modules.sd.utils.OrderAdapter;
+import com.wolfking.jeesite.modules.sys.entity.Dict;
+import com.wolfking.jeesite.modules.sys.entity.User;
+import com.wolfking.jeesite.modules.sys.utils.UserUtils;
+import com.wolfking.jeesite.ms.tmall.md.entity.B2bCustomerMap;
+import org.hibernate.validator.constraints.Length;
+import org.hibernate.validator.constraints.Range;
+
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotNull;
+import java.util.Date;
+import java.util.List;
+
+/**
+ * 订单
+ */
+@JsonAdapter(OrderAdapter.class)
+public class Order extends LongIDBaseEntity<Order> {
+    private static final long serialVersionUID = 1L;
+    public static final String ORDER_DATA_SOURCE_TYPE = "order_data_source";
+    public static final String ORDER_SEQ_CODE = "OrderNo";
+
+    public static final String ORDER_DICT_STATUS_TYPE = "order_status";
+
+    // 订单状态
+    public static final Integer ORDER_STATUS_NEW = 10; // New : 下单-客户已下单，正等待主账号审核中
+    public static final Integer ORDER_STATUS_APPROVED = 20; // Approved : 下单已审核-主账号审核中
+    public static final Integer ORDER_STATUS_ACCEPTED = 30; // Accepted : 已接单-客服已接单，正等待派单
+    public static final Integer ORDER_STATUS_PLANNED = 40; // Planned : 已派单-客服已派单
+    public static final Integer ORDER_STATUS_SERVICED = 50; // Serviced : 上门服务-订单处理中，已派单给安维人员，安维人员正在上门处理中
+    public static final Integer ORDER_STATUS_RETURNING = 60; // Returning : 退单申请-客服申请退单，待客户审核通过
+    public static final Integer ORDER_STATUS_CANCELING = 70; // Canceling : 取消中 - 申请取消，待客户审核
+    public static final Integer ORDER_STATUS_COMPLETED = 80; // Completed : 完成-客服与用户确认后，认定安维人员已上门服务，并完成订单中所有服务项目
+    public static final Integer ORDER_STATUS_CHARGED = 85;  // Charged : 已对账
+    public static final Integer ORDER_STATUS_RETURNED = 90; // Returned : 已退单-客服申请退单，客户已同意并审核
+    public static final Integer ORDER_STATUS_CANCELED = 100; // Canceled : 已取消-客户取消订单
+
+    public static final Integer ORDER_PENDDING_FLAG_NORMAL = 2;// 正常
+    public static final Integer ORDER_PENDDING_FLAG_PENDDING = 1;// 异常-需要更改订单,修改完成后置为2,进入再次对帐
+    public static final Integer ORDER_PENDDING_FLAG_RENEW = 3;// 再次对帐-之前标识过异常并对订单进行了修改
+
+    public static final Integer ORDER_ORDERTYPE_DSXD = 1;// DSXD(电商下单)
+    public static final Integer ORDER_ORDERTYPE_SJXD = 2; // SJXD(手机下单)
+    public static final Integer ORDER_ORDERTYPE_B2B = 3; // B2B接入
+
+    /**
+     * 工单子状态
+     */
+    public static final Integer ORDER_SUBSTATUS_NEW = 0;    //未处理
+    public static final Integer ORDER_SUBSTATUS_PLANNED = 10;    //已派单
+    public static final Integer ORDER_SUBSTATUS_PENDING = 20;    //停滞
+    public static final Integer ORDER_SUBSTATUS_WAITINGPARTS = 30;    //等配件
+    public static final Integer ORDER_SUBSTATUS_APPOINTED = 40;    //已预约
+    public static final Integer ORDER_SUBSTATUS_SERVICED = 50;    //已上门服务
+    public static final Integer ORDER_SUBSTATUS_RETURNNING = 60;//退单申请
+    public static final Integer ORDER_SUBSTATUS_APPCOMPLETED = 70;    //安维在app上完成工单
+    public static final Integer ORDER_SUBSTATUS_FOLLOWUP_FAIL = 75;    //回访失败
+    public static final Integer ORDER_SUBSTATUS_CLOSE = 80;    //工单已客评
+    public static final Integer ORDER_SUBSTATUS_COMPLETED = 80; //工单已完成
+    public static final Integer ORDER_SUBSTATUS_CHARGED = 85;    //工单已入账
+    public static final Integer ORDER_SUBSTATUS_RETURNED = 90;    //工单已退单
+    public static final Integer ORDER_SUBSTATUS_CANCELED = 100;    //工单已取消
+
+    public static final int PENDINGTYPE_WATTINGNOTICE = 1; //停滞类型：等通知
+    public static final Integer PENDINGTYPE_APPOINTED = 3;//停滞类型：预约时间
+    public static final Integer PENDINGTYPE_WAITINGPARTS = 2;//停滞类型：等配件
+    public static final Integer PENDINGTYPE_FOLLOWING = 7;//停滞类型：待跟进
+
+    public static final Integer ORDER_SERVICE_TYPE_INSTALLATION = 1;//安装单
+    public static final Integer ORDER_SERVICE_TYPE_MAINTENANCE = 2;//维修单
+
+    public static final Integer ORDER_DATA_SOURCE_VALUE_KKL = 1; //快可立工单的数据源值
+
+    // Fields
+    private String orderNo = "";// 订单号
+    private Dict dataSource = new Dict("1", "快可立");//数据来源
+    private Dict orderChannel = new Dict("1","线下");//销售渠道
+    private Dict orderType;// 订单类型
+    private Integer totalQty = 0;// 产品数量（下单时）
+    private String verificationCode = "";// 给客户的订单验证码
+    private Integer confirmDoor = 0;// 确认上门标记
+    private Integer serviceTimes = 0;// 累计上门次数
+    private String description = "";// 服务描述
+    private Long b2bOrderId = 0L; //B2B工单ID，2019-9-3
+    private String workCardId = "";//服务单编号
+    private String parentBizOrderId = "";//主交易订单编号
+
+    private String quarter = "";//20171,用于按季度分片，目前采用分库
+
+    private Integer sendUserMessageFlag = 0;//派单时是否向用户发送短信标识
+    private Integer sendEngineerMessageFlag = 0;//派单时是否向安维发送短信标识
+
+    /*
+     * 2018-12-19 该字符改为以json格式存放工单附加信息
+     * 内容如下：预计到货时间
+     */
+    private String orderInfo = "";//将订单基本信息使用json格式存储(包含单头，item)
+    @GsonIgnore
+    private OrderAdditionalInfo orderAdditionalInfo = null;
+
+
+    private String repeateNo = "";//疑似重单单号 2018.01.12
+    private Integer writeOff;//退补标记,0-无,1-有客户退补 2-有厂商退补单 3-有客户及厂商退补单
+    private OrderStatus orderStatus;//订单状态
+    private OrderStatusFlag orderStatusFlag;//工单标记表
+    //订单查询条件
+    private OrderCondition orderCondition;
+    //订单地理信息表 2019-04-24
+    private OrderLocation orderLocation;
+    //订单费用
+    private OrderFee orderFee;
+    // 订单明细
+    private List<OrderItem> items = Lists.newArrayList();
+
+    //包含工单子项的json字符串
+    private String orderItemJson = null; //Add by Zhoucy 2018-6-23
+
+    // 网点费用汇总列表
+    private List<OrderServicePointFee> servicePointFees = Lists.newArrayList();
+
+    @GsonIgnore
+    private List<OrderGrade> gradeList = Lists.newArrayList(); // 评价明细
+
+    @GsonIgnore
+    private List<OrderDetail> detailList = Lists.newArrayList(); // 实际订单明细
+    @GsonIgnore
+    private List<OrderProcessLog> logList = Lists.newArrayList(); // 处理日志明细
+    @GsonIgnore
+    private List<OrderAttachment> attachments = Lists.newArrayList();// 上门拍照产品列表
+
+    //以下是进度跟踪用属性
+    private Date trackingDate; //跟踪日期
+    /**
+     * 添加订单进度跟踪时，是否对客户可见
+     * 默认是0 对客户不可见
+     */
+    private Integer isCustomerSame = 0;
+    /**
+     * 突击单派单时，将派单备注写入进度跟踪，并且不允许客户看到该派单备注，2019-4-18
+     */
+    private Integer crushPlanFlag = 0;
+    private Long oldServicePointId = 0L;
+    @GsonIgnore
+    private List<Product> products = Lists.newArrayList();
+    @GsonIgnore
+    private List<MaterialMaster> materials = Lists.newArrayList();//配件列表
+
+    //end 进度跟踪用属性
+
+    //b2b店铺id
+    private B2bCustomerMap b2bShop;
+
+    @GsonIgnore
+    private Dict complainFormStatus;//投诉单状态
+
+    //app&短信通知内容
+    @GsonIgnore
+    private String appMessage;
+
+    //@GsonIgnore
+    //private double estimatedDistance = 0.0;//上门距离(公里),客服派单使用
+
+    // Constructors
+
+    public Order() {
+    }
+
+    public Order(Long id) {
+        this.id = id;
+    }
+
+    @Length(min = 14, max = 14, message = "订单号长度应为14位")
+    public String getOrderNo() {
+        return orderNo;
+    }
+
+    public void setOrderNo(String orderNo) {
+        this.orderNo = orderNo;
+    }
+
+    @NotNull(message = "订单类型不能为空")
+    public Dict getOrderType() {
+        return orderType;
+    }
+
+    public void setOrderType(Dict orderType) {
+        this.orderType = orderType;
+    }
+
+    @NotNull(message = "数据源不能为空")
+    public Dict getDataSource() {
+        return dataSource;
+    }
+
+    public void setDataSource(Dict dataSource) {
+        this.dataSource = dataSource;
+    }
+
+    //@NotNull(message = "销售渠道不能为空")
+    public Dict getOrderChannel() {
+        return orderChannel;
+    }
+
+    public void setOrderChannel(Dict orderChannel) {
+        this.orderChannel = orderChannel;
+    }
+
+    @Min(value = 1, message = "产品数量必须大于0")
+    public Integer getTotalQty() {
+        return totalQty;
+    }
+
+    public void setTotalQty(Integer totalQty) {
+        this.totalQty = totalQty;
+    }
+
+    @Length(min = 0, max = 6, message = "验证码长度不能超过6")
+    public String getVerificationCode() {
+        return verificationCode;
+    }
+
+    public void setVerificationCode(String verificationCode) {
+        this.verificationCode = verificationCode;
+    }
+
+    @Range(min = 0, max = 1, message = "确认上门标识超出范围")
+    public Integer getConfirmDoor() {
+        return confirmDoor;
+    }
+
+    public void setConfirmDoor(Integer confirmDoor) {
+        this.confirmDoor = confirmDoor;
+    }
+
+    @Min(value = 0, message = "上门次数不能小于0")
+    public Integer getServiceTimes() {
+        return serviceTimes;
+    }
+
+    public void setServiceTimes(Integer serviceTimes) {
+        this.serviceTimes = serviceTimes;
+    }
+
+    @Length(max = 255, message = "服务描述长度不能超过255")
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+//	@Range(min = 0,max = 1,message = "进度跟踪标记超出范围")
+//	public Integer getTrackingFlag() {
+//		return trackingFlag;
+//	}
+//
+//	public void setTrackingFlag(Integer trackingFlag) {
+//		this.trackingFlag = trackingFlag;
+//	}
+
+//	@Range(min = 0,max = 1,message = "手机操作标记超出范围")
+//	public Integer getOperationAppFlag() {
+//		return operationAppFlag;
+//	}
+//
+//	public void setOperationAppFlag(Integer operationAppFlag) {
+//		this.operationAppFlag = operationAppFlag;
+//	}
+
+    public String getOrderInfo() {
+        return orderInfo;
+    }
+
+    public void setOrderInfo(String orderInfo) {
+        this.orderInfo = orderInfo;
+    }
+
+    @NotNull(message = "订单状态不能为空")
+    public OrderStatus getOrderStatus() {
+        return orderStatus;
+    }
+
+    public void setOrderStatus(OrderStatus orderStatus) {
+        this.orderStatus = orderStatus;
+    }
+
+    public OrderStatusFlag getOrderStatusFlag() {
+        return orderStatusFlag;
+    }
+
+    public void setOrderStatusFlag(OrderStatusFlag orderStatusFlag) {
+        this.orderStatusFlag = orderStatusFlag;
+    }
+
+    @NotNull(message = "订单条件不能为空")
+    public OrderCondition getOrderCondition() {
+        return orderCondition;
+    }
+
+    public void setOrderCondition(OrderCondition orderCondition) {
+        this.orderCondition = orderCondition;
+    }
+
+    @NotNull(message = "订单费用不能为空")
+    public OrderFee getOrderFee() {
+        return orderFee;
+    }
+
+    public void setOrderFee(OrderFee orderFee) {
+        this.orderFee = orderFee;
+    }
+
+    @NotNull(message = "订单服务项目不能为空")
+    public List<OrderItem> getItems() {
+        return items;
+    }
+
+    public void setItems(List<OrderItem> items) {
+        this.items = items;
+    }
+
+    public String getOrderItemJson() {
+        return orderItemJson;
+    }
+
+    public void setOrderItemJson(String orderItemJson) {
+        this.orderItemJson = orderItemJson;
+    }
+
+    public List<OrderGrade> getGradeList() {
+        return gradeList;
+    }
+
+    public void setGradeList(List<OrderGrade> gradeList) {
+        this.gradeList = gradeList;
+    }
+
+    public List<OrderDetail> getDetailList() {
+        return detailList;
+    }
+
+    public void setDetailList(List<OrderDetail> detailList) {
+        this.detailList = detailList;
+    }
+
+    public List<OrderProcessLog> getLogList() {
+        return logList;
+    }
+
+    public void setLogList(List<OrderProcessLog> logList) {
+        this.logList = logList;
+    }
+
+    public List<OrderAttachment> getAttachments() {
+        return attachments;
+    }
+
+    public void setAttachments(List<OrderAttachment> attachments) {
+        this.attachments = attachments;
+    }
+
+    public String getQuarter() {
+        return quarter;
+    }
+
+    public void setQuarter(String quarter) {
+        this.quarter = quarter;
+    }
+
+    public OrderLocation getOrderLocation() {
+        return orderLocation;
+    }
+
+    public void setOrderLocation(OrderLocation orderLocation) {
+        this.orderLocation = orderLocation;
+    }
+
+    /**
+     * 插入之前执行方法，需要手动调用
+     */
+    @Override
+    public void preInsert() {
+//        User user = UserUtils.getUser();
+//        if (user.getId() != null) {
+//            if (this.orderCondition != null) {
+//                this.orderCondition.setCreateBy(user);
+//            }
+//        }
+        if (this.orderCondition != null) {
+            this.getOrderCondition().setCreateDate(new Date());
+        }
+    }
+
+    /**
+     * 更新之前执行方法，需要手动调用
+     */
+    @Override
+    public void preUpdate() {
+//        User user = UserUtils.getUser();
+//        if (user.getId() != null) {
+//            if (this.orderCondition != null) {
+//                this.orderCondition.setUpdateBy(user);
+//            }
+//        }
+        if (this.orderCondition != null) {
+            this.orderCondition.setUpdateDate(new Date());
+        }
+    }
+
+
+    //region 订单判断
+
+    /**
+     * 判断客户是否可以取消
+     * 派单前(不含派单)，可取消
+     * 新迎燕、樱雪单，不可取消
+     */
+    @JsonIgnore
+    public boolean canCanceled() {
+        return this.orderCondition.getStatusValue() < Order.ORDER_STATUS_PLANNED
+                && this.getDataSourceId() != B2BDataSourceEnum.XYINGYAN.id
+                && this.getDataSourceId() != B2BDataSourceEnum.INSE.id;
+    }
+
+    /**
+     * 判断业务是否可以取消
+     * 上门前(不含上门)，可取消
+     * 新迎燕、樱雪单，不可取消
+     */
+    @JsonIgnore
+    public boolean canSaleCanceled() {
+        return this.orderCondition.getStatusValue() < Order.ORDER_STATUS_SERVICED
+                && this.getDataSourceId() != B2BDataSourceEnum.XYINGYAN.id
+                && this.getDataSourceId() != B2BDataSourceEnum.INSE.id;
+    }
+
+    /**
+     * 客户是否可以退单 接单后，未完成前，都可退单，上门服务后也可退单 2011/11/28
+     *
+     * @return
+     */
+    @JsonIgnore
+    public boolean canReturn() {
+//		return this.orderCondition.getStatusValue()<=Order.ORDER_STATUS_COMPLETED && this.orderCondition.getStatusValue() >= Order.ORDER_STATUS_ACCEPTED;
+        return this.orderCondition.getStatusValue() < Order.ORDER_STATUS_RETURNING && this.orderCondition.getStatusValue() >= Order.ORDER_STATUS_ACCEPTED;
+    }
+
+    /**
+     * 是否可以设置停滞原因
+     * 派单~完成前(旧)
+     * 接单 ~ 完成(2018/03/23)
+     */
+    @JsonIgnore
+    public boolean canPendingType() {
+        return this.orderCondition.getStatusValue() >= Order.ORDER_STATUS_ACCEPTED && this.orderCondition.getStatusValue() < Order.ORDER_STATUS_RETURNING;
+    }
+
+    /**
+     * 是否可以预约上门时间
+     * 派单~完成前
+     */
+    @JsonIgnore
+    public boolean canAppoint() {
+        return this.orderCondition.getStatusValue() >= Order.ORDER_STATUS_PLANNED && this.orderCondition.getStatusValue() < Order.ORDER_STATUS_RETURNING;
+    }
+
+    /**
+     * 订单是否完成，包含完成、已退单、已取消
+     */
+    @JsonIgnore
+    public boolean isClosed() {
+        return this.orderCondition.getStatusValue() >= Order.ORDER_STATUS_COMPLETED;
+    }
+
+    /**
+     * 是否客户可以修改订单
+     * 客服派单前可修改
+     */
+    @JsonIgnore
+    public boolean canEdit() {
+        return this.orderCondition.getStatusValue() <= Order.ORDER_STATUS_PLANNED;
+    }
+
+    /**
+     * 主账号是否可以审核订单
+     */
+    @JsonIgnore
+    public boolean canApproved() {
+        return this.orderCondition.getStatusValue() <= Order.ORDER_STATUS_NEW;
+    }
+
+    /**
+     * 主账号是否可以审核退单
+     */
+    @JsonIgnore
+    public boolean canApproveReturn() {
+		/*
+		boolean result = false;
+		if(this.orderCondition.getStatusValue() == Order.ORDER_STATUS_RETURNING){
+			result = true;
+		}
+		if(this.orderStatus != null && this.orderStatus.getCancelApproveDate() != null){
+			result = false;
+		}
+		return result;
+		*/
+        return this.orderCondition.getStatusValue() == Order.ORDER_STATUS_RETURNING.intValue();
+    }
+
+    /**
+     * 是否客户可以反馈问题
+     */
+    @JsonIgnore
+    public boolean canFeedback() {
+        // return ! (this.status.equalsIgnoreCase(Order.ORDER_STATUS_NEW)
+        // ||this.status.equalsIgnoreCase(Order.ORDER_STATUS_APPROVED));
+        return true;
+    }
+
+    /**
+     * 是否可以接单 订单状态为Accepted-等待接单 或 订单状态为New-下单，
+     * 但离下单时间已超过设定的时间，视为自动审核 --cancel
+     */
+    @JsonIgnore
+    public boolean canAccept() {
+        return this.orderCondition.getStatusValue() == Order.ORDER_STATUS_APPROVED;
+    }
+
+    /**
+     * 是否可以派单 已派单可重新派单，或已上门服务之后"二"次上门前可重新派单给新安维人员
+     * 订单审核后,还未完成期间都可派单
+     */
+    @JsonIgnore
+    public boolean canPlanOrder() {
+        return this.orderCondition.getStatusValue() >= Order.ORDER_STATUS_APPROVED.intValue() &&
+                this.orderCondition.getStatusValue() < Order.ORDER_STATUS_RETURNING;
+    }
+
+
+    /**
+     * 是否可以上门服务
+     * 1.订单状态：派单，上门
+     * or 2.订单异常(pendingFlag=1)
+     */
+    @JsonIgnore
+    public boolean canService() {
+        return this.orderCondition.getStatusValue() >= Order.ORDER_STATUS_PLANNED.intValue()
+                && this.orderCondition.getStatusValue() <= Order.ORDER_STATUS_SERVICED.intValue()
+                || this.orderCondition.getPendingFlag() == 1;
+    }
+
+    /**
+     * 是否可以评价安维人员 已评价，不允许修改;有上门服务项目才能客评
+     */
+    @JsonIgnore
+    public boolean canGrade() {
+        return this.orderCondition.getStatusValue() == Order.ORDER_STATUS_SERVICED.intValue()
+                && this.orderCondition.getGradeFlag() == 0
+                && this.orderCondition.getServiceTimes() > 0
+                && (this.detailList != null && this.detailList.size() > 0)
+                && this.orderCondition.getAppAbnormalyFlag() != 1;
+    }
+
+    /**
+     * 是否可以录入进度跟踪
+     */
+    @JsonIgnore
+    public boolean canTracking() {
+        return this.orderCondition.getStatusValue() >= Order.ORDER_STATUS_APPROVED.intValue();
+    }
+
+    /**
+     * 是否可以录入用户投诉
+     */
+    @JsonIgnore
+    public boolean canComplain() {
+        return this.orderCondition.getStatusValue() >= Order.ORDER_STATUS_APPROVED.intValue();
+    }
+
+    /**
+     * 订单是否可以回退
+     */
+    @JsonIgnore
+    public boolean canBackApprove() {
+        if (this.orderStatus == null || this.orderCondition == null) {
+            //System.out.println(this.getId());
+            return false;
+        }
+        if (this.orderCondition.getStatusValue() == Order.ORDER_STATUS_PLANNED.intValue()
+                && this.orderCondition.getAppointmentDate() == null
+                && this.orderStatus.getPlanDate() != null
+                && DateUtils.addHour(this.orderStatus.getPlanDate(), 2).getTime() < new Date().getTime()
+        ) {
+            return true;
+        } else {
+            return false;
+        }
+
+    }
+
+    /**
+     * 订单是否可以操作
+     *
+     * @return
+     */
+//    @JsonIgnore
+//    public boolean canAction() {
+//        Integer statusValue = this.orderCondition.getStatusValue();
+//        if (statusValue >= Order.ORDER_STATUS_COMPLETED
+//                || statusValue == Order.ORDER_STATUS_RETURNING
+//                || statusValue == Order.ORDER_STATUS_NEW) {
+//            return false;
+//        }
+//        return true;
+//    }
+
+    /**
+     * 订单处理是否超时
+     */
+    @JsonIgnore
+    public boolean isProcessTimeout(Integer hours) {
+        if (this.orderCondition.getStatusValue() >= Order.ORDER_STATUS_COMPLETED.intValue()) {
+            return false;
+        }
+        if (this.orderStatus == null) {
+            return false;
+        }
+        if (this.orderStatus.getAcceptDate() != null
+                && DateUtils.addHour(this.orderStatus.getAcceptDate(), hours).getTime() < new Date().getTime()) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * 是否30分钟未接单
+     *
+     * @return
+     */
+    @JsonIgnore
+    public boolean isNotAccept(Integer min) {
+        if (this.orderCondition == null || this.orderCondition.getCreateDate() == null) {
+            return false;
+        }
+
+        if (this.orderCondition.getStatusValue() == Order.ORDER_STATUS_APPROVED) {
+            return DateUtils.addMinutes(this.orderCondition.getCreateDate(), min).getTime() < new Date().getTime();
+        } else {
+            return false;
+        }
+
+    }
+
+    public Integer getSendUserMessageFlag() {
+        return sendUserMessageFlag;
+    }
+
+    public void setSendUserMessageFlag(Integer sendUserMessageFlag) {
+        this.sendUserMessageFlag = sendUserMessageFlag;
+    }
+
+    public Integer getSendEngineerMessageFlag() {
+        return sendEngineerMessageFlag;
+    }
+
+    public void setSendEngineerMessageFlag(Integer sendEngineerMessageFlag) {
+        this.sendEngineerMessageFlag = sendEngineerMessageFlag;
+    }
+
+    public Date getTrackingDate() {
+        return trackingDate;
+    }
+
+    public void setTrackingDate(Date trackingDate) {
+        this.trackingDate = trackingDate;
+    }
+
+    public Integer getIsCustomerSame() {
+        return isCustomerSame;
+    }
+
+    public void setIsCustomerSame(Integer isCustomerSame) {
+        this.isCustomerSame = isCustomerSame;
+    }
+
+    public Integer getCrushPlanFlag() {
+        return crushPlanFlag;
+    }
+
+    public void setCrushPlanFlag(Integer crushPlanFlag) {
+        this.crushPlanFlag = crushPlanFlag;
+    }
+
+    public Long getOldServicePointId() {
+        return oldServicePointId;
+    }
+
+    public void setOldServicePointId(Long oldServicePointId) {
+        this.oldServicePointId = oldServicePointId;
+    }
+
+    public List<Product> getProducts() {
+        return products;
+    }
+
+    public void setProducts(List<Product> products) {
+        this.products = products;
+    }
+
+    public List<MaterialMaster> getMaterials() {
+        return materials;
+    }
+
+    public void setMaterials(List<MaterialMaster> materials) {
+        this.materials = materials;
+    }
+
+    public String getRepeateNo() {
+        return repeateNo;
+    }
+
+    public void setRepeateNo(String repeateNo) {
+        this.repeateNo = repeateNo;
+    }
+
+    public Integer getWriteOff() {
+        return writeOff;
+    }
+
+    public void setWriteOff(Integer writeOff) {
+        this.writeOff = writeOff;
+    }
+
+    public Dict getComplainFormStatus() {
+        return complainFormStatus;
+    }
+
+    public void setComplainFormStatus(Dict complainFormStatus) {
+        this.complainFormStatus = complainFormStatus;
+    }
+
+    public List<OrderServicePointFee> getServicePointFees() {
+        return servicePointFees;
+    }
+
+    public String getWorkCardId() {
+        return workCardId;
+    }
+
+    public void setServicePointFees(List<OrderServicePointFee> servicePointFees) {
+        this.servicePointFees = servicePointFees;
+    }
+
+    public void setWorkCardId(String workCardId) {
+        this.workCardId = workCardId;
+    }
+
+    public Long getB2bOrderId() {
+        return b2bOrderId;
+    }
+
+    public void setB2bOrderId(Long b2bOrderId) {
+        this.b2bOrderId = b2bOrderId;
+    }
+
+    public B2bCustomerMap getB2bShop() {
+        return b2bShop;
+    }
+
+    public void setB2bShop(B2bCustomerMap b2bShop) {
+        this.b2bShop = b2bShop;
+    }
+
+    public String getAppMessage() {
+        return appMessage;
+    }
+
+    public void setAppMessage(String appMessage) {
+        this.appMessage = appMessage;
+    }
+
+    public String getParentBizOrderId() {
+        return parentBizOrderId;
+    }
+
+    public void setParentBizOrderId(String parentBizOrderId) {
+        this.parentBizOrderId = parentBizOrderId;
+    }
+
+    public OrderAdditionalInfo getOrderAdditionalInfo() {
+        return orderAdditionalInfo;
+    }
+
+    public void setOrderAdditionalInfo(OrderAdditionalInfo orderAdditionalInfo) {
+        this.orderAdditionalInfo = orderAdditionalInfo;
+    }
+
+    //endregion 订单判断
+
+    /**
+     * 获取时效内容累心
+     */
+    public enum TimeLinessType {
+
+        HOURS(1, "用时"),
+        LEVEL(2, "用时+等级"),
+        ALL(3, "用时+等级+费用");
+
+        public int type;
+        public String name;
+
+        TimeLinessType(int type, String name) {
+            this.type = type;
+            this.name = name;
+        }
+
+    }
+
+    /**
+     * 根据工单子项来检查工单是否是安装单
+     *
+     * @param orderItems
+     * @return
+     */
+    public static boolean isInstallation(List<? extends OrderItem> orderItems) {
+        if (orderItems != null && orderItems.size() > 0) {
+            long qty = orderItems.stream().filter(i -> i.getServiceType() != null && i.getServiceType().getId() != null
+                    && i.getServiceType().getId() != ServiceType.INSTALLATION_SERVICE_TYPE_ID).count();
+            return qty == 0;
+        } else {
+            return false;
+        }
+    }
+
+    public int isTodayForAppointmentDate() {
+        boolean isToday = false;
+        if (getOrderCondition() != null && getOrderCondition().getAppointmentDate() != null
+                && DateUtils.isSameDay(getOrderCondition().getAppointmentDate(), new Date())) {
+            isToday = true;
+        }
+        return isToday ? 1 : 0;
+    }
+
+    /**
+     * 工单改约：改约超时规则： 预约下午17点前（含） ， 当天23点前改约； 预约下午17点以后的， 第二天23点前完成改约。
+     * 没有预约的允许设置预约
+     */
+    public int isAllowedForSetAppointment() {
+        boolean isAllowed = false;
+        if (getOrderCondition() != null && getOrderCondition().getAppointmentDate() != null
+                && getOrderCondition().getPendingType() != null && StringUtils.toInteger(getOrderCondition().getPendingType().getValue()) > 0) {
+            Date now = new Date();
+            Date appointmentDate = getOrderCondition().getAppointmentDate();
+            if (DateUtils.compareTimePart(appointmentDate, DateUtils.getDate(now, 17, 0, 0)) <= 0) {
+                if (now.getTime() < DateUtils.getDate(appointmentDate, 23, 0, 0).getTime()) {
+                    isAllowed = true;
+                }
+            } else {
+                if (now.getTime() < DateUtils.getDate(DateUtils.addDays(appointmentDate, 1), 23, 0, 0).getTime()) {
+                    isAllowed = true;
+                }
+            }
+        } else {
+            isAllowed = true;
+        }
+
+        return isAllowed ? 1 : 0;
+    }
+
+    public int isFollowUpFail(){
+        OrderCondition condition = getOrderCondition();
+        if(condition == null){
+            return 0;
+        }
+        if(condition.getStatusValue()<20 || condition.getStatusValue()>50){
+            return 0;
+        }
+        if(condition.getSubStatus() == Order.ORDER_SUBSTATUS_FOLLOWUP_FAIL){
+            return 1;
+        }
+        return 0;
+    }
+
+    /**
+     * 获取工单的数据源ID
+     */
+    public int getDataSourceId() {
+        int dataSourceId = 0;
+        if (dataSource != null) {
+            dataSourceId = StringUtils.toInteger(dataSource.getValue());
+        }
+        return dataSourceId;
+    }
+
+    public int isServicePointCompleted() {
+        OrderCondition condition = getOrderCondition();
+        if(condition == null){
+            return 0;
+        }
+        if (condition.getSubStatus().equals(Order.ORDER_SUBSTATUS_APPCOMPLETED)) {
+            return 1;
+        }
+        return 0;
+    }
+
+    /**
+     * 工单是否挂起
+     */
+    public int isSuspended() {
+        OrderCondition condition = getOrderCondition();
+        if(condition == null){
+            return 0;
+        }
+        if (condition.getSuspendFlag().equals(OrderSuspendFlagEnum.SUSPENDED.getValue())) {
+            return 1;
+        }
+        return 0;
+    }
+
+    /**
+     * 鉴定挂起
+     */
+    public int isSuspendedForValidate() {
+        if (isSuspended() == 1 && getOrderCondition().getSuspendType().equals(OrderSuspendTypeEnum.VALIDATE.getValue())) {
+            return 1;
+        }
+        return 0;
+    }
+
+}

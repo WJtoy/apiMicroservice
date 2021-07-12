@@ -1,0 +1,57 @@
+package com.wolfking.jeesite.modules.api.entity.fi.mywallet;
+
+import com.wolfking.jeesite.modules.api.entity.common.AppBaseEntity;
+import lombok.Getter;
+import lombok.Setter;
+
+public class AppGetServicePointBalanceResponse extends AppBaseEntity {
+    /**
+     * 网点余额
+     */
+    @Getter
+    @Setter
+    private Double balance = 0.0;
+    /**
+     * 应付总金额（完工金额 - 平台费 - 扣点）
+     */
+    @Getter
+    @Setter
+    private Double payable = 0.0;
+    /**
+     * 实付总金额
+     */
+    @Getter
+    @Setter
+    private Double paid = 0.0;
+    /**
+     * 平台费
+     */
+    @Getter
+    @Setter
+    private Double infoFee = 0.0;
+    /**
+     * 扣点
+     */
+    @Getter
+    @Setter
+    private Double taxFee = 0.0;
+    /**
+     * 完工单金额（包含退补、平台费、扣点）
+     */
+    @Getter
+    @Setter
+    private Double completedCharge = 0.0;
+    /**
+     * 第一笔流水到今天的跨度月份
+     */
+    @Getter
+    @Setter
+    private Integer monthCount = 0;
+    /**
+     * 质保金
+     */
+    @Setter
+    @Getter
+    private Double deposit = 0.0;
+
+}

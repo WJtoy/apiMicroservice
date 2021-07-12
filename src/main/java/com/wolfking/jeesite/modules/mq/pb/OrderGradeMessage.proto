@@ -1,0 +1,57 @@
+syntax="proto3";
+
+//option java_package = "com.wolfking.jeesite.modules.mq.dto";
+option java_outer_classname = "MQOrderGradeMessage";
+import "Common.proto";
+import "OrderProcessLog.proto";
+package com.wolfking.jeesite.modules.mq.dto;
+
+//订单客评消息体
+message OrderGradeMessage {
+
+    //分片
+    string quarter = 1;
+    //ID
+    int64 id = 2;
+    //订单ID
+    int64 orderId = 3;
+    //订单号
+    string orderNo = 4;
+    //网点
+    User servicePoint = 5;
+    //安维
+    User engineer = 6;
+    //自动客评
+    int32 autoGradeFlag = 7;
+    //总评分
+    int32 point = 8;
+    //时效
+    double timeLiness = 9;
+    //createBy
+    User createBy = 10;
+    //createDate
+    int64 createDate = 11;
+    //items
+    repeated GradeItemMessage items = 12;
+
+    //processlog
+    OrderProcessLog processLog = 13;
+    //突击单关闭标志，1:关闭
+    int32 rushCloseFlag = 14;
+}
+
+//Item
+message GradeItemMessage{
+    //评分项目id
+    int64 gradeId = 1;
+    //评分项目
+    string gradeName = 2;
+    //实际评分标准ID
+    int64 gradeItemId = 3;
+    //实际评分标准
+    string gradeItemName = 4;
+    //排序
+    int32 sort = 5;
+    //该评分项目分数
+    int32 point = 6;
+}

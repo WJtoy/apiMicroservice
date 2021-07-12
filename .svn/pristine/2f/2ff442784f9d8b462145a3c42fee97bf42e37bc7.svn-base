@@ -1,0 +1,33 @@
+syntax="proto3";
+
+option java_outer_classname = "MQOrderProcessLog";
+import "Common.proto";
+package com.wolfking.jeesite.modules.mq.dto; //package声明符
+
+//订单处理日志/跟踪进度
+message OrderProcessLog{
+    //分片
+    string quarter = 1;
+    //ID
+    int64 id = 2;
+    //订单ID
+    int64 orderId = 3;
+    //处理方式
+    string action = 4;
+    //处理内容
+    string actionComment = 5;
+    //statusFlag
+    int32 statusFlag = 6;
+    //订单状态
+    string status = 7;
+    //订单状态值
+    int32 statusValue = 8;
+    //关闭标识，1：关闭 2:安维提交的进度跟踪
+    int32 closeFlag = 9;
+    //createBy
+    com.wolfking.jeesite.modules.mq.dto.User createBy = 10;
+    //createDate
+    int64 createDate = 11;
+    //remarks
+    string remarks = 12;
+}

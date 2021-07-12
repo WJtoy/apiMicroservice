@@ -1,0 +1,259 @@
+package com.wolfking.jeesite.ms.providersys.service;
+
+import com.google.common.collect.Lists;
+import com.kkl.kklplus.common.response.MSResponse;
+import com.kkl.kklplus.entity.common.MSPage;
+import com.kkl.kklplus.entity.sys.SysArea;
+import com.wolfking.jeesite.common.utils.GsonUtils;
+import com.wolfking.jeesite.modules.sys.entity.Area;
+import com.wolfking.jeesite.modules.sys.utils.LogUtils;
+import com.wolfking.jeesite.ms.providermd.utils.MDUtils;
+import com.wolfking.jeesite.ms.providersys.feign.MSSysAreaFeign;
+import lombok.extern.slf4j.Slf4j;
+import ma.glasnost.orika.MapperFacade;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.util.ObjectUtils;
+
+import java.util.Comparator;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+@Slf4j
+public class MSSysAreaService {
+
+    @Autowired
+    private MSSysAreaFeign msSysAreaFeign;
+
+    @Autowired
+    MapperFacade mapper;
+
+    public Area getFromCache(Long id) {
+        return MDUtils.getObjNecessaryConvertType(Area.class, ()->msSysAreaFeign.getFromCache(id));
+    }
+
+    /**
+     * 根据id从缓存中获取数据
+     *
+     * @param id
+     * @param type
+     * @return
+    */
+    public Area getFromCache(Long id, Integer type) {
+        return MDUtils.getObjNecessaryConvertType(Area.class, ()->msSysAreaFeign.getFromCache(id, type));
+    }
+
+    /**
+     * 根据区域类型从缓存中获取区域列表
+     *
+     * @param type
+     * @return
+     */
+    public List<Area> findListByTypeFromCache(Integer type) {
+        int pageNo = 0;
+        int pageSize = 499;
+        List<Area>  areaList = Lists.newArrayList();
+
+        while (true) {
+            MSResponse<List<SysArea>> msResponse =  msSysAreaFeign.findListByTypeFromCache(type, pageNo, pageSize);
+            if (MSResponse.isSuccess(msResponse)) {
+                List<SysArea> sysAreaList = msResponse.getData();
+                if (sysAreaList == null || sysAreaList.isEmpty()) {
+                    break;
+                } else {
+                    areaList.addAll(mapper.mapAsList(sysAreaList, Area.class));
+                }
+            } else {
+                break;
+            }
+            pageNo ++;
+        }
+        log.warn("按类型：{} 从缓存中获取的区域数量:{}", type, areaList.size());
+        return areaList;
+    }
+
+    /**
+     * 为网点或师傅获取区域信息
+     *
+     * @param ids
+     * @return
+     */
+    public List<Area> findAreasForServicePointOrEngineer(List<Long> ids) {
+        int pageNo = 1;
+        int pageSize = 200;
+
+        List<Area> areaList = Lists.newArrayList();
+        MSResponse<MSPage<SysArea>> response = msSysAreaFeign.findAreasForServicePointOrEngineer(ids, pageNo, pageSize);
+        if (MSResponse.isSuccess(response)) {
+            MSPage<SysArea> page = response.getData();
+            if (page != null && page.getList() != null && !page.getList().isEmpty()) {
+                List<Area> firstAreaList = mapper.mapAsList(page.getList(), Area.class);
+                if (firstAreaList != null && !firstAreaList.isEmpty()) {
+                    areaList.addAll(firstAreaList);
+                }
+
+                pageNo++;
+                while (pageNo <= page.getPageCount()) {
+                    MSResponse<MSPage<SysArea>> whileResponse = msSysAreaFeign.findAreasForServicePointOrEngineer(ids, pageNo, pageSize);
+                    if (MSResponse.isSuccess(whileResponse)) {
+                        MSPage<SysArea> whilePage = whileResponse.getData();
+                        if (whilePage != null && whilePage.getList() != null && !whilePage.getList().isEmpty()) {
+                            List<Area> whileAreaList = mapper.mapAsList(whilePage.getList(), Area.class);
+                            if (whileAreaList != null && !whileAreaList.isEmpty()) {
+                                areaList.addAll(whileAreaList);
+                            }
+                        }
+                    }
+                    pageNo++;
+                }
+            }
+        } else {
+            return Lists.newArrayList();
+        }
+        return areaList;
+    }
+
+    /**
+     *
+     * @param areaIds
+     * @return id, parent_ids, name, full_name, parent_id
+     */
+    public List<Area> findSpecListByIds(List<Long> areaIds) {
+        if (ObjectUtils.isEmpty(areaIds)) {
+            return Lists.newArrayList();
+        } else {
+            return MDUtils.findListNecessaryConvertType(Area.class, ()->msSysAreaFeign.findSpecListByIds(areaIds));
+        }
+    }
+
+    /**
+     * 地址解析
+     *
+     * @param province 省
+     * @param city     市
+     * @param district 区
+     * @return
+     */
+    public String[] decodeDistrictAddress(String province, String city, String district) {
+        MSResponse<String[]> msResponse = msSysAreaFeign.decodeDistrictAddress(province, city, district);
+        String[] strArray = new String[]{};
+        if (MSResponse.isSuccess(msResponse)) {
+            strArray = msResponse.getData();
+        }
+        return strArray;
+    }
+
+    /**
+     * 地址解析
+     *
+     * @param province 省
+     * @param city     市
+     * @param district 区
+     * @param street   街道
+     * @return
+     */
+    public String[] decodeAddress(String province, String city, String district, String street) {
+        MSResponse<String[]> msResponse = msSysAreaFeign.decodeAddress(province, city, district, street);
+        String[] strArray = new String[]{};
+        if (MSResponse.isSuccess(msResponse)) {
+            strArray = msResponse.getData();
+        }
+        return strArray;
+    }
+
+    // region 数据比较
+    @Deprecated // 此方法为临时方法,用来比较数据用, 不用时请删除 2020-8-7
+    public void compareSingleArea(String param, Area localArea, Area msArea, String methodName) {
+        try {
+            StringBuffer msg = new StringBuffer();
+            if (localArea == null) {
+                msg.append("本地获取区域为空.");
+            }
+            if (msArea == null) {
+                msg.append("从微服务获取的区域为空.");
+            }
+            if (localArea != null && msArea != null && !localArea.getId().equals(1L)) {
+                if (!localArea.getId().equals(msArea.getId()) ||
+                        !localArea.getType().equals(msArea.getType()) ||
+                        !localArea.getCode().equals(msArea.getCode()) ||
+                        !localArea.getName().equals(msArea.getName()) ||
+                        !localArea.getFullName().equals(msArea.getFullName()) ||
+                        !localArea.getParentIds().equals(msArea.getParentIds()) ||
+                        !localArea.getParent().getId().equals(msArea.getParent().getId())
+                ) {
+                    msg.append("数据不相等。");
+                    msg.append("localArea:"+ GsonUtils.toGsonString(localArea));
+                    msg.append("msArea:"+ GsonUtils.toGsonString(msArea));
+                }
+            }
+            if (msg.length() > 0) {
+                msg.append(",输入参数：" + param + ", 方法名称:" + methodName);
+                LogUtils.saveLog("API_区域", methodName, msg.toString(), null, null);
+            }
+        } catch (Exception ex) {
+            LogUtils.saveLog("API_区域", methodName, param, ex, null);
+        }
+    }
+
+    @Deprecated // 此方法为临时方法,用来比较数据用, 不用时请删除 2020-8-7
+    public void compareListArea(String param, List<Area> localAreaList, List<Area> msAreaList, String methodName) {
+        try {
+            StringBuffer msg = new StringBuffer();
+            if (localAreaList == null || localAreaList.isEmpty()) {
+                msg.append("本地获取区域列表为空.");
+                if (msAreaList != null && !msAreaList.isEmpty()) {
+                    List<Long> longList = msAreaList.stream().map(r->r.getId()).collect(Collectors.toList());
+                    msg.append("微服务数据:" + longList.toString());
+                }
+            }
+            if (msAreaList == null || msAreaList.isEmpty()) {
+                msg.append("从微服务获取的区域列表为空.");
+                if (localAreaList != null && !localAreaList.isEmpty()) {
+                    List<Long> longList = localAreaList.stream().map(r->r.getId()).collect(Collectors.toList());
+                    msg.append("本地数据:" + longList.toString());
+                }
+            }
+            if (localAreaList != null && msAreaList != null && !localAreaList.isEmpty() && !msAreaList.isEmpty()) {
+                if (localAreaList.size() != msAreaList.size()) {
+                    msg.append(" 列表长度不相等。本地:"+localAreaList.size()+", MS:"+msAreaList.size());
+                    List<Long> longList = localAreaList.stream().map(r->r.getId()).distinct().sorted(Long::compareTo).collect(Collectors.toList());
+                    List<Long> longList2 = msAreaList.stream().map(r->r.getId()).distinct().sorted(Long::compareTo).collect(Collectors.toList());
+                    msg.append(" 数据差别。本地:"+longList.toString()+", MS:"+longList2.toString());
+                } else {
+                    // 根据id排序
+                    localAreaList = localAreaList.stream().sorted(Comparator.comparing(r->r.getId())).collect(Collectors.toList());
+                    msAreaList = msAreaList.stream().sorted(Comparator.comparing(r->r.getId())).collect(Collectors.toList());
+                    for (int i=0; i< localAreaList.size(); i++) {
+                        Area localArea = localAreaList.get(i);
+                        Area msArea = msAreaList.get(i);
+                        if (!localArea.getId().equals(1L)) {
+                            if (!localArea.getId().equals(msArea.getId()) ||
+                                    !localArea.getType().equals(msArea.getType()) ||
+                                    !localArea.getCode().equals(msArea.getCode()) ||
+                                    !localArea.getName().equals(msArea.getName()) ||
+                                    // !localArea.getSort().equals(msArea.getSort()) ||
+                                    !localArea.getFullName().equals(msArea.getFullName()) ||
+                                    !localArea.getParentIds().equals(msArea.getParentIds()) ||
+                                    !localArea.getParent().getId().equals(msArea.getParent().getId())
+                                // ||!localArea.getParent().getName().equals(msArea.getParent().getName()) //取消比较parentName
+                            ) {
+                                msg.append("id:" + localArea.getId() + " 数据不相等。");
+                                msg.append("localArea:" + GsonUtils.toGsonString(localArea));
+                                msg.append("msArea:" + GsonUtils.toGsonString(msArea));
+                            }
+                        }
+                    }
+                }
+            }
+            if (msg.length() > 0) {
+                msg.append(",输入参数：" + param + ", 方法名称:" + methodName);
+                LogUtils.saveLog("API_区域", methodName, msg.toString(), null, null);
+            }
+        } catch (Exception ex) {
+            LogUtils.saveLog("API_区域", methodName, param, ex, null);
+        }
+    }
+
+    // endregion 数据比较
+}

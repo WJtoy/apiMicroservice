@@ -1,0 +1,1442 @@
+package com.wolfking.jeesite.modules.api.service.sd;
+
+import com.google.common.base.Splitter;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.kkl.kklplus.entity.cc.AbnormalForm;
+import com.kkl.kklplus.entity.md.MDAppFeedbackType;
+import com.kkl.kklplus.entity.sys.SysSMSTypeEnum;
+import com.kkl.kklplus.utils.StringUtils;
+import com.wolfking.jeesite.common.config.WebProperties;
+import com.wolfking.jeesite.common.config.redis.RedisConstant;
+import com.wolfking.jeesite.common.exception.OrderException;
+import com.wolfking.jeesite.common.utils.DateUtils;
+import com.wolfking.jeesite.common.utils.GsonUtils;
+import com.wolfking.jeesite.common.utils.RedisUtilsLocal;
+import com.wolfking.jeesite.modules.api.entity.md.RestLoginUserInfo;
+import com.wolfking.jeesite.modules.api.entity.sd.RestAppFeedback;
+import com.wolfking.jeesite.modules.api.entity.sd.request.RestCloseOrderRequest;
+import com.wolfking.jeesite.modules.api.entity.sd.request.RestSetAppointmentDateRequest;
+import com.wolfking.jeesite.modules.api.util.ErrorCode;
+import com.wolfking.jeesite.modules.api.util.RestResult;
+import com.wolfking.jeesite.modules.api.util.RestResultGenerator;
+import com.wolfking.jeesite.modules.api.util.RestSessionUtils;
+import com.wolfking.jeesite.modules.md.entity.*;
+import com.wolfking.jeesite.modules.md.service.CustomerService;
+import com.wolfking.jeesite.modules.md.service.ProductService;
+import com.wolfking.jeesite.modules.md.service.ServicePointService;
+import com.wolfking.jeesite.modules.mq.conf.NoticeMessageConfig;
+import com.wolfking.jeesite.modules.mq.dto.MQNoticeMessage;
+import com.wolfking.jeesite.modules.mq.dto.MQWebSocketMessage;
+import com.wolfking.jeesite.modules.mq.sender.NoticeMessageSender;
+import com.wolfking.jeesite.modules.mq.sender.sms.SmsMQSender;
+import com.wolfking.jeesite.modules.mq.service.ServicePointOrderBusinessService;
+import com.wolfking.jeesite.modules.sd.entity.*;
+import com.wolfking.jeesite.modules.sd.service.OrderMaterialService;
+import com.wolfking.jeesite.modules.sd.service.OrderOpitionTraceService;
+import com.wolfking.jeesite.modules.sd.service.OrderService;
+import com.wolfking.jeesite.modules.sd.utils.OrderCacheUtils;
+import com.wolfking.jeesite.modules.sd.utils.OrderUtils;
+import com.wolfking.jeesite.modules.sys.entity.Dict;
+import com.wolfking.jeesite.modules.sys.entity.User;
+import com.wolfking.jeesite.modules.sys.utils.LogUtils;
+import com.wolfking.jeesite.modules.sys.utils.UserUtils;
+import com.wolfking.jeesite.ms.cc.service.AbnormalFormService;
+import com.wolfking.jeesite.ms.utils.MSDictUtils;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang.ArrayUtils;
+import org.joda.time.DateTime;
+import org.joda.time.Interval;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.RequestBody;
+
+import javax.servlet.http.HttpServletRequest;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static com.wolfking.jeesite.modules.sd.utils.OrderUtils.ORDER_LOCK_EXPIRED;
+
+/**
+ * @autor Ryan Lu
+ * @date 2018/11/20 2:51 PM
+ */
+@Service
+@Transactional(propagation = Propagation.NOT_SUPPORTED)
+@Slf4j
+public class RestOrderService {
+
+    @Autowired
+    private OrderService orderService;
+
+    @Autowired
+    private RedisUtilsLocal redisUtilsLocal;
+
+    @Autowired
+    private ServicePointService servicePointService;
+
+    @Autowired
+    private CustomerService customerService;
+
+    @Autowired
+    private ProductService productService;
+
+    @Autowired
+    private OrderMaterialService orderMaterialService;
+
+    @Autowired
+    private OrderOpitionTraceService orderOpitionTraceService;
+
+    @Autowired
+    private ServicePointOrderBusinessService servicePointOrderBusinessService;
+
+    @Autowired
+    private SmsMQSender smsMQSender;
+
+    @Autowired
+    private NoticeMessageSender noticeMessageSender;
+
+    @Autowired
+    private AbnormalFormService abnormalFormService;
+
+    //不发短信的数据源设定
+//    @Value("${shortmessage.ignore-data-sources}")
+    private String smIgnoreDataSources;
+
+    @Autowired
+    public void setWebProperties(WebProperties webProperties) {
+        this.smIgnoreDataSources = webProperties.getShortMessage().getIgnoreDataSources();
+    }
+
+    /**
+     * App预约时间
+     * @param request
+     * @param user
+     * @param orderRequest
+     * @return public RestResult<Object> saveAppAppointmentDate(HttpServletRequest request,User user, @RequestBody RestSetAppointmentDateRequest orderRequest){
+    if (orderRequest == null || StringUtils.isBlank(orderRequest.getOrderId()) || StringUtils.isBlank(orderRequest.getQuarter())) {
+    return RestResultGenerator.custom(ErrorCode.WRONG_REQUEST_FORMAT.code, ErrorCode.WRONG_REQUEST_FORMAT.message);
+    }
+    Long orderId = null;
+    try {
+    orderId = Long.valueOf(orderRequest.getOrderId());
+    } catch (Exception e) {
+    return RestResultGenerator.custom(ErrorCode.WRONG_REQUEST_FORMAT.code, ErrorCode.WRONG_REQUEST_FORMAT.message + "：类型错误");
+    }
+    if (orderRequest.getAppointmentDate() == null || orderRequest.getAppointmentDate() <= 0) {
+    return RestResultGenerator.custom(ErrorCode.WRONG_REQUEST_FORMAT.code, "预约日期未设定");
+    }
+    Date date = new Date();
+    Date appointmentDate = new Date(orderRequest.getAppointmentDate());
+    //预约日期在now()-1h ~ now()+48h 范围之外的，必须要设定停滞原因
+    if ((orderRequest.getPendingType() == null || orderRequest.getPendingType() <= 0)
+    && (DateUtils.pastMinutes(DateUtils.addHour(date, -1), appointmentDate) <= 0
+    || DateUtils.pastMinutes(appointmentDate, DateUtils.addHour(date, 48)) <= 0)
+    ) {
+    return RestResultGenerator.custom(ErrorCode.APPOINTED_DATE_ERROR.code, ErrorCode.APPOINTED_DATE_ERROR.message);
+    }
+    Dict pendingType = null;
+
+    //默认：预约日期
+    if (orderRequest.getPendingType() == null || orderRequest.getPendingType() <= 0) {
+    pendingType = MSDictUtils.getDictByValue("3", "PendingType");
+    } else {
+    pendingType = MSDictUtils.getDictByValue(orderRequest.getPendingType().toString(), "PendingType");
+    }
+    if (pendingType == null) {
+    return RestResultGenerator.custom(ErrorCode.NOT_FOUND_PENDINGTYPE.code, ErrorCode.NOT_FOUND_PENDINGTYPE.message);
+    }
+    int pendingTypeId = pendingType.getIntValue();
+    long userId = 0;
+    try {
+    if(user == null) {
+    RestLoginUserInfo userInfo = RestSessionUtils.getLoginUserInfoFromRestSession(request.getAttribute("sessionUserId").toString());
+    if (userInfo == null || userInfo.getUserId() == null) {
+    return RestResultGenerator.custom(ErrorCode.LOGIN_INFO_MISSING.code, ErrorCode.LOGIN_INFO_MISSING.message);
+    }
+    userId = userInfo.getUserId();
+    user = UserUtils.getAcount(userId);
+    if (user == null) {
+    return RestResultGenerator.custom(ErrorCode.LOGIN_INFO_MISSING.code, ErrorCode.LOGIN_INFO_MISSING.message);
+    }
+    }else{
+    userId = user.getId();
+    }
+
+    Order order = orderService.getOrderById(orderId, orderRequest.getQuarter(), OrderUtils.OrderDataLevel.CONDITION, true);
+    if (order == null || order.getOrderCondition() == null) {
+    return RestResultGenerator.custom(ErrorCode.DATA_PROCESS_ERROR.code, "读取订单:" + ErrorCode.DATA_PROCESS_ERROR.message);
+    }
+    //检查状态
+    RestResult<Object> restResult = checkOrderStatus(order);
+    if(restResult.getCode() != ErrorCode.NO_ERROR.code){
+    return restResult;
+    }
+    //若当前预约时间与前一次预约时间一样，则不需要通知B2B
+    OrderCondition condition = order.getOrderCondition();
+    if(condition.getServicePoint() == null || StringUtils.toLong(condition.getServicePoint().getId()) <= 0
+    || condition.getEngineer() == null || StringUtils.toLong(condition.getEngineer().getId()) <= 0  ){
+    return RestResultGenerator.custom(ErrorCode.MEMBER_ENGINEER_NO_EXSIT.code, "读取网点及师傅信息失败");
+    }
+    //Engineer engineer = servicePointService.getEngineerFromCache(userInfo.getServicePointId(), userInfo.getEngineerId());
+    Engineer engineer = servicePointService.getEngineerFromCache(condition.getServicePoint().getId(), condition.getEngineer().getId());
+    if (null == engineer) {
+    return RestResultGenerator.custom(ErrorCode.MEMBER_ENGINEER_NO_EXSIT.code, "读取师傅信息失败");
+    }
+
+    boolean isNeedSendToB2B = true;
+    if (condition.getAppointmentDate() != null && condition.getAppointmentDate().getTime() == appointmentDate.getTime()) {
+    isNeedSendToB2B = false;
+    }
+
+    StringBuffer sbAppointDate = new StringBuffer();
+    Calendar calendar = Calendar.getInstance();
+    calendar.setTimeInMillis(appointmentDate.getTime());
+    sbAppointDate
+    .append(calendar.get(Calendar.MONTH) + 1).append("月")
+    .append(calendar.get(Calendar.DAY_OF_MONTH)).append("日");
+    int hour = calendar.get(Calendar.HOUR_OF_DAY);
+    if (hour < 13) {
+    sbAppointDate.append(" 上午");
+    } else if (hour < 18) {
+    sbAppointDate.append(" 下午");
+    } else {
+    sbAppointDate.append(" 晚上");
+    }
+
+    StringBuilder cmmt = new StringBuilder();
+    cmmt.append("安维预约上门:")
+    .append(sbAppointDate.toString())
+    .append(",")
+    .append(pendingType.getLabel());
+
+    //save
+    OrderCondition orderCondition = new OrderCondition();
+    orderCondition.setOrderId(orderId);
+    orderCondition.setQuarter(orderRequest.getQuarter());
+    orderCondition.setAppointmentDate(appointmentDate);
+    orderCondition.setPendingTypeDate(date);
+    orderCondition.setPendingType(pendingType);
+    orderCondition.setCreateBy(user);
+    orderCondition.setRemarks(cmmt.toString());
+    orderCondition.setStatus(order.getOrderCondition().getStatus());//*
+    orderCondition.setServicePoint(order.getOrderCondition().getServicePoint());
+    orderCondition.setEngineer(order.getOrderCondition().getEngineer());
+    orderCondition.setCustomer(order.getOrderCondition().getCustomer());
+    Order o = new Order();
+    o.setDataSource(order.getDataSource());
+    o.setWorkCardId(order.getWorkCardId());
+    o.setOrderCondition(orderCondition);
+    o.setOrderNo(order.getOrderNo());
+    o.setId(order.getId());
+    o.setB2bOrderId(order.getB2bOrderId());
+    orderService.appPendingOrder(o, isNeedSendToB2B);
+
+    //短信
+    //预约日期&等通知，不发短信
+    if(pendingTypeId == 0 || pendingTypeId == Order.PENDINGTYPE_APPOINTED.intValue() || pendingTypeId == 1){
+    return RestResultGenerator.success();
+    }
+    //检查客户短信发送开关，1:才发送 2020-01-06
+    Customer customer = null;
+    try {
+    customer = customerService.getFromCache(order.getOrderCondition().getCustomer().getId());
+    } catch (Exception e) {
+    log.error("[saveAppAppointmentDate] get customer null ,orderId:{} ,userId:{} ,customerId:{}", order.getId(), userId, order.getOrderCondition().getCustomer().getId(), e);
+    }
+    //发送短信 1.未取道客户信息 2.取道，且短信发送标记为：1
+    //未在配置中：shortmessage.ignore-data-sources  //2018-12-05
+    List<String> ignoreDataSources = StringUtils.isBlank(smIgnoreDataSources)? Lists.newArrayList() : Splitter.on(",").trimResults().splitToList(smIgnoreDataSources);
+    if (!ignoreDataSources.contains(order.getDataSource().getValue()) && (customer == null || (customer != null && customer.getShortMessageFlag() == 1))) {
+    StringBuffer strContent = new StringBuffer();
+    strContent.append("您的售后工单,");
+    strContent.append("将由");
+    strContent.append(engineer.getName().substring(0, 1) + "师傅 ")
+    .append(engineer.getContactInfo())
+    .append("上门服务");
+    strContent.append(",预约时间为" + sbAppointDate.toString());
+    strContent.append(",如有疑问,请致电客服");
+    // 使用新的短信发送方法 2019/02/28
+    smsMQSender.sendNew(condition.getServicePhone(), strContent.toString(), "", user.getId(), date.getTime(), SysSMSTypeEnum.ORDER_PENDING_APP);
+    }
+    return RestResultGenerator.success();
+    } catch (OrderException oe) {
+    return RestResultGenerator.exception(oe.getMessage());
+    } catch (Exception e) {
+    try {
+    String gson = GsonUtils.toGsonString(orderRequest);
+    log.error("[saveAppAppointmentDate] user:{} ,json:{}", userId, gson, e);
+    LogUtils.saveLog(
+    request,
+    null,
+    e,
+    "Rest预约时间",
+    "POST",
+    gson,
+    new User(userId)
+    );
+    } catch (Exception e1) {
+    log.error("[saveAppAppointmentDate] user:{}", userId, e);
+    }
+    return RestResultGenerator.exception("保存预约时间错误");
+    }
+    }
+     */
+
+    /**
+     * App预约时间
+     *
+     * @param request
+     * @param user
+     * @param orderRequest
+     * @return
+     */
+    public RestResult<Object> saveAppAppointmentDate(HttpServletRequest request, User user, @RequestBody RestSetAppointmentDateRequest orderRequest) {
+        if (orderRequest == null || StringUtils.isBlank(orderRequest.getOrderId()) || StringUtils.isBlank(orderRequest.getQuarter())) {
+            return RestResultGenerator.custom(ErrorCode.WRONG_REQUEST_FORMAT.code, ErrorCode.WRONG_REQUEST_FORMAT.message);
+        }
+        Long orderId = null;
+        try {
+            orderId = Long.valueOf(orderRequest.getOrderId());
+        } catch (Exception e) {
+            return RestResultGenerator.custom(ErrorCode.WRONG_REQUEST_FORMAT.code, ErrorCode.WRONG_REQUEST_FORMAT.message + "：类型错误");
+        }
+        if (orderRequest.getAppointmentDate() == null || orderRequest.getAppointmentDate() <= 0) {
+            return RestResultGenerator.custom(ErrorCode.WRONG_REQUEST_FORMAT.code, "预约日期未设定");
+        }
+        DateTime date = new DateTime();
+        DateTime appointmentDate = new DateTime(orderRequest.getAppointmentDate());
+        //预约日期在now()-1h ~ now()+48h 范围之外的，必须要设定停滞原因
+        Interval interval = new Interval(date.minusHours(1), date.plusHours(48));
+        if ((orderRequest.getPendingType() == null || orderRequest.getPendingType() <= 0)
+                && interval.contains(appointmentDate)) {
+            return RestResultGenerator.custom(ErrorCode.APPOINTED_DATE_ERROR.code, ErrorCode.APPOINTED_DATE_ERROR.message);
+        }
+        if (appointmentDate.getHourOfDay() == 17) {
+            appointmentDate = appointmentDate.minusHours(1);
+        }
+        Dict pendingType = null;
+
+        //默认：预约日期
+        if (orderRequest.getPendingType() == null || orderRequest.getPendingType() <= 0) {
+            pendingType = MSDictUtils.getDictByValue("3", "PendingType");
+        } else {
+            pendingType = MSDictUtils.getDictByValue(orderRequest.getPendingType().toString(), "PendingType");
+        }
+        if (pendingType == null) {
+            return RestResultGenerator.custom(ErrorCode.NOT_FOUND_PENDINGTYPE.code, ErrorCode.NOT_FOUND_PENDINGTYPE.message);
+        }
+        int pendingTypeId = pendingType.getIntValue();
+        long userId = 0;
+        try {
+            if (user == null) {
+                RestLoginUserInfo userInfo = RestSessionUtils.getLoginUserInfoFromRestSession(request.getAttribute("sessionUserId").toString());
+                if (userInfo == null || userInfo.getUserId() == null) {
+                    return RestResultGenerator.custom(ErrorCode.LOGIN_INFO_MISSING.code, ErrorCode.LOGIN_INFO_MISSING.message);
+                }
+                userId = userInfo.getUserId();
+                user = UserUtils.getAcount(userId);
+                if (user == null) {
+                    return RestResultGenerator.custom(ErrorCode.LOGIN_INFO_MISSING.code, ErrorCode.LOGIN_INFO_MISSING.message);
+                }
+            } else {
+                userId = user.getId();
+            }
+
+            Order order = orderService.getOrderById(orderId, orderRequest.getQuarter(), OrderUtils.OrderDataLevel.CONDITION, true);
+            if (order == null || order.getOrderCondition() == null) {
+                return RestResultGenerator.custom(ErrorCode.DATA_PROCESS_ERROR.code, "读取订单:" + ErrorCode.DATA_PROCESS_ERROR.message);
+            }
+            //检查状态
+            RestResult<Object> restResult = checkOrderStatus(order);
+            if (restResult.getCode() != ErrorCode.NO_ERROR.code) {
+                return restResult;
+            }
+            //若当前预约时间与前一次预约时间一样，则不需要通知B2B
+            OrderCondition condition = order.getOrderCondition();
+            if (condition.getServicePoint() == null || StringUtils.toLong(condition.getServicePoint().getId()) <= 0
+                    || condition.getEngineer() == null || StringUtils.toLong(condition.getEngineer().getId()) <= 0) {
+                return RestResultGenerator.custom(ErrorCode.MEMBER_ENGINEER_NO_EXSIT.code, "读取网点及师傅信息失败");
+            }
+            //Engineer engineer = servicePointService.getEngineerFromCache(userInfo.getServicePointId(), userInfo.getEngineerId());
+            Engineer engineer = servicePointService.getEngineerFromCache(condition.getServicePoint().getId(), condition.getEngineer().getId());
+            if (null == engineer) {
+                return RestResultGenerator.custom(ErrorCode.MEMBER_ENGINEER_NO_EXSIT.code, "读取师傅信息失败");
+            }
+
+            boolean isNeedSendToB2B = true;
+            if (condition.getAppointmentDate() != null && condition.getAppointmentDate().getTime() == appointmentDate.getMillis()) {
+                isNeedSendToB2B = false;
+            }
+
+            StringBuffer sbAppointDate = new StringBuffer();
+            sbAppointDate.append(appointmentDate.toString("M月d日", Locale.CHINESE));
+            int hour = appointmentDate.getHourOfDay();
+            if (hour < 13) {
+                sbAppointDate.append(" 上午");
+            } else if (hour < 18) {
+                sbAppointDate.append(" 下午");
+            } else {
+                sbAppointDate.append(" 晚上");
+            }
+
+            StringBuilder cmmt = new StringBuilder();
+            cmmt.append("安维预约上门:")
+                    .append(sbAppointDate.toString())
+                    .append(",")
+                    .append(pendingType.getLabel());
+
+            //save
+            OrderCondition orderCondition = new OrderCondition();
+            orderCondition.setOrderId(orderId);
+            orderCondition.setQuarter(orderRequest.getQuarter());
+            orderCondition.setAppointmentDate(appointmentDate.toDate());
+            orderCondition.setPendingTypeDate(date.toDate());
+            orderCondition.setPendingType(pendingType);
+            orderCondition.setCreateBy(user);
+            orderCondition.setRemarks(cmmt.toString());
+            orderCondition.setStatus(order.getOrderCondition().getStatus());//*
+            orderCondition.setServicePoint(order.getOrderCondition().getServicePoint());
+            orderCondition.setEngineer(order.getOrderCondition().getEngineer());
+            orderCondition.setCustomer(order.getOrderCondition().getCustomer());
+            Order o = new Order();
+            o.setDataSource(order.getDataSource());
+            o.setWorkCardId(order.getWorkCardId());
+            o.setOrderCondition(orderCondition);
+            o.setOrderNo(order.getOrderNo());
+            o.setId(order.getId());
+            o.setB2bOrderId(order.getB2bOrderId());
+            orderService.appPendingOrder(o, isNeedSendToB2B);
+
+            //短信
+            //预约日期&等通知，不发短信
+            if (pendingTypeId == 0 || pendingTypeId == Order.PENDINGTYPE_APPOINTED.intValue() || pendingTypeId == 1) {
+                return RestResultGenerator.success();
+            }
+            //检查客户短信发送开关，1:才发送 2020-01-06
+            Customer customer = null;
+            try {
+                customer = customerService.getFromCache(order.getOrderCondition().getCustomer().getId());
+            } catch (Exception e) {
+                log.error("[saveAppAppointmentDate] get customer null ,orderId:{} ,userId:{} ,customerId:{}", order.getId(), userId, order.getOrderCondition().getCustomer().getId(), e);
+            }
+//            //发送短信 1.未取道客户信息 2.取道，且短信发送标记为：1
+//            //未在配置中：shortmessage.ignore-data-sources  //2018-12-05
+//            List<String> ignoreDataSources = StringUtils.isBlank(smIgnoreDataSources) ? Lists.newArrayList() : Splitter.on(",").trimResults().splitToList(smIgnoreDataSources);
+//            if (!ignoreDataSources.contains(order.getDataSource().getValue()) && (customer == null || (customer != null && customer.getShortMessageFlag() == 1))) {
+//                StringBuffer strContent = new StringBuffer();
+//                strContent.append("您的售后工单,");
+//                strContent.append("将由");
+//                strContent.append(engineer.getName().substring(0, 1) + "师傅 ")
+//                        .append(engineer.getContactInfo())
+//                        .append("上门服务");
+//                strContent.append(",预约时间为" + sbAppointDate.toString());
+//                strContent.append(",如有疑问,请致电客服");
+//                // 使用新的短信发送方法 2019/02/28
+//                smsMQSender.sendNew(condition.getServicePhone(), strContent.toString(), "", user.getId(), date.getMillis(), SysSMSTypeEnum.ORDER_PENDING_APP);
+//                strContent.setLength(0);
+//            }
+            //短信 原代码提炼为方法
+            sendAppPendingSMS(order.getDataSource().getIntValue(), pendingType.getIntValue(), orderCondition.getServicePhone(), userId, (new Date().getTime()));
+//            ignoreDataSources.clear();
+            sbAppointDate.setLength(0);
+
+            return RestResultGenerator.success();
+        } catch (OrderException oe) {
+            return RestResultGenerator.exception(oe.getMessage());
+        } catch (Exception e) {
+            try {
+                String gson = GsonUtils.toGsonString(orderRequest);
+                log.error("[saveAppAppointmentDate] user:{} ,json:{}", userId, gson, e);
+                LogUtils.saveLog(
+                        request,
+                        null,
+                        e,
+                        "Rest预约时间",
+                        "POST",
+                        gson,
+                        new User(userId)
+                );
+            } catch (Exception e1) {
+                log.error("[saveAppAppointmentDate] user:{}", userId, e);
+            }
+            return RestResultGenerator.exception("保存预约时间错误");
+        }
+    }
+
+    /**
+     * 网点设置停滞原因
+     *
+     * @param request
+     * @param user         当前账号信息（Web调用时传入）
+     * @param orderRequest
+     * @return
+     */
+    public RestResult<Object> saveAppPengding(HttpServletRequest request, User user, RestSetAppointmentDateRequest orderRequest) {
+        if (orderRequest == null || StringUtils.isBlank(orderRequest.getOrderId()) || StringUtils.isBlank(orderRequest.getQuarter())) {
+            return RestResultGenerator.custom(ErrorCode.WRONG_REQUEST_FORMAT.code, ErrorCode.WRONG_REQUEST_FORMAT.message);
+        }
+        if (orderRequest.getPendingType() == null || orderRequest.getPendingType() <= 0) {
+            return RestResultGenerator.custom(ErrorCode.WRONG_REQUEST_FORMAT.code, "请选择停滞原因");
+        }
+        if (orderRequest.getAppointmentDate() == null || orderRequest.getAppointmentDate() <= 0) {
+            return RestResultGenerator.custom(ErrorCode.WRONG_REQUEST_FORMAT.code, "日期未设定");
+        }
+        Long orderId = null;
+        try {
+            orderId = Long.valueOf(orderRequest.getOrderId());
+        } catch (Exception e) {
+            return RestResultGenerator.custom(ErrorCode.WRONG_REQUEST_FORMAT.code, ErrorCode.WRONG_REQUEST_FORMAT.message + "：类型错误");
+        }
+        if (orderRequest.getAppointmentDate() == null || orderRequest.getAppointmentDate() <= 0) {
+            return RestResultGenerator.custom(ErrorCode.WRONG_REQUEST_FORMAT.code, "预约日期未设定");
+        }
+        Date date = new Date();
+        Date appointmentDate = new Date(orderRequest.getAppointmentDate());
+        if (DateUtils.pastMinutes(DateUtils.addHour(date, -1), appointmentDate) <= 0) {
+            return RestResultGenerator.custom(ErrorCode.WRONG_REQUEST_FORMAT.code, "预约日期应在现在之后");
+        }
+        Dict pendingType = null;
+        //默认：预约日期
+        //切换为微服务
+        pendingType = MSDictUtils.getDictByValue(orderRequest.getPendingType().toString(), "PendingType");
+        if (pendingType == null) {
+            return RestResultGenerator.custom(ErrorCode.NOT_FOUND_PENDINGTYPE.code, ErrorCode.NOT_FOUND_PENDINGTYPE.message);
+        }
+        long userId = 0;
+        Engineer engineer = null;
+        try {
+            if (user == null) {
+                RestLoginUserInfo userInfo = RestSessionUtils.getLoginUserInfoFromRestSession(request.getAttribute("sessionUserId").toString());
+                if (userInfo == null || userInfo.getUserId() == null) {
+                    return RestResultGenerator.custom(ErrorCode.LOGIN_INFO_MISSING.code, ErrorCode.LOGIN_INFO_MISSING.message);
+                }
+                userId = userInfo.getUserId();
+                user = UserUtils.getAcount(userId);
+                if (user == null) {
+                    return RestResultGenerator.custom(ErrorCode.LOGIN_INFO_MISSING.code, ErrorCode.LOGIN_INFO_MISSING.message);
+                }
+            }
+            userId = user.getId();
+            Order order = orderService.getOrderById(orderId, orderRequest.getQuarter(), OrderUtils.OrderDataLevel.CONDITION, true);
+            if (order == null || order.getOrderCondition() == null) {
+                return RestResultGenerator.custom(ErrorCode.DATA_PROCESS_ERROR.code, "读取订单:" + ErrorCode.DATA_PROCESS_ERROR.message);
+            }
+
+            //若当前预约时间与前一次预约时间一样，则不需要通知B2B
+            OrderCondition condition = order.getOrderCondition();
+            if (condition.getServicePoint() == null || condition.getEngineer() == null) {
+                return RestResultGenerator.custom(ErrorCode.MEMBER_ENGINEER_NO_EXSIT.code, "读取师傅信息失败");
+            }
+            engineer = servicePointService.getEngineerFromCache(condition.getServicePoint().getId(), condition.getEngineer().getId());
+            if (null == engineer) {
+                return RestResultGenerator.custom(ErrorCode.MEMBER_ENGINEER_NO_EXSIT.code, "读取师傅信息失败");
+            }
+
+            boolean isNeedSendToB2B = true;
+            if (condition.getAppointmentDate() != null && condition.getAppointmentDate().getTime() == appointmentDate.getTime()) {
+                isNeedSendToB2B = false;
+            }
+
+            StringBuffer sbAppointDate = new StringBuffer();
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTimeInMillis(appointmentDate.getTime());
+            sbAppointDate
+                    .append(calendar.get(Calendar.MONTH) + 1).append("月")
+                    .append(calendar.get(Calendar.DAY_OF_MONTH)).append("日");
+            int hour = calendar.get(Calendar.HOUR_OF_DAY);
+            if (hour < 13) {
+                sbAppointDate.append(" 上午");
+            } else if (hour < 18) {
+                sbAppointDate.append(" 下午");
+            } else {
+                sbAppointDate.append(" 晚上");
+            }
+
+            StringBuilder cmmt = new StringBuilder();
+            cmmt.append("安维预约上门:")
+                    .append(sbAppointDate.toString())
+                    .append(",")
+                    .append(pendingType.getLabel());
+
+            //save d
+            OrderCondition orderCondition = new OrderCondition();
+            orderCondition.setOrderId(orderId);
+            orderCondition.setQuarter(orderRequest.getQuarter());
+            orderCondition.setAppointmentDate(appointmentDate);
+            orderCondition.setPendingType(pendingType);
+            orderCondition.setCreateBy(user);
+            orderCondition.setPendingTypeDate(date);
+            orderCondition.setStatus(order.getOrderCondition().getStatus());//*
+            orderCondition.setRemarks(cmmt.toString());
+            orderCondition.setServicePoint(order.getOrderCondition().getServicePoint());
+            orderCondition.setEngineer(order.getOrderCondition().getEngineer());
+            orderCondition.setCustomer(order.getOrderCondition().getCustomer());
+            Order o = new Order();
+            o.setDataSource(order.getDataSource());
+            o.setWorkCardId(order.getWorkCardId());
+            o.setOrderCondition(orderCondition);
+            o.setOrderNo(order.getOrderNo());
+            o.setId(order.getId());
+            o.setB2bOrderId(order.getB2bOrderId());
+            orderService.appPendingOrder(o, isNeedSendToB2B);
+            //短信 原代码提炼为方法
+            sendAppPendingSMS(order.getDataSource().getIntValue(), pendingType.getIntValue(), orderCondition.getServicePhone(), userId, date.getTime());
+            return RestResultGenerator.success();
+        } catch (OrderException oe) {
+            return RestResultGenerator.exception(oe.getMessage());
+        } catch (Exception e) {
+            try {
+                String gson = GsonUtils.toGsonString(orderRequest);
+                log.error("[saveAppPengding] user:{} ,json:{}", userId, gson, e);
+                LogUtils.saveLog(
+                        request,
+                        null,
+                        e,
+                        "Rest停滞原因",
+                        "POST",
+                        gson,
+                        new User(userId)
+                );
+            } catch (Exception e1) {
+                log.error("[saveAppPengding] user:{}", userId, e);
+            }
+            return RestResultGenerator.exception("保存停滞原因错误");
+        }
+    }
+
+
+    /**
+     * 网点设置停滞原因 (新版本 v2)
+     *
+     * @param request
+     * @param restAppFeedback
+     * @param user            当前账号信息
+     * @return
+     */
+    @Transactional(readOnly = false)
+    public RestResult<Object> saveAppPengdingV2(HttpServletRequest request, RestAppFeedback restAppFeedback, User user) throws RuntimeException {
+        if (user == null) {
+            return RestResultGenerator.custom(ErrorCode.LOGIN_INFO_MISSING.code, ErrorCode.LOGIN_INFO_MISSING.message);
+        }
+        long userId = user.getId();
+        Engineer engineer = null;
+        Order order = restAppFeedback.getOrder();
+        OrderCondition condition = order.getOrderCondition();
+        try {
+            //若当前预约时间与前一次预约时间一样，则不需要通知B2B
+            boolean isNeedSendToB2B = true;
+            if (condition.getAppointmentDate() != null && condition.getAppointmentDate().getTime() == restAppFeedback.getAppointmentAt()) {
+                isNeedSendToB2B = false;
+            }
+
+            StringBuffer sbAppointDate = new StringBuffer();
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTimeInMillis(restAppFeedback.getAppointmentAt());
+            sbAppointDate
+                    .append(calendar.get(Calendar.MONTH) + 1).append("月")
+                    .append(calendar.get(Calendar.DAY_OF_MONTH)).append("日");
+            int hour = calendar.get(Calendar.HOUR_OF_DAY);
+            if (hour < 13) {
+                sbAppointDate.append(" 上午");
+            } else if (hour < 18) {
+                sbAppointDate.append(" 下午");
+            } else {
+                sbAppointDate.append(" 晚上");
+            }
+            OrderOpitionTrace orderOpitionTrace = restAppFeedback.getOrderOpitionTrace();
+            StringBuilder cmmt = new StringBuilder();
+            MDAppFeedbackType parent = orderOpitionTrace.getParent();
+            //已联系【13200000000】，师傅反馈【货未到等用户通知】，下次预约时间【1月1日 8：00】，工单描述【用户说等货到了再联系】
+            cmmt.append("已联系【")
+                    .append(condition.getServicePhone())
+                    .append("】，师傅反馈【")
+                    .append(orderOpitionTrace.getOpinionLabel())
+                    .append("】，下次预约时间【")
+                    .append(sbAppointDate.toString())
+                    .append("】");
+            if (StringUtils.isNotBlank(orderOpitionTrace.getRemark())) {
+                cmmt.append("，工单描述【").append(orderOpitionTrace.getRemark().trim()).append("】");
+            }
+            /*
+            cmmt.append("安维预约上门:")
+                    .append(sbAppointDate.toString())
+                    .append(",")
+                    .append(restAppFeedback.getPendingType().getLabel());
+            */
+            Date apppointDate = new DateTime(restAppFeedback.getAppointmentAt()).toDate();
+            Date date = new Date();
+            OrderCondition orderCondition = new OrderCondition();
+            orderCondition.setOrderId(restAppFeedback.getOrderId());
+            orderCondition.setQuarter(restAppFeedback.getQuarter());
+            orderCondition.setAppointmentDate(apppointDate);
+            orderCondition.setPendingType(restAppFeedback.getPendingType());
+            orderCondition.setCreateBy(user);
+            orderCondition.setPendingTypeDate(date);
+            orderCondition.setStatus(condition.getStatus());//*
+            orderCondition.setRemarks(cmmt.toString());//orderService.appPendingOrder中做了截取处理
+            cmmt.setLength(0);
+            orderCondition.setServicePoint(condition.getServicePoint());
+            orderCondition.setEngineer(condition.getEngineer());
+            orderCondition.setCustomer(condition.getCustomer());
+            orderCondition.setAppAbnormalyFlag(orderOpitionTrace.getIsAbnormaly());
+            Order o = new Order();
+            o.setDataSource(restAppFeedback.getOrder().getDataSource());
+            o.setWorkCardId(order.getWorkCardId());
+            o.setOrderCondition(orderCondition);
+            o.setOrderNo(order.getOrderNo());
+            o.setId(order.getId());
+            o.setB2bOrderId(order.getB2bOrderId());
+
+            orderService.appPendingOrder(o, isNeedSendToB2B);
+            //反馈记录
+            orderOpitionTraceService.insert(orderOpitionTrace);
+            //短信
+            sendAppPendingSMS(order.getDataSource().getIntValue(), restAppFeedback.getPendingType().getIntValue(), orderCondition.getServicePhone(), userId, date.getTime());
+            //异常单
+            AbnormalForm abnormalForm = restAppFeedback.getAbnormalForm();
+            if (abnormalForm != null) {
+                abnormalForm.setOpinionLogId(orderOpitionTrace.getId());
+                try {
+                    abnormalFormService.save(abnormalForm);
+                } catch (Exception e) {
+                    log.error("[RestOrderService.saveAppPengdingV2]保存异常单失败 from:{}", GsonUtils.getInstance().toGson(abnormalForm), e);
+                }
+            }
+            return RestResultGenerator.success();
+        } catch (OrderException oe) {
+            throw oe;
+            //return RestResultGenerator.exception(oe.getMessage());
+        } catch (Exception e) {
+            try {
+                String gson = GsonUtils.toGsonString(restAppFeedback);
+                log.error("[saveAppPengding] user:{} ,json:{}", userId, gson, e);
+                LogUtils.saveLog(
+                        request,
+                        null,
+                        e,
+                        "Rest停滞原因",
+                        "POST",
+                        gson,
+                        new User(userId)
+                );
+            } catch (Exception e1) {
+                log.error("[saveAppPengding] user:{}", userId, e);
+            }
+            //return RestResultGenerator.exception("保存停滞原因错误");
+            throw new RuntimeException(e.getMessage());
+        }
+    }
+
+    /**
+     * 标记app异常
+     */
+    @Transactional(readOnly = false)
+    public RestResult<Object> saveAppAbnormalyV2(RestAppFeedback restAppFeedback, User user) throws RuntimeException {
+        if (user == null) {
+            return RestResultGenerator.custom(ErrorCode.LOGIN_INFO_MISSING.code, ErrorCode.LOGIN_INFO_MISSING.message);
+        }
+        long userId = user.getId();
+        Order order = restAppFeedback.getOrder();
+        OrderCondition condition = order.getOrderCondition();
+
+        String lockkey = null;
+        Boolean locked = false;
+        Date date = new Date();
+        OrderOpitionTrace orderOpitionTrace = restAppFeedback.getOrderOpitionTrace();
+        try {
+            long orderId = order.getId();
+            lockkey = String.format(RedisConstant.SD_ORDER_LOCK, orderId);
+            //获得锁
+            locked = redisUtilsLocal.setNX(RedisConstant.RedisDBType.REDIS_LOCK_DB, lockkey, 1, ORDER_LOCK_EXPIRED);//60秒
+            if (!locked) {
+                return RestResultGenerator.custom(ErrorCode.ORDER_REDIS_LOCKED.code, "此订单正在处理中，请稍候重试");
+            }
+            Integer orgAppAbnormalyFlag = condition.getAppAbnormalyFlag();
+            //标记异常
+            if (orderOpitionTrace.getIsAbnormaly() == 1 && orgAppAbnormalyFlag == 0) {
+                HashMap<String, Object> params = Maps.newHashMap();
+                params.put("orderId", orderId);
+                params.put("quarter", order.getQuarter());
+                params.put("appAbnormalyFlag", 1);
+                orderService.updateOrderCondition(params);
+                //同步网点工单数据
+                Long spId = Optional.ofNullable(condition.getServicePoint()).map(t -> t.getId()).orElse(0L);
+                servicePointOrderBusinessService.abnormalyFlag(
+                        orderId,
+                        order.getQuarter(),
+                        spId,
+                        1,
+                        user.getId(),
+                        date.getTime()
+                );
+            }
+            //log
+            OrderProcessLog processLog = new OrderProcessLog();
+            processLog.setQuarter(order.getQuarter());
+            processLog.setAction("进度跟踪");
+            processLog.setOrderId(orderId);
+            //师傅【取消工单】，师傅反馈【实际安装环境不满足】，工单描述【用户家里的环境不适合安装】
+            processLog.setActionComment(String.format("师傅【%s】，师傅反馈【%s】，工单描述【%s】",
+                    orderOpitionTrace.getParent().getLabel(),
+                    orderOpitionTrace.getOpinionLabel(),
+                    orderOpitionTrace.getRemark()
+            ));
+            processLog.setActionComment(StringUtils.left(processLog.getActionComment(), 255));
+            processLog.setStatus(condition.getStatus().getLabel());
+            processLog.setStatusValue(condition.getStatusValue());
+            processLog.setStatusFlag(OrderProcessLog.OPL_SF_TRACKING);
+            processLog.setCloseFlag(0);
+            processLog.setCreateBy(user);
+            processLog.setCreateDate(date);
+            processLog.setCustomerId(condition.getCustomerId());
+            processLog.setDataSourceId(order.getDataSourceId());
+            orderService.saveOrderProcessLogNew(processLog);
+            //反馈记录
+            orderOpitionTraceService.insert(orderOpitionTrace);
+            //异常单
+            AbnormalForm abnormalForm = restAppFeedback.getAbnormalForm();
+            if (abnormalForm != null) {
+                abnormalForm.setOpinionLogId(orderOpitionTrace.getId());
+                try {
+                    abnormalFormService.save(abnormalForm);
+                } catch (Exception e) {
+                    log.error("保存异常单失败 form:{}", GsonUtils.getInstance().toGson(abnormalForm), e);
+                }
+            }
+            //region Notice Message
+            if (orgAppAbnormalyFlag == 0 && orderOpitionTrace.getIsAbnormaly() == 1 && condition.getKefu() != null) {
+                try {
+                    MQNoticeMessage.NoticeMessage message = MQNoticeMessage.NoticeMessage.newBuilder()
+                            .setOrderId(condition.getOrderId())
+                            .setQuarter(condition.getQuarter())
+                            .setNoticeType(NoticeMessageConfig.NOTICE_TYPE_APPABNORMALY)
+                            .setCustomerId(condition.getCustomer().getId())
+                            .setKefuId(condition.getKefu().getId())
+                            .setAreaId(condition.getArea().getId())
+                            .setTriggerBy(MQWebSocketMessage.User.newBuilder()
+                                    .setId(user.getId())
+                                    .setName(user.getName())
+                                    .build()
+                            )
+                            .setTriggerDate(date.getTime())
+                            .setDelta(1)
+                            .build();
+                    noticeMessageSender.send(message);
+                } catch (Exception e) {
+                    log.error("send MQNoticeMessage,orderId:{} ,user:{} ,pendingType:{}", orderId, user.getId(), orderOpitionTrace.getOpinionId(), e);
+                }
+            }
+            //endregion Notice Message
+
+            //cache,淘汰,调用公共缓存
+            OrderCacheParam.Builder builder = new OrderCacheParam.Builder();
+            builder.setOpType(OrderCacheOpType.UPDATE)
+                    .setOrderId(orderId)
+                    .setDeleteField(OrderCacheField.CONDITION);
+            OrderCacheUtils.update(builder.build());
+            return RestResultGenerator.success();
+        } catch (OrderException oe) {
+            throw oe;
+        } catch (Exception e) {
+            throw new RuntimeException(e.getMessage(), e);
+        } finally {
+            if (locked && lockkey != null) {
+                redisUtilsLocal.remove(RedisConstant.RedisDBType.REDIS_LOCK_DB, lockkey);//释放锁
+            }
+        }
+    }
+
+
+    /**
+     * 发送停滞短信
+     *
+     * @param dataSource  数据源
+     * @param pendingType 停滞类型
+     */
+    private void sendAppPendingSMS(Integer dataSource, int pendingType, String phone, long userId, long sendAt) {
+        if (StringUtils.isBlank(phone) || userId <= 0) {
+            return;
+        }
+        if (sendAt <= 0) {
+            sendAt = System.currentTimeMillis();
+        }
+        //未在配置中：shortmessage.ignore-data-sources  //2018-12-05
+        List<String> ignoreDataSources = StringUtils.isBlank(smIgnoreDataSources) ? Lists.newArrayList() : Splitter.on(",").trimResults().splitToList(smIgnoreDataSources);
+        if (!ignoreDataSources.contains(dataSource.toString())) {
+            StringBuffer strContent = new StringBuffer();
+            switch (pendingType) {
+                    /*
+                    case 1://等通知
+                        strContent.append("尊敬的用户，您好，您的售后工单，由于暂时无法上门，请您在时间方便时，联系师傅或客服预约上门时间");
+                        break;
+                    */
+                case 2://等配件
+                    strContent.append("尊敬的用户，您好，您的售后工单，由于需要等待商家寄发配件，请您在收到配件后，及时联系师傅或客服预约上门时间");
+                    break;
+                    /*
+                    case 3://预约时间
+                        strContent.append("您的售后工单,将由")
+                                .append(engineer.getName().substring(0, 1) + "师傅 ")
+                                .append(engineer.getContactInfo())
+                                .append("上门服务,预约时间为" + sbAppointDate.toString())
+                                .append(",如有疑问,请致电客服");
+                        break;
+                    */
+                case 4://等到货
+                    //京东单等到货短信内容调整 2019-04-16
+                    /* 2020-05-12 停发 等到货 短信
+                    if(dataSource == B2BDataSourceEnum.JD.getId()) {
+                        strContent.append("您好，您的售后工单，由于您暂时还未收到货，请在收到货后，及时联系师傅或客服预约时间，咨询投诉热线：0757-29235666");
+                    }else {
+                        strContent.append("尊敬的用户，您好，您的售后工单，由于您暂时还未收到货，请您在收到货后时，及时联系师傅或客服预约上门时间");
+                    }*/
+                    break;
+                case 5://等装修
+                    strContent.append("尊敬的用户，您好，您的售后工单，由于您家需要等待装修，请您在装修完成后，及时联系师傅或客服预约上门时间");
+                    break;
+                case 6://不确定时间
+                    strContent.append("尊敬的用户，您好，您的售后工单，由于您的原因暂时无法上门，请您在时间方便时，自行联系师傅或客服预约上门时间");
+                    break;
+            }
+            // 使用新的短信发送方法 2019/02/28
+            if (strContent.length() > 0) {
+                smsMQSender.sendNew(phone, strContent.toString(), "", userId, sendAt, SysSMSTypeEnum.ORDER_PENDING_APP);
+            }
+        }
+    }
+
+    /**
+     * app完成订单
+     *
+     * @param request
+     * @param user
+     * @param orderRequest
+     * @return
+     */
+    public RestResult<Object> saveAppComplete(HttpServletRequest request, User user, RestCloseOrderRequest orderRequest) {
+        long index = 0;
+        //long index = redisUtils.incr("appClose");
+        //log.warn("[[RestOrderController.saveOrderComplete]]=={}== {}",index,new Date());
+        if (orderRequest == null) {
+            return RestResultGenerator.custom(ErrorCode.WRONG_REQUEST_FORMAT.code, ErrorCode.WRONG_REQUEST_FORMAT.message);
+        }
+        if (StringUtils.isBlank(orderRequest.getOrderId()) || StringUtils.isBlank(orderRequest.getQuarter())) {
+            return RestResultGenerator.custom(ErrorCode.REQUEST_BODY_VALIDATE_FAIL.code, "参数输入不完整：订单ID或分片为空");
+        }
+        if (StringUtils.isBlank(orderRequest.getCompleteType())) {
+            return RestResultGenerator.custom(ErrorCode.REQUEST_BODY_VALIDATE_FAIL.code, "未设定:完成类型");
+        }
+        Long orderId = null;
+        try {
+            orderId = Long.valueOf(orderRequest.getOrderId());
+        } catch (Exception e) {
+            return RestResultGenerator.custom(ErrorCode.WRONG_REQUEST_FORMAT.code, ErrorCode.WRONG_REQUEST_FORMAT.message + "：类型错误");
+        }
+        if (StringUtils.isNoneBlank(orderRequest.getRemarks()) && orderRequest.getRemarks().trim().length() > 200) {
+            return RestResultGenerator.custom(ErrorCode.REQUEST_BODY_VALIDATE_FAIL.code, "备注长度过长，不能超过200字");
+        }
+        Dict completeType = MSDictUtils.getDictByValue(orderRequest.getCompleteType().trim(), "completed_type");//切换为微服务
+        if (completeType == null) {
+            return RestResultGenerator.custom(ErrorCode.REQUEST_BODY_VALIDATE_FAIL.code, "系统中未定义此完成类型，请确认");
+        }
+        long userId = 0;
+        RestResult restResult = RestResultGenerator.success();
+        Engineer engineer = null;
+        try {
+            if (user == null) {
+                RestLoginUserInfo userInfo = RestSessionUtils.getLoginUserInfoFromRestSession(request.getAttribute("sessionUserId").toString());
+                if (userInfo == null || userInfo.getUserId() == null) {
+                    return RestResultGenerator.custom(ErrorCode.LOGIN_INFO_MISSING.code, ErrorCode.LOGIN_INFO_MISSING.message);
+                }
+
+                userId = userInfo.getUserId();
+                user = UserUtils.getAcount(userId);
+                if (user == null) {
+                    return RestResultGenerator.custom(ErrorCode.LOGIN_INFO_MISSING.code, ErrorCode.LOGIN_INFO_MISSING.message);
+                }
+            }
+            //Engineer engineer = servicePointService.getEngineerFromCache(userInfo.getServicePointId(), userInfo.getEngineerId());
+            //if (engineer == null) {
+            //    return RestResultGenerator.custom(ErrorCode.MEMBER_ENGINEER_NO_EXSIT.code, ErrorCode.MEMBER_ENGINEER_NO_EXSIT.message);
+            //}
+            Order order = orderService.getOrderById(orderId, orderRequest.getQuarter(), OrderUtils.OrderDataLevel.DETAIL, true);
+            if (order == null || order.getOrderCondition() == null) {
+                return RestResultGenerator.custom(ErrorCode.DATA_PROCESS_ERROR.code, "读取订单:" + ErrorCode.DATA_PROCESS_ERROR.message);
+            }
+            OrderCondition condition = order.getOrderCondition();
+            if (condition.getServicePoint() == null || condition.getEngineer() == null) {
+                return RestResultGenerator.custom(ErrorCode.MEMBER_ENGINEER_NO_EXSIT.code, "读取师傅信息失败");
+            }
+            engineer = servicePointService.getEngineerFromCache(condition.getServicePoint().getId(), condition.getEngineer().getId());
+            if (null == engineer) {
+                return RestResultGenerator.custom(ErrorCode.MEMBER_ENGINEER_NO_EXSIT.code, "读取师傅信息失败");
+            }
+            final Long engineerId = engineer.getId();
+            List<OrderDetail> details = order.getDetailList();
+            if (details == null || details.size() == 0) {
+                return RestResultGenerator.custom(ErrorCode.ORDER_CAN_NOT_COMPLETE.code, ErrorCode.ORDER_CAN_NOT_COMPLETE.message);
+            }
+            if (details != null && details.size() > 0) {
+                OrderDetail detail = details.stream().filter(t -> t.getEngineer().getId().equals(engineerId))
+                        .findFirst()
+                        .orElse(null);
+                if (detail == null) {
+                    return RestResultGenerator.custom(ErrorCode.ORDER_CAN_NOT_COMPLETE.code, ErrorCode.ORDER_CAN_NOT_COMPLETE.message);
+                }
+            }
+
+            restResult = orderService.saveOrderComplete(order, user, completeType, orderRequest.getRemarks().trim());
+            return restResult;
+            //return RestResultGenerator.success();
+        } catch (OrderException oe) {
+            return RestResultGenerator.exception(oe.getMessage());
+        } catch (Exception e) {
+            try {
+                String gson = GsonUtils.toGsonString(orderRequest);
+                log.error("[saveOrderComplete]=={}== user:{} ,json:{}", index, userId, gson, e);
+                LogUtils.saveLog(
+                        request,
+                        null,
+                        e,
+                        "Rest工单完工",
+                        "POST",
+                        gson,
+                        new User(userId)
+                );
+            } catch (Exception e1) {
+                log.error("[saveOrderComplete] user:{}", userId, e);
+            }
+            if (restResult != null && restResult.getCode() > 0) {
+                return restResult;
+            } else {
+                return RestResultGenerator.exception("工单完工错误");
+            }
+        }
+    }
+
+    /**
+     * App维护上门服务维修信息
+     */
+    @Transactional(readOnly = false)
+    public void editRepair(OrderDetail detail) {
+        String lockkey = String.format(RedisConstant.SD_ORDER_LOCK, detail.getOrderId());
+        //获得锁
+        Boolean locked = redisUtilsLocal.setNX(RedisConstant.RedisDBType.REDIS_LOCK_DB, lockkey, 1, ORDER_LOCK_EXPIRED);//60秒
+        if (!locked) {
+            throw new OrderException("此订单正在处理中，请稍候重试，或刷新页面。");
+        }
+        User user = detail.getUpdateBy();
+        try {
+            Order order = orderService.getOrderById(detail.getOrderId(), "", OrderUtils.OrderDataLevel.DETAIL, true);
+            if (order == null || order.getOrderCondition() == null) {
+                throw new OrderException("读取订单错误，请重试。");
+            }
+
+            Integer chargeFlag = order.getOrderCondition().getChargeFlag();
+            if (chargeFlag != null && chargeFlag.intValue() == 1) {
+                throw new OrderException("此订单已已经对账，不能删除上门服务。");
+            }
+            List<OrderDetail> details = order.getDetailList();
+            if (details == null || details.isEmpty()) {
+                throw new OrderException("此订单无上门服务项目。");
+            }
+            Long detailId = detail.getId();
+            OrderDetail d = details.stream().filter(t -> t.getId().equals(detailId)).findFirst().orElse(null);
+            if (d == null) {
+                throw new OrderException("此订单无此上门服务项目。");
+            }
+            if (d.getDelFlag() == 1) {
+                throw new OrderException("此上门服务项目已删除，请刷新上门服务列表。");
+            }
+            OrderCondition condition = order.getOrderCondition();
+            //Customer Price
+            List<CustomerPrice> customerPrices = customerService.getPricesFromCache(condition.getCustomer().getId());
+            if (customerPrices == null || customerPrices.size() == 0) {
+                throw new OrderException(String.format("读取客户：%s价格失败", condition.getCustomer().getName()));
+            }
+            Product product = d.getProduct();
+            CustomerPrice cprice = customerPrices.stream()
+                    .filter(t -> Objects.equals(t.getProduct().getId(), product.getId()) && Objects.equals(t.getServiceType().getId(), detail.getServiceType().getId()))
+                    .findFirst().orElse(null);
+            if (cprice == null) {
+                throw new OrderException(String.format("未定义服务价格；客户：%s 产品:%s 服务：%s。", condition.getCustomer().getName(), product.getName(), detail.getServiceType().getName()));
+            }
+            //ServicePoint Price
+            Long servicePointId = condition.getServicePoint().getId();
+            //使用新的网点价格读取方法 2020-03-07
+            ServicePrice eprice = servicePointService.getPriceByProductAndServiceTypeFromCache(servicePointId, product.getId(), detail.getServiceType().getId());
+            /* comment at 2020-03-07 Ryan
+            List<ServicePrice> engineerPrices = servicePointService.getPricesFromCache(servicePointId);
+            if (engineerPrices == null || engineerPrices.size() == 0) {
+                throw new OrderException(String.format("读取安维网点：%s价格失败，请检查该网点是否维护了服务价格。", condition.getServicePoint().getName()));
+            }
+            ServicePrice eprice = engineerPrices.stream()
+                    .filter(t -> Objects.equals(t.getProduct().getId(), product.getId())
+                            && Objects.equals(t.getServiceType().getId(), detail.getServiceType().getId()))
+                    .findFirst().orElse(null);
+             */
+            if (eprice == null) {
+                throw new OrderException(String.format("未定义服务价格；网点：%s[%s] 产品:%s 服务：%s。", condition.getServicePoint().getServicePointNo(), condition.getServicePoint().getName(), product.getName(), detail.getServiceType().getName()));
+            }
+            detail.setStandPrice(cprice.getPrice());
+            detail.setDiscountPrice(cprice.getDiscountPrice());
+
+            //remove from details
+            details.remove(d);//*
+            detail.setQuarter(order.getQuarter());//数据库分片
+
+            //region app不修改的内容
+            detail.setRemarks(d.getRemarks());
+            detail.setQty(d.getQty());
+            detail.setProduct(product);
+            detail.setBrand(d.getBrand());
+            detail.setProductSpec(d.getProductSpec());
+            detail.setServiceTimes(d.getServiceTimes());
+            detail.setServiceCategory(d.getServiceCategory());
+            detail.setServicePoint(d.getServicePoint());
+
+            //charge
+            detail.setEngineerMaterialCharge(d.getEngineerMaterialCharge());
+            detail.setMaterialCharge(d.getMaterialCharge());
+            detail.setEngineerOtherCharge(d.getEngineerOtherCharge());
+            detail.setOtherCharge(d.getOtherCharge());
+            detail.setEngineerTravelCharge(d.getEngineerTravelCharge());
+            detail.setTravelCharge(d.getTravelCharge());
+            detail.setTravelNo(d.getTravelNo());
+            detail.setEngineerExpressCharge(d.getEngineerExpressCharge());
+            detail.setExpressCharge(d.getExpressCharge());
+
+            //endregion app不修改产品，品牌，型号
+
+            //网点费用表
+            OrderServicePointFee orderServicePointFee = orderService.getOrderServicePointFee(order.getId(), order.getQuarter(), servicePointId);
+            detail.setEngineerStandPrice(eprice.getPrice());
+            detail.setEngineerDiscountPrice(eprice.getDiscountPrice());
+            //ryan at 2018/10/31
+            //因sd_orderFee表中网点付款方式出现为0的情况，此处做特殊处理
+            Dict engineerPaymentType = order.getOrderFee().getEngineerPaymentType();
+            if (engineerPaymentType != null && engineerPaymentType.getIntValue() > 0) {
+                detail.setEngineerPaymentType(engineerPaymentType);
+            } else {
+                ServicePoint servicePoint = servicePointService.getFromCache(servicePointId);
+                if (servicePoint != null && servicePoint.getFinance() != null
+                        && servicePoint.getFinance().getPaymentType() != null
+                        && servicePoint.getFinance().getPaymentType().getIntValue() > 0) {
+                    detail.setEngineerPaymentType(servicePoint.getFinance().getPaymentType());
+                } else {
+                    throw new OrderException(String.format("确认网点：%s 结算方式失败", condition.getServicePoint().getName()));
+                }
+            }
+            //end
+            Date date = new Date();
+
+            //统计未关联上门明细的配件费(通过审核的)
+            Double materailAmount = 0.0d;
+            int[] materialStatus = new int[]{2, 3, 4};//2：待发货 3：已发货 4：已完成
+            long[] subProducts = new long[]{};//产品
+            subProducts = ArrayUtils.add(subProducts, detail.getProduct().getId().longValue());
+            //套组，拆分产品
+            Product p = productService.getProductByIdFromCache(product.getId());
+            if (p.getSetFlag() == 1) {
+                List<Product> products = productService.getProductListOfSet(p.getId());
+                if (products != null && products.size() > 0) {
+                    for (Product sp : products) {
+                        subProducts = ArrayUtils.add(subProducts, sp.getId().longValue());
+                    }
+                }
+            } else {
+                //单品，判断订单项中套组
+                long[] setIds = orderService.getSetProductIdIncludeMe(product.getId(), order.getItems());
+                if (setIds != null && setIds.length > 0) {
+                    subProducts = ArrayUtils.addAll(subProducts, setIds);
+                }
+            }
+            final long[] sids = ArrayUtils.clone(subProducts);
+            //只读取单头
+            List<MaterialMaster> materials = orderMaterialService.findMaterialMasterHeadsByOrderId(detail.getOrderId(), order.getQuarter());
+            if (materials != null && materials.size() > 0) {
+                materailAmount = materials.stream().filter(
+                        t -> ArrayUtils.contains(materialStatus, Integer.parseInt(t.getStatus().getValue()))
+                                && Objects.equals(t.getOrderDetailId(), 0l)
+                                && ArrayUtils.contains(sids, t.getProductId().longValue())
+                )
+                        .collect(Collectors.summingDouble(MaterialMaster::getTotalPrice));
+                if (materailAmount > 0) {
+                    //应付，+
+                    detail.setEngineerMaterialCharge(detail.getEngineerMaterialCharge() + materailAmount);
+                    detail.setEngineerTotalCharge(detail.getEngineerChage());
+                    //应收，+
+                    detail.setMaterialCharge(detail.getMaterialCharge() + materailAmount);
+                }
+            }
+
+            OrderFee orderFee = order.getOrderFee();
+            //时效奖励(快可立补贴)
+            Double timeLinessCharge = orderFee.getTimeLinessCharge();
+            //时效费(客户补贴)
+            Double subsidyTimeLinessCharge = orderFee.getSubsidyTimeLinessCharge();
+            details.add(detail);//*
+            orderService.rechargeOrder(details, detail);
+            HashMap<String, Object> params = Maps.newHashMap();
+            //重新汇总金额
+            HashMap<String, Object> feeMap = orderService.recountFee(details);
+            //应收
+            orderFee.setServiceCharge((Double) feeMap.get("serviceCharge"));
+            orderFee.setMaterialCharge((Double) feeMap.get("materialCharge"));
+            orderFee.setExpressCharge((Double) feeMap.get("expressCharge"));
+            orderFee.setTravelCharge((Double) feeMap.get("travelCharge"));
+            orderFee.setOtherCharge((Double) feeMap.get("otherCharge"));
+            orderFee.setOrderCharge((Double) feeMap.get("orderCharge"));//以上5项合计
+            //时效费,加急费
+            if (condition.getPendingFlag() == 1 || detail.getAddType() == 1) {
+                orderFee.setOrderCharge(orderFee.getOrderCharge() + orderFee.getCustomerTimeLinessCharge() + orderFee.getCustomerUrgentCharge());
+            }
+
+            //应付
+            orderFee.setEngineerServiceCharge((Double) feeMap.get("engineerServiceCharge"));
+            orderFee.setEngineerMaterialCharge((Double) feeMap.get("engineerMaterialCharge"));
+            orderFee.setEngineerExpressCharge((Double) feeMap.get("engineerExpressCharge"));
+            orderFee.setEngineerTravelCharge((Double) feeMap.get("engineerTravelCharge"));
+            orderFee.setEngineerOtherCharge((Double) feeMap.get("engineerOtherCharge"));
+            orderFee.setEngineerTotalCharge((Double) feeMap.get("engineerTotalCharge"));//以上5项合计
+            //保险费
+            orderFee.setEngineerTotalCharge(orderFee.getEngineerTotalCharge() + orderFee.getInsuranceCharge());
+            //时效奖励(快可立补贴)，时效费(客户补贴)
+            if (condition.getPendingFlag() == 1 || detail.getAddType() == 1) {
+                orderFee.setEngineerTotalCharge(orderFee.getEngineerTotalCharge() + timeLinessCharge + subsidyTimeLinessCharge + orderFee.getEngineerUrgentCharge());//合计
+            }
+
+            //fee
+            params.put("quarter", order.getQuarter());
+            params.put("orderId", order.getId());
+            //应收(客户)
+            params.put("serviceCharge", orderFee.getServiceCharge()); //服务费
+            params.put("materialCharge", orderFee.getMaterialCharge());// 配件费
+            params.put("expressCharge", orderFee.getExpressCharge()); // 快递费
+            params.put("travelCharge", orderFee.getTravelCharge()); //远程费
+            params.put("otherCharge", orderFee.getOtherCharge());// 其他費用
+            params.put("orderCharge", orderFee.getOrderCharge());// 合计
+
+            //应付(安维)
+            params.put("engineerServiceCharge", orderFee.getEngineerServiceCharge());//服务费
+            params.put("engineerMaterialCharge", orderFee.getEngineerMaterialCharge());//配件费
+            params.put("engineerExpressCharge", orderFee.getEngineerExpressCharge());//快递费
+            params.put("engineerTravelCharge", orderFee.getEngineerTravelCharge());//远程费
+            params.put("engineerOtherCharge", orderFee.getEngineerOtherCharge());//其它费用
+            //合计=其他费用合计-保险费
+            params.put("engineerTotalCharge", orderFee.getEngineerTotalCharge());
+            orderService.updateFee(params);
+
+            //details
+            OrderDetail model;
+            for (int i = 0, size = details.size(); i < size; i++) {
+                model = details.get(i);
+                if (model.getDelFlag() == OrderDetail.DEL_FLAG_DELETE) {
+                    continue;
+                }
+                //update
+                params.clear();
+                params.put("quarter", order.getQuarter());
+                params.put("id", model.getId());
+                params.put("itemNo", model.getItemNo());
+
+                params.put("materialCharge", model.getMaterialCharge());
+                params.put("travelCharge", model.getTravelCharge());
+                params.put("charge", model.getCharge());
+
+                params.put("engineerMaterialCharge", model.getEngineerMaterialCharge());
+                params.put("engineerTravelCharge", model.getEngineerTravelCharge());
+                params.put("engineerServiceCharge", model.getEngineerServiceCharge());
+
+                params.put("updateBy", user);
+                params.put("updateDate", date);
+
+                if (model.getId().longValue() == detailId.longValue()) {
+                    //本次修改服务内容
+                    params.put("brand", detail.getBrand());
+                    params.put("productSpec", detail.getProductSpec());
+                    params.put("serviceType", detail.getServiceType());
+                    params.put("product", detail.getProduct());
+                    params.put("product", detail.getProduct());
+                    params.put("qty", detail.getQty());
+                    params.put("remarks", detail.getRemarks());
+                    //engineer
+                    params.put("engineerStandPrice", detail.getEngineerStandPrice());
+                    params.put("engineerDiscountPrice", detail.getEngineerDiscountPrice());
+                    params.put("engineerExpressCharge", detail.getEngineerExpressCharge());
+                    params.put("engineerOtherCharge", detail.getEngineerOtherCharge());
+                    params.put("engineerDiscountPrice", detail.getEngineerDiscountPrice());
+                    //customer
+                    params.put("standPrice", detail.getStandPrice());
+                    params.put("discountPrice", detail.getDiscountPrice());
+                    params.put("expressCharge", detail.getExpressCharge());
+                    params.put("travelNo", detail.getTravelNo());
+                    params.put("otherCharge", detail.getOtherCharge());
+                    //repair
+                    int serviceCategoryId = detail.getServiceCategory().getIntValue();
+                    params.put("serviceCategoryId", serviceCategoryId);
+                    if (detail.getErrorType() != null && detail.getErrorType().getId() != null) {
+                        params.put("errorTypeId", detail.getErrorType().getId());
+                        params.put("errorCodeId", detail.getErrorCode().getId());
+                        if (detail.getActionCode() == null || detail.getActionCode().getId() == null) {
+                            params.put("actionCodeId", 0L);
+                            params.put("actionCodeName", "");
+                        } else {
+                            params.put("actionCodeId", detail.getActionCode().getId());
+                            params.put("actionCodeName", detail.getActionCode().getName());
+                        }
+                        params.put("otherActionRemark", detail.getOtherActionRemark());
+                    } else {
+                        params.put("errorTypeId", 0);
+                        params.put("errorCodeId", 0);
+                        params.put("actionCodeId", 0L);
+                        params.put("actionCodeName", "");
+                        if (serviceCategoryId == 1) {
+                            //安装，清空
+                            params.put("otherActionRemark", "");
+                        } else {
+                            params.put("otherActionRemark", detail.getOtherActionRemark());
+                        }
+                    }
+                    orderService.editDetail(params);
+                } else {
+                    //update
+                    orderService.updateDetail(params);
+                }
+            }
+
+            //OrderServicePointFee 生效并汇总
+            OrderDetail servicePointFeeSum = null;
+            if (orderServicePointFee != null) {
+                servicePointFeeSum = details.stream().filter(t -> t.getServicePoint().getId().longValue() == servicePointId.longValue() && t.getDelFlag() != OrderDetail.DEL_FLAG_DELETE)
+                        .reduce(new OrderDetail(), (item1, item2) -> {
+                            return new OrderDetail(
+                                    item1.getEngineerServiceCharge() + item2.getEngineerServiceCharge(),
+                                    item1.getEngineerTravelCharge() + item2.getEngineerTravelCharge(),
+                                    item1.getEngineerExpressCharge() + item2.getEngineerExpressCharge(),
+                                    item1.getEngineerMaterialCharge() + item2.getEngineerMaterialCharge(),
+                                    item1.getEngineerOtherCharge() + item2.getEngineerOtherCharge()
+                            );
+                        });
+            }
+            params.clear();
+            params.put("orderId", order.getId());
+            params.put("quarter", order.getQuarter());
+            params.put("servicePointId", servicePointId);
+            params.put("delFlag", 0);
+            //费用汇总
+            if (orderServicePointFee != null && servicePointFeeSum != null) {
+                params.put("serviceCharge", servicePointFeeSum.getEngineerServiceCharge());
+                params.put("travelCharge", servicePointFeeSum.getEngineerTravelCharge());
+                params.put("expressCharge", servicePointFeeSum.getEngineerExpressCharge());
+                params.put("materialCharge", servicePointFeeSum.getEngineerMaterialCharge());
+                params.put("otherCharge", servicePointFeeSum.getEngineerOtherCharge());
+                params.put("insuranceCharge", orderServicePointFee.getInsuranceCharge());
+                params.put("timeLinessCharge", orderServicePointFee.getTimeLinessCharge());
+                params.put("customerTimeLinessCharge", orderServicePointFee.getCustomerTimeLinessCharge());
+                params.put("urgentCharge", orderServicePointFee.getUrgentCharge());
+                //汇总
+                Double engineerTotalCharge = servicePointFeeSum.getEngineerServiceCharge()
+                        + servicePointFeeSum.getEngineerTravelCharge()
+                        + servicePointFeeSum.getEngineerExpressCharge()
+                        + servicePointFeeSum.getEngineerMaterialCharge()
+                        + servicePointFeeSum.getEngineerOtherCharge()
+                        + orderServicePointFee.getInsuranceCharge()
+                        + orderServicePointFee.getTimeLinessCharge()
+                        + orderServicePointFee.getCustomerTimeLinessCharge()
+                        + orderServicePointFee.getUrgentCharge();
+                params.put("orderCharge", engineerTotalCharge);
+            }
+            orderService.updateOrderServicePointFeeByMaps(params);
+
+            //log
+            OrderProcessLog processLog = new OrderProcessLog();
+            processLog.setQuarter(order.getQuarter());
+            processLog.setAction("上门服务:修改订单具体服务项目");
+            processLog.setOrderId(order.getId());
+            //2019-12-27 统一上门服务格式
+            if (detail.getErrorType() != null && detail.getErrorType().getId() != null && detail.getErrorType().getId() > 0) {
+                if (StringUtils.isBlank(detail.getOtherActionRemark())) {
+                    processLog.setActionComment(String.format("安维 %s【%s】现象:【%s】处理措施:【%s】",
+                            detail.getServiceType().getName(),
+                            detail.getProduct().getName(),
+                            detail.getErrorCode().getName(),
+                            detail.getActionCode().getName()
+                    ));
+                } else {
+                    processLog.setActionComment(String.format("安维 %s【%s】现象:【%s】处理措施:【%s】其他故障:【%s】",
+                            detail.getServiceType().getName(),
+                            detail.getProduct().getName(),
+                            detail.getErrorCode().getName(),
+                            detail.getActionCode().getName(),
+                            detail.getOtherActionRemark()
+                    ));
+                }
+            } else {
+                if (StringUtils.isBlank(detail.getOtherActionRemark())) {
+                    processLog.setActionComment(String.format("安维 %s【%s】", detail.getServiceType().getName(), detail.getProduct().getName()));
+                } else {
+                    processLog.setActionComment(String.format("安维 %s【%s】其他故障:【%s】", detail.getServiceType().getName(), detail.getProduct().getName(), detail.getOtherActionRemark()));
+                }
+            }
+            processLog.setActionComment(StringUtils.left(processLog.getActionComment(), 255));
+            processLog.setStatus(condition.getStatus().getLabel());
+            processLog.setStatusValue(condition.getStatusValue());
+            processLog.setStatusFlag(OrderProcessLog.OPL_SF_NOT_CHANGE_STATUS);
+            processLog.setCloseFlag(0);
+            processLog.setCreateBy(user);
+            processLog.setCreateDate(date);
+            processLog.setCustomerId(condition.getCustomerId());
+            processLog.setDataSourceId(order.getDataSourceId());
+            orderService.saveOrderProcessLogNew(processLog);
+
+            //cache,淘汰
+            OrderCacheUtils.setDetailActionFlag(order.getId());
+            OrderCacheUtils.delete(detail.getOrderId());
+
+        } catch (OrderException oe) {
+            throw new OrderException(oe.getMessage());
+        } catch (Exception e) {
+            log.error("orderId:{}", detail.getOrderId(), e);
+            throw new RuntimeException(e.getMessage());
+        } finally {
+            if (locked && lockkey != null) {
+                redisUtilsLocal.remove(RedisConstant.RedisDBType.REDIS_LOCK_DB, lockkey);
+            }
+        }
+    }
+
+    /**
+     * 根据订单状态判断App是否可以操作
+     *
+     * @param order
+     * @return
+     */
+    public RestResult<Object> checkOrderStatus(Order order) {
+        int statusValue = Optional.ofNullable(order.getOrderCondition()).map(OrderCondition::getStatusValue).orElse(0);
+        if (statusValue >= Order.ORDER_STATUS_RETURNING) {
+            StringBuffer msg = new StringBuffer(64);
+            msg.append("此单【");
+            if (statusValue == Order.ORDER_STATUS_CANCELING.intValue()) {
+                msg.append("取消中");
+            } else if (statusValue == Order.ORDER_STATUS_COMPLETED.intValue()) {
+                msg.append("已完成");
+            } else if (statusValue == Order.ORDER_STATUS_CHARGED.intValue()) {
+                msg.append("已入账");
+            } else if (statusValue == Order.ORDER_STATUS_RETURNING.intValue()) {
+                msg.append("退单审核中");
+            } else if (statusValue == Order.ORDER_STATUS_RETURNED.intValue()) {
+                msg.append("已退单");
+            } else if (statusValue == Order.ORDER_STATUS_CANCELED.intValue()) {
+                msg.append("已取消");
+            }
+            msg.append("】，不允许其他操作。");
+            return RestResultGenerator.custom(ErrorCode.DATA_PROCESS_ERROR.code, msg.toString());
+        }
+        return RestResultGenerator.success();
+    }
+}

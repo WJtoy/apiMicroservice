@@ -1,0 +1,82 @@
+package com.wolfking.jeesite.ms.mapper.md;
+
+import com.kkl.kklplus.entity.md.MDEngineerAddress;
+import com.kkl.kklplus.entity.md.dto.MDEngineerDto;
+import com.kkl.kklplus.utils.StringUtils;
+import com.wolfking.jeesite.modules.md.entity.Engineer;
+import com.wolfking.jeesite.modules.md.entity.ServicePoint;
+import com.wolfking.jeesite.modules.sys.entity.Area;
+import com.wolfking.jeesite.modules.sys.entity.Dict;
+import ma.glasnost.orika.CustomMapper;
+import ma.glasnost.orika.MappingContext;
+import org.springframework.stereotype.Component;
+
+import java.util.Optional;
+
+@Component
+public class MDEngineerDtoMapper extends CustomMapper<MDEngineerDto, Engineer> {
+    @Override
+    public void mapAtoB(MDEngineerDto a, Engineer b, MappingContext context) {
+        b.setId(a.getId());
+        b.setName(a.getName());
+        b.setLevel(new Dict(Optional.ofNullable(a.getLevel()).orElse(0),""));
+        b.setContactInfo(a.getContactInfo());
+        b.setArea(new Area(Optional.ofNullable(a.getAreaId()).orElse(0L),""));
+        b.setAddress(a.getAddress());
+        b.setGrade(a.getGrade());
+        b.setQq(a.getQq());
+        b.setMasterFlag(a.getMasterFlag());
+        b.setAppFlag(a.getAppFlag());
+        b.setOrderCount(Optional.ofNullable(a.getOrderCount()).orElse(0));
+        b.setPlanCount(Optional.ofNullable(a.getPlanCount()).orElse(0));
+        b.setBreakCount(Optional.ofNullable(a.getBreakCount()).orElse(0));
+        b.setForTmall(a.getForTmall());
+        b.setExceptId(Optional.ofNullable(a.getExceptId()).map(Long::intValue).orElse(0));
+        b.setAccountId(a.getAccountId());
+        ServicePoint servicePoint = new ServicePoint();
+        servicePoint.setId(a.getServicePointId());
+        servicePoint.setServicePointNo(a.getServicePointNo());
+        servicePoint.setName(a.getServicePointName());
+        b.setServicePoint(servicePoint);
+        b.setDelFlag(a.getDelFlag());
+        b.setRemarks(a.getRemarks());
+        b.setComplainCount(a.getComplainCount());
+        b.setReminderCount(a.getReminderCount());
+        b.setAreaIds(a.getAreaIds());
+        b.setTemperature(a.getTemperature());
+        MDEngineerAddress engineerAddress = new MDEngineerAddress();
+        engineerAddress.setAddress(a.getShippingAddress());
+        b.setEngineerAddress(engineerAddress);
+
+    }
+
+    @Override
+    public void mapBtoA(Engineer b, MDEngineerDto a, MappingContext context) {
+        a.setId(b.getId());
+        a.setName(b.getName());
+        a.setLevel(Optional.ofNullable(b.getLevel()).map(Dict::getValue).map(StringUtils::toInteger).orElse(null));
+        a.setContactInfo(b.getContactInfo());
+        a.setAreaId(Optional.ofNullable(b.getArea()).map(Area::getId).orElse(null));
+        a.setAddress(b.getAddress());
+        a.setGrade(b.getGrade());
+        a.setQq(b.getQq());
+        a.setMasterFlag(b.getMasterFlag());
+        a.setAppFlag(b.getAppFlag());
+        a.setOrderCount(b.getOrderCount());
+        a.setPlanCount(b.getPlanCount());
+        a.setBreakCount(b.getBreakCount());
+        a.setForTmall(b.getForTmall());
+        a.setExceptId(Optional.ofNullable(b.getExceptId()).map(Long::valueOf).orElse(null));
+        a.setAccountId(b.getAccountId());
+        a.setServicePointId(Optional.ofNullable(b.getServicePoint()).map(ServicePoint::getId).orElse(null));
+        a.setServicePointNo(Optional.ofNullable(b.getServicePoint()).map(ServicePoint::getServicePointNo).orElse(null));
+        a.setServicePointName(Optional.ofNullable(b.getServicePoint()).map(ServicePoint::getName).orElse(null));
+        a.setDelFlag(b.getDelFlag());
+        a.setRemarks(b.getRemarks());
+        a.setComplainCount(b.getComplainCount());
+        a.setReminderCount(b.getReminderCount());
+        a.setAreaIds(b.getAreaIds());
+        a.setShippingAddress(Optional.ofNullable(b.getEngineerAddress()).map(MDEngineerAddress::getAddress).orElse(null));
+        a.setTemperature(b.getTemperature());
+    }
+}

@@ -1,0 +1,205 @@
+package com.wolfking.jeesite.ms.konka.sd.service;
+
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.kkl.kklplus.entity.canbo.sd.CanboOrderCompleted;
+import com.kkl.kklplus.utils.StringUtils;
+import com.wolfking.jeesite.modules.md.entity.Engineer;
+import com.wolfking.jeesite.modules.md.entity.ProductCompletePicItem;
+import com.wolfking.jeesite.modules.md.service.ServicePointService;
+import com.wolfking.jeesite.modules.sd.dao.OrderItemDao;
+import com.wolfking.jeesite.modules.sd.entity.Order;
+import com.wolfking.jeesite.modules.sd.entity.OrderItem;
+import com.wolfking.jeesite.modules.sd.entity.OrderItemComplete;
+import com.wolfking.jeesite.modules.sd.entity.TwoTuple;
+import com.wolfking.jeesite.modules.sd.service.OrderItemCompleteService;
+import com.wolfking.jeesite.modules.sd.service.OrderItemService;
+import com.wolfking.jeesite.modules.sd.utils.OrderItemUtils;
+import com.wolfking.jeesite.modules.sd.utils.OrderPicUtils;
+import com.wolfking.jeesite.modules.sd.utils.OrderUtils;
+import com.wolfking.jeesite.modules.sys.entity.Dict;
+import com.wolfking.jeesite.modules.sys.entity.User;
+import com.wolfking.jeesite.ms.b2bcenter.sd.entity.B2BOrderStatusUpdateReqEntity;
+import com.wolfking.jeesite.ms.b2bcenter.sd.service.B2BOrderManualBaseService;
+import com.wolfking.jeesite.ms.utils.MSDictUtils;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import javax.annotation.Resource;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+
+@Slf4j
+@Service
+@Transactional(propagation = Propagation.NOT_SUPPORTED)
+public class KonkaOrderService extends B2BOrderManualBaseService {
+
+    @Resource
+    private OrderItemService orderItemService;
+
+    @Autowired
+    OrderItemCompleteService orderItemCompleteService;
+
+    @Autowired
+    private ServicePointService servicePointService;
+
+
+    //region 其他
+
+    private List<CanboOrderCompleted.CompletedItem> getKonkaOrderCompletedItems(Long orderId, String quarter, List<OrderItem> orderItems) {
+        List<CanboOrderCompleted.CompletedItem> list = Lists.newArrayList();
+        if (orderId != null && orderId > 0 && StringUtils.isNotBlank(quarter) && orderItems != null && !orderItems.isEmpty()) {
+            Map<Long, List<String>> b2bProductCodeMap = getProductIdToB2BProductCodeMapping(orderItems);
+//            for (OrderItem item : orderItems) {
+//                if (StringUtils.isNotBlank(item.getB2bProductCode())) {
+//                    if (b2bProductCodeMap.containsKey(item.getProductId())) {
+//                        b2bProductCodeMap.get(item.getProductId()).add(item.getB2bProductCode());
+//                    } else {
+//                        b2bProductCodeMap.put(item.getProductId(), Lists.newArrayList(item.getB2bProductCode()));
+//                    }
+//                }
+//            }
+            List<OrderItemComplete> completeList = orderItemCompleteService.getByOrderId(orderId, quarter);
+            Map<Long, List<OrderItemComplete>> itemCompleteMap = Maps.newHashMap();
+            for (OrderItemComplete item : completeList) {
+                if (itemCompleteMap.containsKey(item.getProduct().getId())) {
+                    itemCompleteMap.get(item.getProduct().getId()).add(item);
+                } else {
+                    itemCompleteMap.put(item.getProduct().getId(), Lists.newArrayList(item));
+                }
+            }
+
+            CanboOrderCompleted.CompletedItem completedItem;
+            for (Map.Entry<Long, List<String>> item : b2bProductCodeMap.entrySet()) {
+                List<OrderItemComplete> itemCompletes = itemCompleteMap.get(item.getKey());
+                for (int i = 0; i < item.getValue().size(); i++) {
+                    completedItem = new CanboOrderCompleted.CompletedItem();
+                    completedItem.setItemCode(item.getValue().get(i));
+                    if (itemCompletes != null && itemCompletes.size() > i) {
+                        OrderItemComplete itemComplete = itemCompletes.get(i);
+                        List<ProductCompletePicItem> picItems = OrderUtils.fromProductCompletePicItemsJson(itemComplete.getPicJson());
+                        if (picItems != null && !picItems.isEmpty()) {
+                            completedItem.setPic1(OrderPicUtils.getOrderPicHostDir() + picItems.get(0).getUrl());
+                            if (picItems.size() > 1) {
+                                completedItem.setPic2(OrderPicUtils.getOrderPicHostDir() + picItems.get(1).getUrl());
+                            }
+                            if (picItems.size() > 2) {
+                                completedItem.setPic3(OrderPicUtils.getOrderPicHostDir() + picItems.get(2).getUrl());
+                            }
+                            if (picItems.size() > 3) {
+                                completedItem.setPic4(OrderPicUtils.getOrderPicHostDir() + picItems.get(3).getUrl());
+                            }
+                        }
+                    }
+
+                    list.add(completedItem);
+                }
+            }
+        }
+        return list;
+    }
+
+    //endregion 其他
+
+    //-------------------------------------------------------------------------------------------------创建状态变更请求实体
+
+    /**
+     * 创建康佳派单请求对象
+     */
+    public TwoTuple<Boolean, B2BOrderStatusUpdateReqEntity.Builder> createPlanRequestEntity(String engineerName, String engineerMobile, String remarks) {
+        TwoTuple<Boolean, B2BOrderStatusUpdateReqEntity.Builder> result = new TwoTuple<>(false, null);
+        if (StringUtils.isNotBlank(engineerName) && StringUtils.isNotBlank(engineerMobile)) {
+            B2BOrderStatusUpdateReqEntity.Builder builder = new B2BOrderStatusUpdateReqEntity.Builder();
+            builder.setEngineerName(engineerName)
+                    .setEngineerMobile(engineerMobile)
+                    .setRemarks(StringUtils.toString(remarks));
+            result.setAElement(true);
+            result.setBElement(builder);
+        }
+        return result;
+    }
+
+    /**
+     * 创建康佳预约请求对象
+     */
+    public TwoTuple<Boolean, B2BOrderStatusUpdateReqEntity.Builder> createAppointRequestEntity(Date appointmentDate, User updater, String remarks) {
+        TwoTuple<Boolean, B2BOrderStatusUpdateReqEntity.Builder> result = new TwoTuple<>(false, null);
+        if (updater != null && StringUtils.isNotBlank(updater.getName()) && appointmentDate != null) {
+            B2BOrderStatusUpdateReqEntity.Builder builder = new B2BOrderStatusUpdateReqEntity.Builder();
+            builder.setUpdaterName(updater.getName())
+                    .setEffectiveDate(appointmentDate)
+                    .setRemarks(StringUtils.toString(remarks));
+            result.setAElement(true);
+            result.setBElement(builder);
+        }
+        return result;
+    }
+
+    /**
+     * 创建康佳上门请求对象
+     */
+    public TwoTuple<Boolean, B2BOrderStatusUpdateReqEntity.Builder> createServiceRequestEntity(Date visitedDate, Long servicePointId, Long engineerId, String remarks) {
+        TwoTuple<Boolean, B2BOrderStatusUpdateReqEntity.Builder> result = new TwoTuple<>(false, null);
+        if (visitedDate != null && servicePointId != null && servicePointId > 0 && engineerId != null && engineerId > 0) {
+            Engineer engineer = servicePointService.getEngineerFromCache(servicePointId, engineerId);
+            if (engineer != null && StringUtils.isNotBlank(engineer.getName()) && StringUtils.isNotBlank(engineer.getContactInfo())) {
+                B2BOrderStatusUpdateReqEntity.Builder builder = new B2BOrderStatusUpdateReqEntity.Builder();
+                builder.setEngineerName(engineer.getName())
+                        .setEffectiveDate(visitedDate)
+                        .setRemarks(StringUtils.toString(remarks));
+                result.setAElement(true);
+                result.setBElement(builder);
+            }
+        }
+        return result;
+    }
+
+    /**
+     * 创建康佳完工请求对象
+     */
+    @Transactional()
+    public TwoTuple<Boolean, B2BOrderStatusUpdateReqEntity.Builder> createCompleteRequestEntity(Long orderId, String quarter, List<OrderItem> orderItems, Date effectiveDate, String remarks) {
+        TwoTuple<Boolean, B2BOrderStatusUpdateReqEntity.Builder> result = new TwoTuple<>(false, null);
+        if (orderId != null && orderId > 0 && StringUtils.isNotBlank(quarter)) {
+            if (orderItems == null || orderItems.isEmpty()) {
+                Order order = orderItemService.getOrderItems(quarter, orderId);//2020-12-20 sd_order -> sd_order_head
+                if (order != null) {
+                    orderItems = order.getItems();
+                }
+            }
+            List<CanboOrderCompleted.CompletedItem> completedItems = getKonkaOrderCompletedItems(orderId, quarter, orderItems);
+            B2BOrderStatusUpdateReqEntity.Builder builder = new B2BOrderStatusUpdateReqEntity.Builder();
+            builder.setCompletedItems(completedItems)
+                    .setEffectiveDate(effectiveDate)
+                    .setRemarks(StringUtils.toString(remarks));
+            result.setAElement(true);
+            result.setBElement(builder);
+        }
+        return result;
+    }
+
+    /**
+     * 创建康佳取消请求对象
+     */
+    public TwoTuple<Boolean, B2BOrderStatusUpdateReqEntity.Builder> createCancelRequestEntity(Integer kklCancelType, Date cancelDate, User updater) {
+        TwoTuple<Boolean, B2BOrderStatusUpdateReqEntity.Builder> result = new TwoTuple<>(false, null);
+        String cancelResponsible = null;
+        if (kklCancelType != null) {
+            cancelResponsible = MSDictUtils.getDictLabel(kklCancelType.toString(), Dict.DICT_TYPE_CANCEL_RESPONSIBLE, "");
+        }
+        if (StringUtils.isNotBlank(cancelResponsible) && cancelDate != null) {
+            B2BOrderStatusUpdateReqEntity.Builder builder = new B2BOrderStatusUpdateReqEntity.Builder();
+            builder.setEffectiveDate(cancelDate)
+                    .setUpdaterName(updater != null && StringUtils.isNotBlank(updater.getName()) ? updater.getName() : "")
+                    .setRemarks(cancelResponsible);
+            result.setAElement(true);
+            result.setBElement(builder);
+        }
+        return result;
+    }
+
+}

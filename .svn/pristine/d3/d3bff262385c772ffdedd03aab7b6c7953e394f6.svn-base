@@ -1,0 +1,189 @@
+package com.wolfking.jeesite.modules.api.controller.fi;
+
+import com.kkl.kklplus.utils.StringUtils;
+import com.wolfking.jeesite.common.exception.OrderException;
+import com.wolfking.jeesite.common.persistence.Page;
+import com.wolfking.jeesite.modules.api.entity.common.RestAppException;
+import com.wolfking.jeesite.modules.api.entity.fi.mywallet.*;
+import com.wolfking.jeesite.modules.api.entity.md.RestLoginUserInfo;
+import com.wolfking.jeesite.modules.api.service.fi.AppMyWalletService;
+import com.wolfking.jeesite.modules.api.util.ErrorCode;
+import com.wolfking.jeesite.modules.api.util.RestResult;
+import com.wolfking.jeesite.modules.api.util.RestResultGenerator;
+import com.wolfking.jeesite.modules.api.util.RestSessionUtils;
+import com.wolfking.jeesite.modules.fi.entity.EngineerCharge;
+import com.wolfking.jeesite.modules.fi.entity.EngineerChargeMaster;
+import com.wolfking.jeesite.modules.fi.entity.EngineerCurrency;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+import javax.servlet.http.HttpServletRequest;
+
+@Slf4j
+@RestController
+@RequestMapping("/api/fi/myWallet")
+public class AppMyWalletController {
+
+    @Autowired
+    private AppMyWalletService appMyWalletService;
+
+    private RestLoginUserInfo getUserInfo(HttpServletRequest request) {
+        return RestSessionUtils.getLoginUserInfoFromRestSession(request.getAttribute("sessionUserId").toString());
+    }
+
+    /**
+     * 获取网点余额信息
+     */
+    @RequestMapping(value = "getServicePointBalance", produces = "application/json;charset=UTF-8", method = RequestMethod.POST)
+    public RestResult<Object> getServicePointBalance(HttpServletRequest request) {
+        RestLoginUserInfo userInfo = getUserInfo(request);
+        if (userInfo == null || userInfo.getUserId() == null || userInfo.getServicePointId() == null) {
+            return RestResultGenerator.custom(ErrorCode.LOGIN_INFO_MISSING.code, ErrorCode.LOGIN_INFO_MISSING.message);
+        }
+        if (!userInfo.getPrimary()) {
+            return RestResultGenerator.custom(ErrorCode.NOT_PRIMARY_ACCOUNT.code, ErrorCode.NOT_PRIMARY_ACCOUNT.message);
+        }
+        AppGetServicePointBalanceResponse response = appMyWalletService.getServicePointBalance(userInfo.getServicePointId());
+        return RestResultGenerator.success(response);
+    }
+
+    /**
+     * 获取网点完工金额明细
+     */
+    @PostMapping(value = "getServicePointCompletedChargeList", produces = "application/json;charset=UTF-8")
+    public RestResult<Object> getServicePointCompletedChargeList(HttpServletRequest request, @RequestBody AppGetServicePointCompletedChargeListRequest params) {
+        if (params == null || params.getYearIndex() == null || params.getMonthIndex() == null) {
+            return RestResultGenerator.custom(ErrorCode.WRONG_REQUEST_FORMAT.code, ErrorCode.WRONG_REQUEST_FORMAT.message);
+        }
+        RestLoginUserInfo userInfo = null;
+        try {
+            userInfo = getUserInfo(request);
+            if (userInfo == null || userInfo.getUserId() == null || userInfo.getServicePointId() == null) {
+                return RestResultGenerator.custom(ErrorCode.LOGIN_INFO_MISSING.code, ErrorCode.LOGIN_INFO_MISSING.message);
+            }
+            if (!userInfo.getPrimary()) {
+                return RestResultGenerator.custom(ErrorCode.NOT_PRIMARY_ACCOUNT.code, ErrorCode.NOT_PRIMARY_ACCOUNT.message);
+            }
+            Page<EngineerChargeMaster> page = new Page<>(params.getPageNo(), params.getPageSize());
+            AppGetServicePointCompletedChargeListResponse response = appMyWalletService.getServicePointCompletedChargeList(userInfo.getServicePointId(), params.getYearIndex(), params.getMonthIndex(), page);
+            return RestResultGenerator.success(response);
+        } catch (OrderException | RestAppException oe) {
+            return RestResultGenerator.exception(oe.getMessage());
+        } catch (Exception e) {
+            log.error("[AppMyWalletController.getServicePointCompletedChargeList] user:{}", userInfo != null && userInfo.getUserId() != null ? userInfo.getUserId() : 0, e);
+            return RestResultGenerator.exception("获取网点完工金额明细失败");
+        }
+    }
+
+    /**
+     * 获取网点退补金额明细
+     */
+    @PostMapping(value = "getServicePointWriteOffChargeList", produces = "application/json;charset=UTF-8")
+    public RestResult<Object> getServicePointWriteOffChargeList(HttpServletRequest request, @RequestBody AppGetServicePointWriteOffChargeListRequest params) {
+        if (params == null || params.getYearIndex() == null || params.getMonthIndex() == null) {
+            return RestResultGenerator.custom(ErrorCode.WRONG_REQUEST_FORMAT.code, ErrorCode.WRONG_REQUEST_FORMAT.message);
+        }
+        RestLoginUserInfo userInfo = null;
+        try {
+            userInfo = getUserInfo(request);
+            if (userInfo == null || userInfo.getUserId() == null || userInfo.getServicePointId() == null) {
+                return RestResultGenerator.custom(ErrorCode.LOGIN_INFO_MISSING.code, ErrorCode.LOGIN_INFO_MISSING.message);
+            }
+            if (!userInfo.getPrimary()) {
+                return RestResultGenerator.custom(ErrorCode.NOT_PRIMARY_ACCOUNT.code, ErrorCode.NOT_PRIMARY_ACCOUNT.message);
+            }
+            Page<EngineerCharge> page = new Page<>(params.getPageNo(), params.getPageSize());
+            AppGetServicePointWriteOffChargeListResponse response = appMyWalletService.getServicePointWriteOffChargeList(userInfo.getServicePointId(), params.getYearIndex(), params.getMonthIndex(), page);
+            return RestResultGenerator.success(response);
+        } catch (OrderException | RestAppException oe) {
+            return RestResultGenerator.exception(oe.getMessage());
+        } catch (Exception e) {
+            log.error("[AppMyWalletController.getServicePointWriteOffChargeList] user:{}", userInfo != null && userInfo.getUserId() != null ? userInfo.getUserId() : 0, e);
+            return RestResultGenerator.exception("获取网点退补金额明细失败");
+        }
+    }
+
+    /**
+     * 获取网点提现明细
+     */
+    @PostMapping(value = "getServicePointWithdrawList", produces = "application/json;charset=UTF-8")
+    public RestResult<Object> getServicePointWithdrawList(HttpServletRequest request, @RequestBody AppGetServicePointWithdrawListRequest params) {
+        if (params == null || params.getYearIndex() == null || params.getMonthIndex() == null) {
+            return RestResultGenerator.custom(ErrorCode.WRONG_REQUEST_FORMAT.code, ErrorCode.WRONG_REQUEST_FORMAT.message);
+        }
+        RestLoginUserInfo userInfo = null;
+        try {
+            userInfo = getUserInfo(request);
+            if (userInfo == null || userInfo.getUserId() == null || userInfo.getServicePointId() == null) {
+                return RestResultGenerator.custom(ErrorCode.LOGIN_INFO_MISSING.code, ErrorCode.LOGIN_INFO_MISSING.message);
+            }
+            if (!userInfo.getPrimary()) {
+                return RestResultGenerator.custom(ErrorCode.NOT_PRIMARY_ACCOUNT.code, ErrorCode.NOT_PRIMARY_ACCOUNT.message);
+            }
+            Page<EngineerCurrency> page = new Page<>(params.getPageNo(), params.getPageSize());
+            AppGetServicePointWithdrawListResponse response = appMyWalletService.getServicePointWithdrawList(userInfo.getServicePointId(), params.getYearIndex(), params.getMonthIndex(), page);
+            return RestResultGenerator.success(response);
+        } catch (OrderException | RestAppException oe) {
+            return RestResultGenerator.exception(oe.getMessage());
+        } catch (Exception e) {
+            log.error("[AppMyWalletController.getServicePointWithdrawList] user:{}", userInfo != null && userInfo.getUserId() != null ? userInfo.getUserId() : 0, e);
+            return RestResultGenerator.exception("获取网点提现明细失败");
+        }
+    }
+
+    /**
+     * 获取完工账单项详情
+     */
+    @PostMapping(value = "getServicePointCompletedChargeDetail", produces = "application/json;charset=UTF-8")
+    public RestResult<Object> getServicePointCompletedChargeDetail(HttpServletRequest request, @RequestBody AppGetServicePointCompletedChargeDetailRequest params) {
+        if (params == null || params.getItemId() == null || params.getItemId() <= 0 || StringUtils.isBlank(params.getQuarter())) {
+            return RestResultGenerator.custom(ErrorCode.WRONG_REQUEST_FORMAT.code, ErrorCode.WRONG_REQUEST_FORMAT.message);
+        }
+        RestLoginUserInfo userInfo = null;
+        try {
+            userInfo = getUserInfo(request);
+            if (userInfo == null || userInfo.getUserId() == null || userInfo.getServicePointId() == null) {
+                return RestResultGenerator.custom(ErrorCode.LOGIN_INFO_MISSING.code, ErrorCode.LOGIN_INFO_MISSING.message);
+            }
+            if (!userInfo.getPrimary()) {
+                return RestResultGenerator.custom(ErrorCode.NOT_PRIMARY_ACCOUNT.code, ErrorCode.NOT_PRIMARY_ACCOUNT.message);
+            }
+            AppGetServicePointCompletedChargeDetailResponse response = appMyWalletService.getServicePointCompletedChargeDetail(params.getQuarter(), params.getItemId());
+            return RestResultGenerator.success(response);
+        } catch (OrderException | RestAppException oe) {
+            return RestResultGenerator.exception(oe.getMessage());
+        } catch (Exception e) {
+            log.error("[AppMyWalletController.getServicePointCompletedChargeDetail] user:{}", userInfo != null && userInfo.getUserId() != null ? userInfo.getUserId() : 0, e);
+            return RestResultGenerator.exception("获取网点完工账单详情失败");
+        }
+    }
+
+    /**
+     * 获取退补账单项详情
+     */
+    @PostMapping(value = "getServicePointWriteOffChargeDetail", produces = "application/json;charset=UTF-8")
+    public RestResult<Object> getServicePointWriteOffChargeDetail(HttpServletRequest request, @RequestBody AppGetServicePointWriteOffChargeDetailRequest params) {
+        if (params == null || params.getItemId() == null || params.getItemId() <= 0 || StringUtils.isBlank(params.getQuarter())) {
+            return RestResultGenerator.custom(ErrorCode.WRONG_REQUEST_FORMAT.code, ErrorCode.WRONG_REQUEST_FORMAT.message);
+        }
+        RestLoginUserInfo userInfo = null;
+        try {
+            userInfo = getUserInfo(request);
+            if (userInfo == null || userInfo.getUserId() == null || userInfo.getServicePointId() == null) {
+                return RestResultGenerator.custom(ErrorCode.LOGIN_INFO_MISSING.code, ErrorCode.LOGIN_INFO_MISSING.message);
+            }
+            if (!userInfo.getPrimary()) {
+                return RestResultGenerator.custom(ErrorCode.NOT_PRIMARY_ACCOUNT.code, ErrorCode.NOT_PRIMARY_ACCOUNT.message);
+            }
+            AppGetServicePointWriteOffChargeDetailResponse response = appMyWalletService.getServicePointWriteChargeDetail(params.getQuarter(), params.getItemId());
+            return RestResultGenerator.success(response);
+        } catch (OrderException | RestAppException oe) {
+            return RestResultGenerator.exception(oe.getMessage());
+        } catch (Exception e) {
+            log.error("[AppMyWalletController.getServicePointWriteOffChargeDetail] user:{}", userInfo != null && userInfo.getUserId() != null ? userInfo.getUserId() : 0, e);
+            return RestResultGenerator.exception("获取网点退补账单详情失败");
+        }
+    }
+
+}

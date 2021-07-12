@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.wolfking.jeesite.modules.api.dao.AppMyWalletDao">
+
+    <select id="getServicePointBalance" resultType="ServicePointFinance">
+        SELECT
+                a.balance,
+                a.total_amount,
+                a.platform_fee,
+                a.info_fee,
+                a.tax_fee
+        FROM    md_servicepoint_finance a
+        WHERE   a.id =#{servicePointId}
+    </select>
+
+    <select id="getFirstCurrencyCreateDate" resultType="com.wolfking.jeesite.modules.fi.entity.EngineerCurrency">
+		SELECT  id,
+			    create_date
+		FROM    fi_engineercurrency
+		WHERE   service_point_id = #{servicePointId}
+		ORDER BY id
+		LIMIT 1
+	</select>
+
+    <select id="getServicePointCompletedChargeList" resultType="com.wolfking.jeesite.modules.fi.entity.EngineerChargeMaster">
+        SELECT
+                a.id,
+                a.order_id,
+                a.order_no,
+                a.service_charge,
+                a.express_charge,
+                a.travel_charge,
+                a.material_charge,
+                a.other_charge,
+                a.insurance_charge,
+                a.customer_time_liness_charge,
+                a.time_liness_charge,
+                a.urgent_charge,
+                a.praise_fee,
+                a.create_date,
+                a.quarter
+        FROM    fi_engineercharge_master a
+        WHERE   a.quarter = #{quarter}
+                AND a.service_point_id = #{servicePointId}
+                AND a.create_date >= #{beginCreateDate} AND <![CDATA[ a.create_date < #{endCreateDate} ]]>
+                AND a.charge_order_type = 0
+                AND a.del_flag = 0
+        ORDER BY a.id DESC
+    </select>
+
+    <select id="getServicePointCompletedChargeSummary" resultType="com.wolfking.jeesite.modules.api.entity.common.IntegerDoubleTuple">
+        SELECT
+                count(0) AS aElement,
+                sum(service_charge + express_charge + travel_charge + material_charge + other_charge + customer_time_liness_charge + time_liness_charge + urgent_charge + praise_fee + insurance_charge) AS bElement
+        FROM    fi_engineercharge_master a
+        WHERE   a.quarter = #{quarter}
+                AND a.service_point_id = #{servicePointId}
+                AND a.create_date >= #{beginCreateDate} AND <![CDATA[ a.create_date < #{endCreateDate} ]]>
+                AND a.charge_order_type = 0
+                AND a.del_flag = 0
+    </select>
+
+    <select id="getServicePointCompletedQty" resultType="Integer">
+        SELECT
+                count(0)
+        FROM    fi_engineercharge_master a
+        WHERE   a.quarter = #{quarter}
+                AND a.service_point_id = #{servicePointId}
+                AND a.create_date >= #{beginCreateDate} AND <![CDATA[ a.create_date < #{endCreateDate} ]]>
+                AND a.charge_order_type = 0
+                AND a.del_flag = 0
+    </select>
+
+    <select id="getServicePointWriteOffQty" resultType="Integer">
+        SELECT
+                count(0)
+        FROM    fi_engineercharge a
+        WHERE   a.quarter = #{quarter}
+                AND a.service_point_id = #{servicePointId}
+                AND a.create_date >= #{beginCreateDate} AND <![CDATA[ a.create_date < #{endCreateDate} ]]>
+                AND a.charge_order_type = 1
+                AND a.del_flag = 0
+    </select>
+
+    <select id="getServicePointWriteOffChargeList" resultType="com.wolfking.jeesite.modules.fi.entity.EngineerCharge">
+        SELECT
+                a.id,
+                a.order_id,
+                a.order_no,
+                a.service_charge,
+                a.express_charge,
+                a.travel_charge,
+                a.material_charge,
+                a.other_charge,
+                a.create_date,
+                a.quarter
+        FROM    fi_engineercharge a
+        WHERE   a.quarter = #{quarter}
+                AND a.service_point_id = #{servicePointId}
+                AND a.create_date >= #{beginCreateDate} AND <![CDATA[ a.create_date < #{endCreateDate} ]]>
+                AND a.charge_order_type = 1
+                AND a.del_flag = 0
+        ORDER BY a.id DESC
+    </select>
+
+    <select id="getServicePointWriteOffChargeSummary" resultType="com.wolfking.jeesite.modules.api.entity.common.IntegerDoubleTuple">
+        SELECT
+                count(0) AS aElement,
+                sum(service_charge + express_charge + travel_charge + material_charge + other_charge) AS bElement
+        FROM    fi_engineercharge a
+        WHERE   a.quarter = #{quarter}
+                AND a.service_point_id = #{servicePointId}
+                AND a.create_date >= #{beginCreateDate} AND <![CDATA[ a.create_date < #{endCreateDate} ]]>
+                AND a.charge_order_type = 1
+                AND a.del_flag = 0
+    </select>
+
+    <select id="getServicePointWithdrawList" resultType="com.wolfking.jeesite.modules.fi.entity.EngineerCurrency">
+        SELECT
+                a.id,
+                a.action_type,
+                a.currency_no,
+                a.amount,
+                a.payment_type,
+                a.create_date,
+                a.remarks
+        FROM    fi_engineercurrency a
+        WHERE   a.quarter = #{quarter}
+                AND a.service_point_id = #{servicePointId}
+                AND a.create_date >= #{beginCreateDate} AND <![CDATA[ a.create_date < #{endCreateDate} ]]>
+                AND a.action_type = 50
+        ORDER BY a.id DESC
+    </select>
+
+    <select id="getServicePointWithdrawTotalCharge" resultType="Double">
+        SELECT
+                sum(amount)
+        FROM    fi_engineercurrency a
+        WHERE   a.quarter = #{quarter}
+                AND a.service_point_id = #{servicePointId}
+                AND a.create_date >= #{beginCreateDate} AND <![CDATA[ a.create_date < #{endCreateDate} ]]>
+                AND a.action_type = 50
+    </select>
+
+    <select id="getServicePointCompletedChargeDetail" resultType="com.wolfking.jeesite.modules.fi.entity.EngineerChargeMaster">
+        SELECT
+                a.id,
+                a.order_id,
+                a.order_no,
+                a.service_charge,
+                a.express_charge,
+                a.travel_charge,
+                a.material_charge,
+                a.other_charge,
+                a.insurance_charge,
+                a.customer_time_liness_charge,
+                a.time_liness_charge,
+                a.urgent_charge,
+                a.praise_fee,
+                a.create_date
+        FROM    fi_engineercharge_master a
+        WHERE   a.quarter = #{quarter}
+                AND a.id = #{engineerChargeMasterId}
+    </select>
+
+    <select id="getServicePointWriteOffChargeDetail" resultType="com.wolfking.jeesite.modules.fi.entity.EngineerCharge">
+        SELECT
+                a.id,
+                a.order_id,
+                a.order_no,
+                a.service_charge,
+                a.express_charge,
+                a.travel_charge,
+                a.material_charge,
+                a.other_charge,
+                a.create_date,
+                a.remarks
+        FROM    fi_engineercharge a
+        WHERE   a.quarter = #{quarter}
+                AND a.id = #{engineerChargeId}
+    </select>
+
+    <select id="getOrderInfo" resultType="OrderCondition">
+        SELECT
+                soc.order_no,
+                soc.user_name,
+                soc.service_phone,
+                soc.area_id             AS "area.id",
+                soc.area_name,
+                soc.service_address
+        FROM  sd_order_condition soc
+        <where>
+            soc.order_id = #{orderId}
+            <if test="quarter != null and quarter != ''.toString()">
+                AND soc.quarter = #{quarter}
+            </if>
+        </where>
+    </select>
+
+    <select id="getOrderDetailList" resultType="OrderDetail">
+        SELECT
+                sod.id,
+                sod.service_times,
+                sod.service_type_id           AS "serviceType.id",
+                sod.product_id                AS "product.id",
+                sod.qty
+        FROM    sd_orderdetail sod
+        WHERE   sod.quarter = #{quarter}
+                AND sod.order_id = #{orderId}
+                AND sod.del_flag = 0
+        LIMIT 100
+    </select>
+
+</mapper>

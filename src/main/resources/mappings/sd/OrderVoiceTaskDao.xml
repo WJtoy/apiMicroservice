@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 语音回访任务表 -->
+<mapper namespace="com.wolfking.jeesite.modules.sd.dao.OrderVoiceTaskDao">
+
+    <sql id="fullColumns">
+        a.id,
+        a.voice_type,
+        a.order_id,
+        a.quarter,
+        a.connected_at,
+        a.disconnected_at,
+        a.user_name,
+        a.phone,
+        a.project_caption,
+        a.talk_times,
+        a.task_result,
+        a.end_reason,
+        a.status,
+        a.score,
+        a.labelling,
+        a.remark,
+        a.create_by,
+        a.create_date,
+        a.update_date
+    </sql>
+
+    <sql id="baseColumns">
+        a.id,
+        a.voice_type,
+        a.connected_at,
+        a.talk_times,
+        a.task_result,
+        a.end_reason
+    </sql>
+
+    <select id="getByOrderId" resultType="OrderVoiceTask">
+        SELECT
+            <include refid="fullColumns"/>
+        FROM
+            sd_voice_task a
+        WHERE
+            a.quarter = #{quarter}
+            and a.order_id = #{orderId}
+        limit 1
+    </select>
+
+    <select id="getBaseInfoByOrderId" resultType="OrderVoiceTask">
+        SELECT
+            <include refid="baseColumns"/>
+        FROM
+            sd_voice_task a
+        WHERE
+            a.quarter = #{quarter}
+            and a.order_id = #{orderId}
+        limit 1
+    </select>
+
+    <!-- 新建 -->
+    <insert id="insert" parameterType="OrderVoiceTask" keyProperty="id" useGeneratedKeys="true">
+        INSERT INTO sd_voice_task(
+        voice_type,
+        order_id,
+        quarter,
+        user_name,
+        phone,
+        project_caption,
+        create_by,
+        create_date,
+        remark
+        ) VALUES (
+        #{voiceType},
+        #{orderId},
+        #{quarter},
+        #{userName},
+        #{phone},
+        #{projectCaption},
+        #{createBy},
+        #{createDate},
+        #{remark}
+        )
+    </insert>
+
+    <!-- 更新 -->
+    <update id="update" parameterType="OrderVoiceTask">
+        UPDATE sd_voice_task
+        SET
+            connected_at	= #{connectedAt},
+            disconnected_at	= #{disconnectedAt},
+            talk_times	    = #{talkTimes},
+            end_reason	    = #{endReason},
+            task_result	    = #{taskResult},
+            status	        = #{status},
+            score	        = #{score},
+            labelling	    = #{labelling},
+            update_date	    = #{updateDate}
+        WHERE
+            <if test="quarter != null and quarter != ''.trim()">quarter = #{quarter} and </if>
+             id = #{id}
+    </update>
+
+    <!-- 取消 -->
+    <update id="cancel">
+        UPDATE sd_voice_task
+        SET
+          task_result	    = 3,
+          update_date	    = #{updateDate}
+        WHERE
+        <if test="quarter != null and quarter != ''.trim()">quarter = #{quarter} and </if>
+        order_id = #{orderId}
+    </update>
+</mapper>

@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wolfking.jeesite.modules.sd.dao.OrderOpitionTraceDao">
+	<!-- 工单意见跟踪记录表 包含停滞，反馈，短信标记异常，app完工标记异常 -->
+	<resultMap id="OrderOpitionTraceResult" type="OrderOpitionTrace" >
+		<id property="id" column="id"/>
+		<result property="quarter" column="quarter" />
+		<result property="channel" column="channel" />
+		<result property="orderId" column="order_id" />
+		<result property="opinionId" column="opinion_id" />
+		<result property="parentId" column="parent_id" />
+		<result property="opinionValue" column="opinion_value" />
+		<result property="opinionLabel" column="opinion_label" />
+		<result property="opinionType" column="opinion_type" />
+		<result property="appointmentAt" column="appointment_at" />
+		<result property="isAbnormaly" column="is_abnormaly" />
+		<result property="createAt" column="create_at" />
+		<result property="remark" column="remark" />
+	</resultMap>
+
+	<sql id="selectOpinionTrace">
+		SELECT
+			f.id,
+			f.channel,
+			f.opinion_id,
+			f.parent_id,
+			f.opinion_value,
+			f.opinion_label,
+			f.opinion_type,
+			f.appointment_at,
+			f.is_abnormaly,
+			f.remark,
+			f.create_by as "createBy.id",
+			f.create_at
+		FROM sd_opinion_trace_log f
+	</sql>
+
+    <!-- 按网点Id读取同反馈类型反馈次数 -->
+    <select id="getTimesByServicepoint" resultType="java.lang.Integer">
+        select f.times
+        from sd_opinion_trace_log f
+        WHERE f.order_id = #{orderId}
+        and f.parent_id = #{opinionId}
+        <if test="quarter != null and quarter != ''">
+            and f.quarter = #{quarter}
+        </if>
+        and f.servicepoint_id = #{servicePointId}
+        order by id desc
+        limit 1
+    </select>
+
+    <!-- 按反馈类型读取反馈总次数 -->
+    <select id="getTotalTimesByOpinionType" resultType="java.lang.Integer">
+        select ifnull(max(f.total_times),0)
+		from sd_opinion_trace_log f
+        WHERE
+            f.order_id = #{orderId}
+            and f.parent_id = #{opinionId}
+            <if test="quarter != null and quarter != ''">
+                and f.quarter = #{quarter}
+            </if>
+    </select>
+
+	<insert id="insert" useGeneratedKeys="true" keyProperty="id">
+		INSERT INTO sd_opinion_trace_log(
+			 quarter,
+			 channel,
+			 servicepoint_id,
+			 times,
+			 total_times,
+			 order_id,
+			 opinion_id,
+			 parent_id,
+			 opinion_value,
+			 opinion_label,
+			 opinion_type,
+			 appointment_at,
+			 is_abnormaly,
+			 remark,
+			 create_by,
+			 create_at
+		) VALUES (
+			#{quarter},
+			#{channel},
+			#{servicePointId},
+			#{times},
+			#{totalTimes},
+			#{orderId},
+			#{opinionId},
+			#{parentId},
+			#{opinionValue},
+			#{opinionLabel},
+			#{opinionType},
+			#{appointmentAt},
+			#{isAbnormaly},
+			#{remark},
+			#{createBy.id},
+			#{createAt}
+		);
+	</insert>
+
+</mapper>

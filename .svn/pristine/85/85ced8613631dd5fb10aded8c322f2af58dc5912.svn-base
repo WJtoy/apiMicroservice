@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wolfking.jeesite.ms.b2bcenter.sd.dao.B2BOrderDao">
+
+    <select id="getOrderInfo" resultType="Order">
+        SELECT
+        id,
+        order_no,
+        quarter
+        FROM  sd_order
+        <where>
+            <if test="quarter != null and quarter !=''.toString()">
+                AND quarter = #{quarter}
+            </if>
+            AND workcard_id = #{b2bOrderNo}
+            <if test="dataSource != null and dataSource != 0 ">
+                AND data_source = #{dataSource}
+            </if>
+        </where>
+        LIMIT 1
+    </select>
+
+    <select id="getDataSourceIdByOrderId" resultType="Integer">
+        SELECT data_source
+        FROM sd_order a
+        <where>
+            <if test="quarter != null and quarter !=''.toString()">
+                AND a.quarter = #{quarter}
+            </if>
+            AND a.id = #{orderId}
+        </where>
+        LIMIT 1
+    </select>
+
+    <select id="getCustomerIdByOrderId" resultType="Long">
+        SELECT a.customer_id
+        FROM sd_order_condition a
+        <where>
+            <if test="quarter != null and quarter !=''.toString()">
+                AND a.quarter = #{quarter}
+            </if>
+            AND a.order_id = #{orderId}
+        </where>
+        LIMIT 1
+    </select>
+
+    <select id="getOrderMaterials" resultType="MaterialItem">
+        SELECT
+        smi.product_id AS "product.id",
+        smi.material_id AS "material.id",
+        smi.qty
+        FROM sd_materialitem smi
+        INNER JOIN sd_materialmaster sm on sm.id = smi.materialmaster_id
+        <where>
+            sm.order_id = #{orderId}
+            <if test="quarter != null and quarter != ''.toString()">
+                AND sm.quarter = #{quarter}
+            </if>
+            AND sm.status in (3,4) AND sm.del_flag = 0 AND smi.del_flag = 0
+        </where>
+        LIMIT 1000
+    </select>
+
+    <select id="getOrderErrors" resultType="OrderDetail">
+        SELECT
+        id,
+        order_id,
+        product_id          AS "product.id",
+        error_type_id       AS "errorType.id",
+        error_code_id       AS "errorCode.id",
+        action_code_id      AS "actionCode.id",
+        action_name,
+        other_action_remark
+        FROM sd_orderdetail
+        <where>
+            order_id = #{orderId}
+            <if test="quarter != null and quarter != ''.toString()">
+                AND quarter = #{quarter}
+            </if>
+            AND del_flag = 0
+        </where>
+        LIMIT 100
+    </select>
+
+    <select id="getOrderAdditionalInfo"  resultType="String">
+        select order_info_json
+        FROM sd_order
+        <where>
+            <if test="quarter != null  and quarter != ''.toString()">
+                quarter = #{quarter}
+            </if>
+            AND id = #{orderId}
+        </where>
+    </select>
+
+</mapper>

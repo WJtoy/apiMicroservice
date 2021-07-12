@@ -1,0 +1,41 @@
+package com.wolfking.jeesite.ms.providermd.feign;
+
+import com.kkl.kklplus.common.response.MSResponse;
+import com.kkl.kklplus.entity.common.MSPage;
+import com.kkl.kklplus.entity.md.MDCustomerMaterial;
+import com.wolfking.jeesite.ms.providermd.fallback.MSCustomerMaterialFeignFallbackFactory;
+import org.springframework.cloud.netflix.feign.FeignClient;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@FeignClient(name="provider-md", fallbackFactory = MSCustomerMaterialFeignFallbackFactory.class)
+public interface MSCustomerMaterialFeign {
+    /**
+     * 根据id获取
+     * @param id
+     * @return
+     */
+    @GetMapping("/customerMaterial/getById/{id}")
+    MSResponse<MDCustomerMaterial> getById(@PathVariable("id") Long id);
+
+    /**
+     * 根据客户id,产品id,配件id获取客户配件
+     * @param customerId,productId,materialId
+     * @return
+     */
+    @GetMapping("/customerMaterial/getCustomerMaterialByCustomerAndProductAndMaterial")
+    MSResponse<MDCustomerMaterial> getCustomerMaterialByCustomerAndProductAndMaterial(@RequestParam("customerId") Long customerId,
+                                                                      @RequestParam("productId") Long productId,
+                                                                      @RequestParam("materialId") Long material);
+
+    /**
+     * 根据客户id,产品id客户配件
+     * @param customerId,productId
+     * @return
+     */
+    @GetMapping("/customerMaterial/findCustomerMaterialByCustomerIdAndProductId")
+    MSResponse<List<MDCustomerMaterial>> findListByCustomerAndProduct(@RequestParam("customerId") Long customerId,
+                                                                     @RequestParam("productId") Long productId);
+
+}

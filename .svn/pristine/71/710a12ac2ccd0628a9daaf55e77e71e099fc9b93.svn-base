@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wolfking.jeesite.modules.fi.dao.EngineerCurrencyDao">
+
+	<select id="getServicePointCurrencyListForApi" parameterType="Map" resultType="com.wolfking.jeesite.modules.fi.entity.EngineerCurrency">
+		select
+				fec.id,
+				fec.currency_no,
+				fec.before_balance,
+				fec.balance,
+				fec.amount,
+				fec.action_type,
+				fec.create_date,
+				fec.remarks
+		from 	fi_engineercurrency fec
+		<where>
+			<if test="beginDate != null">
+				fec.create_date >= #{beginDate}
+			</if>
+			<if test="endDate != null">
+				and <![CDATA[ fec.create_date <= #{endDate} ]]>
+			</if>
+			<if test="servicePointId != null">
+				and fec.service_point_id = #{servicePointId}
+			</if>
+			<if test="actionType != null">
+				<choose>
+					<when test="actionType == 3040">
+						and (fec.action_type = 30 or fec.action_type = 40)
+					</when>
+					<otherwise>
+						and fec.action_type = #{actionType}
+					</otherwise>
+				</choose>
+			</if>
+			<if test="actionType == null">
+				and <![CDATA[ fec.action_type < 60 ]]>
+			</if>
+			<if test="currencyNo != null and currencyNo != ''">
+				and fec.currency_no = #{currencyNo}
+			</if>
+			<if test="quarters != null and quarters.size>0">
+				and fec.quarter in
+				<foreach collection="quarters" item="item" open="(" close=")" separator=",">
+					${item}
+				</foreach>
+			</if>
+		</where>
+		order by fec.id desc
+	</select>
+
+	<select id="getServicePointCurrencySummryByMonthApi" parameterType="Map" resultType="Map">
+		select
+			fec.action_type,
+			sum(fec.amount) as amount
+		from
+			fi_engineercurrency fec
+		<where>
+			fec.create_date between #{beginDate} and #{endDate}
+			and fec.service_point_id = #{servicePointId}
+			<if test="actionType != null">
+				<choose>
+					<when test="actionType == 3040">
+						and (fec.action_type = 30 or fec.action_type = 40)
+					</when>
+					<otherwise>
+						and fec.action_type = #{actionType}
+					</otherwise>
+				</choose>
+			</if>
+			<if test="actionType == null">
+				and <![CDATA[ fec.action_type < 60 ]]>
+			</if>
+		</where>
+		group by fec.action_type
+		limit 20
+	</select>
+
+	<select id="getFirstCurrency" resultType="com.wolfking.jeesite.modules.fi.entity.EngineerCurrency">
+		SELECT
+			id,
+			create_date
+		FROM
+			fi_engineercurrency
+		WHERE
+			service_point_id = #{servicePointId}
+		ORDER BY
+			id
+		LIMIT 1
+	</select>
+
+</mapper>

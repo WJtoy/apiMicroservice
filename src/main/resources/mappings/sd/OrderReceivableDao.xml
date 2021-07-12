@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wolfking.jeesite.modules.sd.dao.OrderReceivableDao">
+
+	<sql id="OrderReceivableColumns">
+        item_no,
+        form_no,
+        amount,
+        remark
+    </sql>
+
+	<select id="getByOrderId" resultType="OrderReceivable">
+		select
+			<include refid="OrderReceivableColumns" />
+		from
+			sd_order_receivable
+		<where>
+			order_id = #{orderId}
+			and quarter = #{quarter}
+		</where>
+		order by item_no
+	</select>
+
+	<insert id="insert">
+		insert into sd_order_receivable(
+			order_id,
+			quarter,
+			item_no,
+			form_no,
+			amount,
+			remark,
+			create_by,
+			create_at
+		) values(
+			#{orderId},
+			#{quarter},
+			#{itemNo},
+        	#{formNo},
+        	#{amount},
+        	#{remark},
+        	#{createBy.id},
+        	#{createAt}
+		)
+	</insert>
+
+</mapper>

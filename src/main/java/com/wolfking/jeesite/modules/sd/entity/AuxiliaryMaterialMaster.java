@@ -1,0 +1,143 @@
+package com.wolfking.jeesite.modules.sd.entity;
+
+import com.google.common.collect.Lists;
+import com.wolfking.jeesite.common.persistence.LongIDDataEntity;
+
+import java.util.List;
+
+public class AuxiliaryMaterialMaster extends LongIDDataEntity<AuxiliaryMaterialMaster> {
+
+    public enum FormTypeEnum {
+
+        HAS_MATERIAL_ITEM(0, "有辅材项目"),
+        NO_MATERIAL_ITEM(1, "无辅材项目");
+
+        private final int value;
+        private final String label;
+
+        FormTypeEnum(int value, String label) {
+            this.value = value;
+            this.label = label;
+        }
+
+        public int getValue() {
+            return value;
+        }
+
+        public String getLabel() {
+            return label;
+        }
+
+        public static FormTypeEnum valueOf(Integer value) {
+            if (value != null) {
+                for (FormTypeEnum type : FormTypeEnum.values()) {
+                    if (type.value == value) {
+                        return type;
+                    }
+                }
+            }
+            return null;
+        }
+    }
+
+    /**
+     * 工单ID
+     */
+    private Long orderId = 0L;
+    private Integer formType = FormTypeEnum.HAS_MATERIAL_ITEM.getValue();
+
+    /**
+     * 辅材或收费子目数量
+     */
+    private Integer qty = 0;
+
+    /**
+     * 费用总金额
+     */
+    private Double total = 0.0;
+
+    private Double actualTotalCharge = 0.0;
+
+    private String quarter = "";
+
+    private String filePath = "";
+
+    /**
+     * 是否更新图片路径的标识
+     */
+    private boolean isUpdatePhoto = true;
+
+    private List<AuxiliaryMaterial> items = Lists.newArrayList();
+
+    public Long getOrderId() {
+        return orderId;
+    }
+
+    public void setOrderId(Long orderId) {
+        this.orderId = orderId;
+    }
+
+    public Integer getFormType() {
+        return formType;
+    }
+
+    public void setFormType(Integer formType) {
+        this.formType = formType;
+    }
+
+    public Integer getQty() {
+        return qty;
+    }
+
+    public void setQty(Integer qty) {
+        this.qty = qty;
+    }
+
+    public Double getTotal() {
+        return total;
+    }
+
+    public void setTotal(Double total) {
+        this.total = total;
+    }
+
+    public Double getActualTotalCharge() {
+        return actualTotalCharge;
+    }
+
+    public void setActualTotalCharge(Double actualTotalCharge) {
+        this.actualTotalCharge = actualTotalCharge;
+    }
+
+    public String getQuarter() {
+        return quarter;
+    }
+
+    public void setQuarter(String quarter) {
+        this.quarter = quarter;
+    }
+
+    public List<AuxiliaryMaterial> getItems() {
+        return items;
+    }
+
+    public void setItems(List<AuxiliaryMaterial> items) {
+        this.items = items;
+    }
+
+    public String getFilePath() {
+        return filePath;
+    }
+
+    public void setFilePath(String filePath) {
+        this.filePath = filePath;
+    }
+
+    public boolean isUpdatePhoto() {
+        return isUpdatePhoto;
+    }
+
+    public void setUpdatePhoto(boolean updatePhoto) {
+        isUpdatePhoto = updatePhoto;
+    }
+}

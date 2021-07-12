@@ -1,0 +1,39 @@
+syntax="proto3";
+
+option java_package = "com.wolfking.jeesite.modules.mq.dto";
+option java_outer_classname = "MQOrderAutoPlanMessage";
+
+// 主消息体
+message OrderAutoPlan{
+    //订单id
+    int64 orderId = 1;
+    //订单号
+    string orderNo = 2;
+    //数据分片
+    string quarter = 3;
+    //区县id
+    int64 areaId = 4;
+    //名称，包含省市区
+    string areaName = 5;
+    //订单完整地址
+    string serviceAddress = 6;
+    //经度
+    double longitude = 7;
+    //维度
+    double latitude = 8;
+    //创建人id
+    int64 createBy = 9;
+    //创建人姓名
+    string creator = 10;
+    //创建日期
+    int64 createAt = 11;
+    //区域检索半径
+    AreaRadius areaRadius = 12;
+}
+
+// 区域检索半径
+message AreaRadius{
+    int32 radius1 = 1;
+    int32 radius2 = 2;
+    int32 radius3 = 3;
+}

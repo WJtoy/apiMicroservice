@@ -1,0 +1,54 @@
+package com.wolfking.jeesite.modules.api.entity.md.mapper;
+
+import com.wolfking.jeesite.modules.api.entity.md.RestEngineer;
+import com.wolfking.jeesite.modules.api.entity.md.RestEngineerTemperatureInfo;
+import com.wolfking.jeesite.modules.md.entity.Engineer;
+import com.wolfking.jeesite.modules.md.entity.EngineerTemperature;
+import ma.glasnost.orika.CustomMapper;
+import ma.glasnost.orika.MappingContext;
+import org.springframework.stereotype.Component;
+
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * @Auther wj
+ * @Date 2021/1/14 9:40
+ */
+@Component
+public class RestEngineerTemperatureMapper extends CustomMapper<RestEngineerTemperatureInfo, EngineerTemperature> {
+    @Override
+    public void mapAtoB(RestEngineerTemperatureInfo a, EngineerTemperature b, MappingContext context) {
+
+    }
+
+    @Override
+    public void mapBtoA(EngineerTemperature b, RestEngineerTemperatureInfo a, MappingContext context) {
+        Map<String,String> map = new HashMap<>();
+        a.setId(b.getId());
+        a.setHealthOption(b.getHealthOption());
+        a.setTemperature(b.getTemperature());
+        a.setCreateDate(b.getCreateDate());
+        if (b.getHealthStatus() == 0) {
+            map.put("value",b.getHealthStatus().toString());
+            map.put("title","体温正常，健康申报正常");
+            map.put("label","身心健康，满足安全健康上门条件。");
+            a.setHealthStatus(map);
+        }else {
+            map.put("value",b.getHealthStatus().toString());
+            if (b.getTemperature()<35.5 || b.getTemperature()>37.2) {
+                if (b.getHealthOption()==0) {
+                    map.put("title", "体温异常，健康申报正常");
+                    map.put("label","健康异常！");
+                }else {
+                    map.put("title", "体温异常，健康申报异常");
+                    map.put("label","身体不适，存在发热、头晕、胸闷、呼吸困难、乏力、恶心呕吐、腹泻等症状或携带不良情绪。");
+                }
+            }else {
+                map.put("title","体温正常，健康申报异常");
+                map.put("label","身体不适，存在发热、头晕、胸闷、呼吸困难、乏力、恶心呕吐、腹泻等症状或携带不良情绪。");
+            }
+            a.setHealthStatus(map);
+        }
+    }
+}

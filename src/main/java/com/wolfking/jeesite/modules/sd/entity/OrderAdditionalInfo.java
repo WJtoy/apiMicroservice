@@ -1,0 +1,108 @@
+package com.wolfking.jeesite.modules.sd.entity;
+
+import com.wolfking.jeesite.common.persistence.LongIDDataEntity;
+
+public class OrderAdditionalInfo extends LongIDDataEntity<OrderAdditionalInfo> {
+
+    /**
+     * 预计到货时间（字符串）
+     */
+    private String estimatedReceiveDate = "";
+
+    /**
+     * 购买时间 (2020-3-10新增属性)
+     */
+    private Long buyDate = 0L;
+
+    /**
+     * 期望上门日期 (2020-3-10新增属性)
+     */
+    private String expectServiceTime = "";
+
+    /**
+     * 网点编号
+     */
+    private String siteCode = "";
+
+    /**
+     * 网点名称
+     */
+    private String siteName = "";
+
+    /**
+     * 师傅名称
+     */
+    private String engineerName = "";
+    /**
+     * 师傅手机
+     */
+    private String engineerMobile = "";
+    /**
+     * 工单来源
+     */
+    private String orderDataSource = "";
+
+    public String getEstimatedReceiveDate() {
+        return estimatedReceiveDate;
+    }
+
+    public void setEstimatedReceiveDate(String estimatedReceiveDate) {
+        this.estimatedReceiveDate = estimatedReceiveDate;
+    }
+
+    public Long getBuyDate() {
+        return buyDate;
+    }
+
+    public void setBuyDate(Long buyDate) {
+        this.buyDate = buyDate;
+    }
+
+    public String getExpectServiceTime() {
+        return expectServiceTime;
+    }
+
+    public void setExpectServiceTime(String expectServiceTime) {
+        this.expectServiceTime = expectServiceTime;
+    }
+
+    public String getSiteCode() {
+        return siteCode;
+    }
+
+    public void setSiteCode(String siteCode) {
+        this.siteCode = siteCode;
+    }
+
+    public String getSiteName() {
+        return siteName;
+    }
+
+    public void setSiteName(String siteName) {
+        this.siteName = siteName;
+    }
+
+    public String getEngineerName() {
+        return engineerName;
+    }
+
+    public void setEngineerName(String engineerName) {
+        this.engineerName = engineerName;
+    }
+
+    public String getEngineerMobile() {
+        return engineerMobile;
+    }
+
+    public void setEngineerMobile(String engineerMobile) {
+        this.engineerMobile = engineerMobile;
+    }
+
+    public String getOrderDataSource() {
+        return orderDataSource;
+    }
+
+    public void setOrderDataSource(String orderDataSource) {
+        this.orderDataSource = orderDataSource;
+    }
+}

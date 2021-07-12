@@ -1,0 +1,128 @@
+package com.wolfking.jeesite.ms.cc.service;
+
+import com.google.common.base.Splitter;
+import com.kkl.kklplus.common.response.MSResponse;
+import com.kkl.kklplus.entity.cc.AbnormalForm;
+import com.kkl.kklplus.utils.StringUtils;
+import com.wolfking.jeesite.common.service.SequenceIdService;
+import com.wolfking.jeesite.modules.sd.entity.Order;
+import com.wolfking.jeesite.modules.sd.entity.OrderCondition;
+import com.wolfking.jeesite.modules.sys.entity.Area;
+import com.wolfking.jeesite.modules.sys.entity.User;
+import com.wolfking.jeesite.modules.sys.service.AreaService;
+import com.wolfking.jeesite.modules.sys.utils.SeqUtils;
+import com.wolfking.jeesite.ms.cc.feign.CCAbnormalFormFeign;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+
+
+/**
+ * 异常单服务层
+ */
+@Slf4j
+@Service
+@Transactional(propagation = Propagation.NOT_SUPPORTED)
+public class AbnormalFormService {
+
+    @Autowired
+    private CCAbnormalFormFeign ccAbnormalFormFeign;
+
+    @Autowired
+    private AreaService areaService;
+
+    @Autowired
+    private SequenceIdService sequenceIdService;
+
+
+    //region 操作
+
+    /**
+     * 添加异常单
+     *
+     * @param abnormalForm
+     */
+    public void save(AbnormalForm abnormalForm) {
+        long id = sequenceIdService.nextId();//2020/05/24
+        abnormalForm.setId(id);
+        MSResponse<Integer> msResponse = ccAbnormalFormFeign.save(abnormalForm);
+        if (msResponse.getCode() > 0) {
+            throw new RuntimeException(msResponse.getMsg());
+        }
+    }
+
+    //endregion 操作
+
+    //region 其他
+
+    /**
+     * 组装异常单信息
+     *
+     * @param order
+     * @param reason   异常原因
+     * @param channel  来源
+     * @param formType 异常类型
+     * @param subType  子类型
+     * @param remarks  描述
+     * @return
+     */
+    public AbnormalForm handleAbnormalForm(Order order, String reason, User user, Integer channel, Integer formType, Integer subType, String remarks) {
+        OrderCondition orderCondition = order.getOrderCondition();
+        if (orderCondition != null) {
+            AbnormalForm abnormalForm = new AbnormalForm();
+            long id = sequenceIdService.nextId();//2020/05/24
+            abnormalForm.setId(id);
+            String abnormalNo = SeqUtils.NextSequenceNo("abnormalNo", 0, 3);
+            abnormalForm.setOrderId(orderCondition.getOrderId());
+            abnormalForm.setOrderNo(orderCondition.getOrderNo());
+            abnormalForm.setQuarter(orderCondition.getQuarter());
+            abnormalForm.setAbnormalNo(abnormalNo);
+            abnormalForm.setChannel(channel);
+            abnormalForm.setFormType(formType);
+            abnormalForm.setSubType(subType);
+            abnormalForm.setCustomerId(orderCondition.getCustomer().getId());
+            abnormalForm.setServicepointId(orderCondition.getServicePoint().getId());
+            abnormalForm.setProductCategoryId(orderCondition.getProductCategoryId());
+            abnormalForm.setKefuId(orderCondition.getKefu().getId());
+            abnormalForm.setStatus(0);
+            abnormalForm.setReason(StringUtils.left(reason, 250));
+            abnormalForm.setDescription(StringUtils.left(remarks, 250));
+            abnormalForm.setProvinceId(0L);
+            abnormalForm.setCityId(0L);
+            abnormalForm.setAreaId(orderCondition.getArea().getId());
+            abnormalForm.setSubAreaId(orderCondition.getSubArea().getId());
+            abnormalForm.setUserName(StringUtils.left(orderCondition.getUserName(), 20));
+            abnormalForm.setUserPhone(orderCondition.getServicePhone());
+            abnormalForm.setUserAddress(orderCondition.getArea().getName() + orderCondition.getServiceAddress());
+            if (orderCondition.getEngineer() != null && orderCondition.getEngineer().getId() != null) {
+                abnormalForm.setEngineerId(orderCondition.getEngineer().getId());
+            }
+            if (user != null) {
+                abnormalForm.setCreateById(user.getId());
+            }
+            abnormalForm.setCreateDt(System.currentTimeMillis());
+            Area area = areaService.getFromCache(orderCondition.getArea().getId());
+            if (area != null) {
+                List<String> ids = Splitter.onPattern(",")
+                        .omitEmptyStrings()
+                        .trimResults()
+                        .splitToList(area.getParentIds());
+                if (ids.size() >= 2) {
+                    abnormalForm.setCityId(Long.valueOf(ids.get(ids.size() - 1)));
+                    abnormalForm.setProvinceId(Long.valueOf(ids.get(ids.size() - 2)));
+                }
+            }
+            abnormalForm.setCanRush(orderCondition.getCanRush());
+            return abnormalForm;
+        } else {
+            return null;
+        }
+    }
+
+    //endregion 其他
+
+}

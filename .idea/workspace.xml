@@ -1,0 +1,936 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="1fec63f6-662e-4db8-93ba-80a3e47bd3e1" name="Default Changelist" comment="1更新互助基金的条款内容和辅助材料收费价格">
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/wolfking/jeesite/modules/api/entity/sd/RestOrderCondition.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/wolfking/jeesite/modules/sd/dao/OrderConditionDao.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/wolfking/jeesite/modules/sd/entity/OrderConditionStatus.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/wolfking/jeesite/modules/sd/service/OrderConditionService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/wolfking/jeesite/modules/utils/OperationCommand.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/wolfking/jeesite/modules/utils/VerificationUtils.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/mappings/sd/OrderConditionDao.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/wolfking/jeesite/common/config/Global.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/wolfking/jeesite/common/config/Global.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/wolfking/jeesite/modules/api/controller/sd/RestOrderController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/wolfking/jeesite/modules/api/controller/sd/RestOrderController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/wolfking/jeesite/modules/api/service/sd/RestOrderService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/wolfking/jeesite/modules/api/service/sd/RestOrderService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/wolfking/jeesite/ms/cc/service/B2BOrderReminderService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/wolfking/jeesite/ms/cc/service/B2BOrderReminderService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/wolfking/jeesite/ms/cc/service/ReminderService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/wolfking/jeesite/ms/cc/service/ReminderService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/application.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/com/wolfking/jeesite/ReminderApplicationTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/com/wolfking/jeesite/ReminderApplicationTest.java" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="CoverageViewManager">
+    <option name="myElementSize" value="214" />
+  </component>
+  <component name="DatabaseView">
+    <option name="SHOW_INTERMEDIATE" value="true" />
+    <option name="GROUP_DATA_SOURCES" value="true" />
+    <option name="GROUP_SCHEMA" value="true" />
+    <option name="GROUP_CONTENTS" value="false" />
+    <option name="SORT_POSITIONED" value="false" />
+    <option name="SHOW_EMPTY_GROUPS" value="false" />
+    <option name="AUTO_SCROLL_FROM_SOURCE" value="false" />
+    <option name="HIDDEN_KINDS">
+      <set />
+    </option>
+    <expand />
+    <select />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="FxmlFile" />
+        <option value="Interface" />
+        <option value="HTML File" />
+        <option value="Enum" />
+        <option value="Class" />
+      </list>
+    </option>
+  </component>
+  <component name="MavenImportPreferences">
+    <option name="generalSettings">
+      <MavenGeneralSettings>
+        <option name="mavenHome" value="D:/Item/maven/apache-maven-3.6.3" />
+        <option name="userSettingsFile" value="D:\Item\maven\apache-maven-3.6.3\conf\settings.xml" />
+      </MavenGeneralSettings>
+    </option>
+  </component>
+  <component name="ProjectId" id="1hB90rDil5ZAb7153NNkhEG5cec" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showExcludedFiles" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="DefaultHtmlFileTemplate" value="HTML File" />
+    <property name="FileHistory.org.jetbrains.idea.svn.history.SvnHistoryProvider_flatOrder0" value="0" />
+    <property name="FileHistory.org.jetbrains.idea.svn.history.SvnHistoryProvider_flatOrder1" value="1" />
+    <property name="FileHistory.org.jetbrains.idea.svn.history.SvnHistoryProvider_flatOrder2" value="2" />
+    <property name="FileHistory.org.jetbrains.idea.svn.history.SvnHistoryProvider_flatOrder3" value="3" />
+    <property name="FileHistory.org.jetbrains.idea.svn.history.SvnHistoryProvider_flatOrder4" value="4" />
+    <property name="FileHistory.org.jetbrains.idea.svn.history.SvnHistoryProvider_flatOrder5" value="5" />
+    <property name="FileHistory.org.jetbrains.idea.svn.history.SvnHistoryProvider_flatWidth0" value="308" />
+    <property name="FileHistory.org.jetbrains.idea.svn.history.SvnHistoryProvider_flatWidth1" value="308" />
+    <property name="FileHistory.org.jetbrains.idea.svn.history.SvnHistoryProvider_flatWidth2" value="308" />
+    <property name="FileHistory.org.jetbrains.idea.svn.history.SvnHistoryProvider_flatWidth3" value="308" />
+    <property name="FileHistory.org.jetbrains.idea.svn.history.SvnHistoryProvider_flatWidth4" value="308" />
+    <property name="FileHistory.org.jetbrains.idea.svn.history.SvnHistoryProvider_flatWidth5" value="308" />
+    <property name="FileHistory.org.jetbrains.idea.svn.history.SvnHistoryProvider_treeOrder0" value="0" />
+    <property name="FileHistory.org.jetbrains.idea.svn.history.SvnHistoryProvider_treeOrder1" value="1" />
+    <property name="FileHistory.org.jetbrains.idea.svn.history.SvnHistoryProvider_treeOrder2" value="2" />
+    <property name="FileHistory.org.jetbrains.idea.svn.history.SvnHistoryProvider_treeOrder3" value="3" />
+    <property name="FileHistory.org.jetbrains.idea.svn.history.SvnHistoryProvider_treeOrder4" value="4" />
+    <property name="FileHistory.org.jetbrains.idea.svn.history.SvnHistoryProvider_treeOrder5" value="5" />
+    <property name="FileHistory.org.jetbrains.idea.svn.history.SvnHistoryProvider_treeWidth0" value="308" />
+    <property name="FileHistory.org.jetbrains.idea.svn.history.SvnHistoryProvider_treeWidth1" value="308" />
+    <property name="FileHistory.org.jetbrains.idea.svn.history.SvnHistoryProvider_treeWidth2" value="308" />
+    <property name="FileHistory.org.jetbrains.idea.svn.history.SvnHistoryProvider_treeWidth3" value="308" />
+    <property name="FileHistory.org.jetbrains.idea.svn.history.SvnHistoryProvider_treeWidth4" value="308" />
+    <property name="FileHistory.org.jetbrains.idea.svn.history.SvnHistoryProvider_treeWidth5" value="308" />
+    <property name="MyBatisLogPluginparameters" value="Parameters:" />
+    <property name="MyBatisLogPluginpreparing" value="Preparing:" />
+    <property name="MyBatisLogPluginrunning" value="true" />
+    <property name="RequestMappingsPanelOrder0" value="0" />
+    <property name="RequestMappingsPanelOrder1" value="1" />
+    <property name="RequestMappingsPanelOrder2" value="2" />
+    <property name="RequestMappingsPanelWidth0" value="75" />
+    <property name="RequestMappingsPanelWidth1" value="75" />
+    <property name="RequestMappingsPanelWidth2" value="75" />
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="aspect.path.notification.shown" value="true" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/../Web" />
+    <property name="project.structure.last.edited" value="Modules" />
+    <property name="project.structure.proportion" value="0.0" />
+    <property name="project.structure.side.proportion" value="0.2" />
+    <property name="settings.editor.selected.configurable" value="preferences.pluginManager" />
+  </component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="D:\public\KKLPlusProviderAPI\src\main\resources" />
+      <recent name="D:\public\KKLPlusProviderAPI\src\main\java\com\wolfking\jeesite\modules\mq\sender" />
+      <recent name="D:\public\KKLPlusProviderAPI\src\main\java\com\wolfking\jeesite\modules\mq\conf" />
+      <recent name="D:\public\KKLPlusProviderAPI\src\main\java\com\wolfking\jeesite\modules" />
+      <recent name="D:\public\KKLPlusProviderAPI\src\main\java\com\wolfking\jeesite\modules\api" />
+    </key>
+    <key name="CopyClassDialog.RECENTS_KEY">
+      <recent name="com.wolfking.jeesite.modules.utils" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="D:\public\KKLPlusProviderAPI\src\main\resources\papers" />
+    </key>
+  </component>
+  <component name="RunManager" selected="Spring Boot.ProviderAPIApplication">
+    <configuration name="HtmlUtils" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="com.wolfking.jeesite.modules.utils.HtmlUtils" />
+      <module name="kklplus-provider-api" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.wolfking.jeesite.modules.utils.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="RestIdentityController" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="com.wolfking.jeesite.modules.api.controller.sd.RestIdentityController" />
+      <module name="kklplus-provider-api" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.wolfking.jeesite.modules.api.controller.sd.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="RestTestController" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="com.wolfking.jeesite.modules.api.controller.test.RestTestController" />
+      <module name="kklplus-provider-api" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.wolfking.jeesite.modules.api.controller.test.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="VerificationUtils" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="com.wolfking.jeesite.modules.utils.VerificationUtils" />
+      <module name="kklplus-provider-api" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.wolfking.jeesite.modules.utils.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="ReminderApplicationTest.test3" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="kklplus-provider-api" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.wolfking.jeesite.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="com.wolfking.jeesite" />
+      <option name="MAIN_CLASS_NAME" value="com.wolfking.jeesite.ReminderApplicationTest" />
+      <option name="METHOD_NAME" value="test3" />
+      <option name="TEST_OBJECT" value="method" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="ProviderAPIApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot">
+      <module name="kklplus-provider-api" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="com.wolfking.jeesite.ProviderAPIApplication" />
+      <option name="ACTIVE_PROFILES" value="dev" />
+      <option name="ALTERNATIVE_JRE_PATH" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Application.RestIdentityController" />
+        <item itemvalue="JUnit.ReminderApplicationTest.test3" />
+        <item itemvalue="Application.VerificationUtils" />
+        <item itemvalue="Application.HtmlUtils" />
+        <item itemvalue="Application.RestTestController" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SvnConfiguration" cleanupOnStartRun="true">
+    <configuration>C:\Users\admin\AppData\Roaming\Subversion</configuration>
+    <supportedVersion>125</supportedVersion>
+  </component>
+  <component name="SvnFileUrlMappingImpl">
+    <option name="myMappingRoots">
+      <list>
+        <SvnCopyRootSimple>
+          <option name="myVcsRoot" value="D:\public\KKLPlusProviderAPI" />
+          <option name="myCopyRoot" value="D:\public\KKLPlusProviderAPI" />
+        </SvnCopyRootSimple>
+      </list>
+    </option>
+    <option name="myMoreRealMappingRoots">
+      <list>
+        <SvnCopyRootSimple>
+          <option name="myVcsRoot" value="D:\public\KKLPlusProviderAPI" />
+          <option name="myCopyRoot" value="D:\public\KKLPlusProviderAPI" />
+        </SvnCopyRootSimple>
+      </list>
+    </option>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="1fec63f6-662e-4db8-93ba-80a3e47bd3e1" name="Default Changelist" comment="" />
+      <created>1599473397282</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1599473397282</updated>
+      <workItem from="1599473400188" duration="1759000" />
+      <workItem from="1599529197862" duration="6030000" />
+      <workItem from="1599535284198" duration="62000" />
+      <workItem from="1599535364722" duration="595000" />
+      <workItem from="1599535992888" duration="84000" />
+      <workItem from="1599536096427" duration="4783000" />
+      <workItem from="1599615059449" duration="3829000" />
+      <workItem from="1599632109947" duration="625000" />
+      <workItem from="1599701485901" duration="599000" />
+      <workItem from="1599702628650" duration="2601000" />
+      <workItem from="1599787748696" duration="15321000" />
+      <workItem from="1600047774611" duration="10247000" />
+      <workItem from="1600133490375" duration="2572000" />
+      <workItem from="1600219923246" duration="7996000" />
+      <workItem from="1600306291011" duration="3239000" />
+      <workItem from="1600392486022" duration="1796000" />
+      <workItem from="1600651964986" duration="599000" />
+      <workItem from="1600738489066" duration="599000" />
+      <workItem from="1600744643723" duration="597000" />
+      <workItem from="1600745298338" duration="71000" />
+      <workItem from="1600745393986" duration="1034000" />
+      <workItem from="1600824768138" duration="598000" />
+      <workItem from="1600911373425" duration="597000" />
+      <workItem from="1600997781514" duration="593000" />
+      <workItem from="1601084068537" duration="1248000" />
+      <workItem from="1601112614503" duration="653000" />
+      <workItem from="1601256884694" duration="596000" />
+      <workItem from="1601343215681" duration="1501000" />
+      <workItem from="1601429614207" duration="599000" />
+      <workItem from="1602207289051" duration="2514000" />
+      <workItem from="1602308325542" duration="15651000" />
+      <workItem from="1602466533955" duration="23087000" />
+      <workItem from="1602553142377" duration="11613000" />
+      <workItem from="1602639534125" duration="9213000" />
+      <workItem from="1602726037165" duration="10149000" />
+      <workItem from="1602812301870" duration="9641000" />
+      <workItem from="1603071349326" duration="5531000" />
+      <workItem from="1603158016845" duration="8293000" />
+      <workItem from="1603244149897" duration="15201000" />
+      <workItem from="1603330630266" duration="12833000" />
+      <workItem from="1603417090431" duration="10385000" />
+      <workItem from="1603676117387" duration="4287000" />
+      <workItem from="1603762619401" duration="10079000" />
+      <workItem from="1603849026677" duration="9473000" />
+      <workItem from="1603935572644" duration="3165000" />
+      <workItem from="1604021920452" duration="4070000" />
+      <workItem from="1604281076123" duration="595000" />
+      <workItem from="1604367549386" duration="26218000" />
+      <workItem from="1604453660609" duration="17744000" />
+      <workItem from="1604540221672" duration="3440000" />
+      <workItem from="1604626511906" duration="5927000" />
+      <workItem from="1604885615141" duration="9690000" />
+      <workItem from="1604972165807" duration="16919000" />
+      <workItem from="1605058827972" duration="4101000" />
+      <workItem from="1605144783263" duration="4519000" />
+      <workItem from="1605231487499" duration="1092000" />
+      <workItem from="1605234861232" duration="6992000" />
+      <workItem from="1605490695875" duration="6185000" />
+      <workItem from="1605577158982" duration="11309000" />
+      <workItem from="1605663173289" duration="3518000" />
+      <workItem from="1605676410092" duration="3756000" />
+      <workItem from="1605749595597" duration="6478000" />
+      <workItem from="1605774589734" duration="2065000" />
+      <workItem from="1605836443934" duration="6447000" />
+      <workItem from="1606095212154" duration="7288000" />
+      <workItem from="1606182263060" duration="2079000" />
+      <workItem from="1606267921282" duration="599000" />
+      <workItem from="1606354332642" duration="1790000" />
+      <workItem from="1606440705458" duration="603000" />
+      <workItem from="1606699862447" duration="4150000" />
+      <workItem from="1606786395704" duration="20900000" />
+      <workItem from="1606872746194" duration="10540000" />
+      <workItem from="1606959153345" duration="29492000" />
+      <workItem from="1607045533757" duration="11757000" />
+      <workItem from="1607131852246" duration="25676000" />
+      <workItem from="1607305082883" duration="6221000" />
+      <workItem from="1607391443062" duration="8457000" />
+      <workItem from="1607477555656" duration="13634000" />
+      <workItem from="1607563943092" duration="12807000" />
+      <workItem from="1607650329889" duration="12181000" />
+      <workItem from="1607909885362" duration="15321000" />
+      <workItem from="1607996158556" duration="8881000" />
+      <workItem from="1608082512141" duration="6324000" />
+      <workItem from="1608168793371" duration="6710000" />
+      <workItem from="1608255254603" duration="5805000" />
+      <workItem from="1608514483683" duration="11349000" />
+      <workItem from="1608600832721" duration="5818000" />
+      <workItem from="1608687293415" duration="14038000" />
+      <workItem from="1608773640989" duration="10236000" />
+      <workItem from="1608860142539" duration="7644000" />
+      <workItem from="1609119202680" duration="9528000" />
+      <workItem from="1609205560602" duration="8295000" />
+      <workItem from="1609292219532" duration="6381000" />
+      <workItem from="1609378429317" duration="6049000" />
+      <workItem from="1609724249477" duration="9033000" />
+      <workItem from="1609810633302" duration="8657000" />
+      <workItem from="1609896705825" duration="4713000" />
+      <workItem from="1609983380470" duration="4186000" />
+      <workItem from="1610069710338" duration="7530000" />
+      <workItem from="1610328738609" duration="4064000" />
+      <workItem from="1610415212586" duration="8360000" />
+      <workItem from="1610501639248" duration="24334000" />
+      <workItem from="1610588148016" duration="24026000" />
+      <workItem from="1610674479489" duration="25604000" />
+      <workItem from="1610760914610" duration="28438000" />
+      <workItem from="1610933711181" duration="29259000" />
+      <workItem from="1611020149818" duration="14861000" />
+      <workItem from="1611106676897" duration="8768000" />
+      <workItem from="1611192877786" duration="20606000" />
+      <workItem from="1611279343323" duration="15056000" />
+      <workItem from="1611538421068" duration="7417000" />
+      <workItem from="1611624878829" duration="12519000" />
+      <workItem from="1611711384558" duration="12646000" />
+      <workItem from="1611797820386" duration="13971000" />
+      <workItem from="1611884330348" duration="8958000" />
+      <workItem from="1612143439459" duration="11255000" />
+      <workItem from="1612229826061" duration="13585000" />
+      <workItem from="1612316058989" duration="14013000" />
+      <workItem from="1612402878585" duration="5023000" />
+      <workItem from="1612489038365" duration="568000" />
+      <workItem from="1612502822056" duration="704000" />
+      <workItem from="1612747617757" duration="5881000" />
+      <workItem from="1613699089175" duration="10853000" />
+      <workItem from="1613957957827" duration="23175000" />
+      <workItem from="1614044190056" duration="28957000" />
+      <workItem from="1614130624231" duration="26286000" />
+      <workItem from="1614216989455" duration="28094000" />
+      <workItem from="1614303373283" duration="25758000" />
+      <workItem from="1614390178605" duration="29231000" />
+      <workItem from="1614562775315" duration="19505000" />
+      <workItem from="1614649289134" duration="21879000" />
+      <workItem from="1614735548492" duration="21243000" />
+      <workItem from="1614822139479" duration="17816000" />
+      <workItem from="1614908417865" duration="11117000" />
+      <workItem from="1614995067483" duration="5073000" />
+      <workItem from="1615018418341" duration="1146000" />
+      <workItem from="1615167540545" duration="20595000" />
+      <workItem from="1615254025207" duration="25442000" />
+      <workItem from="1615340762112" duration="8848000" />
+      <workItem from="1615426910791" duration="7875000" />
+      <workItem from="1615513189388" duration="5476000" />
+      <workItem from="1615599601029" duration="7731000" />
+      <workItem from="1615772484087" duration="17095000" />
+      <workItem from="1615858799642" duration="25840000" />
+      <workItem from="1615945232587" duration="23850000" />
+      <workItem from="1616031737295" duration="20067000" />
+      <workItem from="1616118168422" duration="3167000" />
+      <workItem from="1616204598612" duration="6406000" />
+      <workItem from="1616221533377" duration="2587000" />
+      <workItem from="1616377046660" duration="20185000" />
+      <workItem from="1616463437361" duration="19690000" />
+      <workItem from="1616636217547" duration="15159000" />
+      <workItem from="1616722282205" duration="13519000" />
+      <workItem from="1616808823172" duration="7572000" />
+      <workItem from="1616981782053" duration="19412000" />
+      <workItem from="1617068273748" duration="8921000" />
+      <workItem from="1617154463225" duration="6388000" />
+      <workItem from="1617240790383" duration="4656000" />
+      <workItem from="1617254129273" duration="6677000" />
+      <workItem from="1617327505709" duration="16038000" />
+      <workItem from="1617673040591" duration="11076000" />
+      <workItem from="1617759543836" duration="9473000" />
+      <workItem from="1617846015546" duration="12257000" />
+      <workItem from="1617932220123" duration="24276000" />
+      <workItem from="1618018623683" duration="11825000" />
+      <workItem from="1620265159594" duration="3609000" />
+      <workItem from="1620281928639" duration="2514000" />
+      <workItem from="1620351663692" duration="4218000" />
+      <workItem from="1620437842508" duration="7547000" />
+      <workItem from="1620608799329" duration="8876000" />
+      <workItem from="1620630015187" duration="596000" />
+      <workItem from="1620695381946" duration="7414000" />
+      <workItem from="1620781578962" duration="1826000" />
+      <workItem from="1620867900937" duration="2599000" />
+      <workItem from="1620954292964" duration="2318000" />
+      <workItem from="1621213590639" duration="3976000" />
+      <workItem from="1621323685090" duration="796000" />
+      <workItem from="1621326256378" duration="1188000" />
+      <workItem from="1621386730479" duration="599000" />
+      <workItem from="1621472775845" duration="1195000" />
+      <workItem from="1621559373325" duration="3025000" />
+      <workItem from="1621574112241" duration="599000" />
+      <workItem from="1621584511466" duration="598000" />
+      <workItem from="1621818388221" duration="3320000" />
+      <workItem from="1621904874955" duration="1269000" />
+      <workItem from="1621991424761" duration="3043000" />
+      <workItem from="1622077323057" duration="628000" />
+      <workItem from="1622251574558" duration="33000" />
+    </task>
+    <task id="LOCAL-00001">
+      <created>1602467473870</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1602467473870</updated>
+    </task>
+    <task id="LOCAL-00002">
+      <created>1602491220074</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1602491220074</updated>
+    </task>
+    <task id="LOCAL-00003">
+      <created>1603176788705</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1603176788705</updated>
+    </task>
+    <task id="LOCAL-00004">
+      <created>1603269744618</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1603269744618</updated>
+    </task>
+    <task id="LOCAL-00005">
+      <created>1603272979905</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1603272979905</updated>
+    </task>
+    <task id="LOCAL-00006">
+      <created>1603273634185</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1603273634185</updated>
+    </task>
+    <task id="LOCAL-00007">
+      <created>1603359425968</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1603359425968</updated>
+    </task>
+    <task id="LOCAL-00008" summary="修改催单回复接口">
+      <created>1604393774048</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1604393774048</updated>
+    </task>
+    <task id="LOCAL-00009" summary="修改催单回复接口">
+      <created>1604471850101</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1604471850101</updated>
+    </task>
+    <task id="LOCAL-00010" summary="修改订单详情接口，增加购买时间字段">
+      <created>1604643814815</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1604643814815</updated>
+    </task>
+    <task id="LOCAL-00011" summary="新确认上门接口,增加确认上门后返回订单信息的服务和价格">
+      <created>1607048614219</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1607048614219</updated>
+    </task>
+    <task id="LOCAL-00012" summary="（新）确认上门接口：修改bug">
+      <created>1607147118452</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1607147118452</updated>
+    </task>
+    <task id="LOCAL-00013" summary="修改催单回复接口">
+      <created>1608104907857</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1608104907857</updated>
+    </task>
+    <task id="LOCAL-00014" summary="新增的安维体温查询列表接口和保存安维体温接口">
+      <created>1610791609102</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1610791609102</updated>
+    </task>
+    <task id="LOCAL-00015" summary="新增的安维体温查询列表接口和保存安维体温接口">
+      <created>1610942039928</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL-00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1610942039928</updated>
+    </task>
+    <task id="LOCAL-00016" summary="新增的安维体温查询列表接口和保存安维体温接口">
+      <created>1610944142019</created>
+      <option name="number" value="00016" />
+      <option name="presentableId" value="LOCAL-00016" />
+      <option name="project" value="LOCAL" />
+      <updated>1610944142019</updated>
+    </task>
+    <task id="LOCAL-00017" summary="优花安维体温接口代码">
+      <created>1610944581980</created>
+      <option name="number" value="00017" />
+      <option name="presentableId" value="LOCAL-00017" />
+      <option name="project" value="LOCAL" />
+      <updated>1610944581980</updated>
+    </task>
+    <task id="LOCAL-00018" summary="新增的安维体温查询列表接口和保存安维体温接口">
+      <created>1610951355084</created>
+      <option name="number" value="00018" />
+      <option name="presentableId" value="LOCAL-00018" />
+      <option name="project" value="LOCAL" />
+      <updated>1610951355084</updated>
+    </task>
+    <task id="LOCAL-00019" summary="优化新增的获取安维体温列表接口代码">
+      <created>1610956367669</created>
+      <option name="number" value="00019" />
+      <option name="presentableId" value="LOCAL-00019" />
+      <option name="project" value="LOCAL" />
+      <updated>1610956367669</updated>
+    </task>
+    <task id="LOCAL-00020" summary="优化新增的获取安维体温列表接口代码">
+      <created>1610958287389</created>
+      <option name="number" value="00020" />
+      <option name="presentableId" value="LOCAL-00020" />
+      <option name="project" value="LOCAL" />
+      <updated>1610958287389</updated>
+    </task>
+    <task id="LOCAL-00021" summary="新增新的质保金明细接口+我的钱包+完工金额明细接口&#10;修改 添加师傅接口的质保金总额">
+      <created>1614303928857</created>
+      <option name="number" value="00021" />
+      <option name="presentableId" value="LOCAL-00021" />
+      <option name="project" value="LOCAL" />
+      <updated>1614303928857</updated>
+    </task>
+    <task id="LOCAL-00022" summary="修改EngineerCurrencyDepositDao.xml的返回类型double改为Double,查询改为 id desc">
+      <created>1614307571427</created>
+      <option name="number" value="00022" />
+      <option name="presentableId" value="LOCAL-00022" />
+      <option name="project" value="LOCAL" />
+      <updated>1614307571427</updated>
+    </task>
+    <task id="LOCAL-00023" summary="修改质保金明细接口把流水金额改为正">
+      <created>1614326951162</created>
+      <option name="number" value="00023" />
+      <option name="presentableId" value="LOCAL-00023" />
+      <option name="project" value="LOCAL" />
+      <updated>1614326951162</updated>
+    </task>
+    <task id="LOCAL-00024" summary="限制年月不能超过当前">
+      <created>1614391818025</created>
+      <option name="number" value="00024" />
+      <option name="presentableId" value="LOCAL-00024" />
+      <option name="project" value="LOCAL" />
+      <updated>1614391818025</updated>
+    </task>
+    <task id="LOCAL-00025" summary="1.修改配置文件添加公告通知字段&#10;web:&#10;  app:&#10;    notice-enabled: false &#10;2.修改登陆接口添加appNoticeEnabled字段&#10;3.新增获取开启/关闭互助基金接口&#10;4.新增app关闭互助基金接口（只能关闭一次">
+      <created>1614420165860</created>
+      <option name="number" value="00025" />
+      <option name="presentableId" value="LOCAL-00025" />
+      <option name="project" value="LOCAL" />
+      <updated>1614420165860</updated>
+    </task>
+    <task id="LOCAL-00026" summary="完工金额明细接口，平台管理费和扣点没有用0-算值，直接用-号导致该值为-0">
+      <created>1614736393284</created>
+      <option name="number" value="00026" />
+      <option name="presentableId" value="LOCAL-00026" />
+      <option name="project" value="LOCAL" />
+      <updated>1614736393284</updated>
+    </task>
+    <task id="LOCAL-00027" summary="1新增网点合作条款同意接口&#10;2新增返回网点合作条款接口&#10;3新增无需登录返回项目配置开关接口&#10;4新增保存辅材项目接口">
+      <created>1614843017138</created>
+      <option name="number" value="00027" />
+      <option name="presentableId" value="LOCAL-00027" />
+      <option name="project" value="LOCAL" />
+      <updated>1614843017138</updated>
+    </task>
+    <task id="LOCAL-00028" summary="1修改java配置的网点条款开关的默认值为false">
+      <created>1614849484871</created>
+      <option name="number" value="00028" />
+      <option name="presentableId" value="LOCAL-00028" />
+      <option name="project" value="LOCAL" />
+      <updated>1614849484871</updated>
+    </task>
+    <task id="LOCAL-00029" summary="1修改完工接口，把备注和辅材费用写入跟踪日志表&#10;2修改保存辅材接口，修改没上传辅材费用图片的返回的错误信息">
+      <created>1615186500809</created>
+      <option name="number" value="00029" />
+      <option name="presentableId" value="LOCAL-00029" />
+      <option name="project" value="LOCAL" />
+      <updated>1615186500809</updated>
+    </task>
+    <task id="LOCAL-00030" summary="1. 修改保存辅材和项目服务接口，有辅材项目和费用时才需要上传辅材费用清单图片。">
+      <created>1615283931312</created>
+      <option name="number" value="00030" />
+      <option name="presentableId" value="LOCAL-00030" />
+      <option name="project" value="LOCAL" />
+      <updated>1615283931312</updated>
+    </task>
+    <task id="LOCAL-00031" summary="1. 去除多余的代码">
+      <created>1615285630424</created>
+      <option name="number" value="00031" />
+      <option name="presentableId" value="LOCAL-00031" />
+      <option name="project" value="LOCAL" />
+      <updated>1615285630424</updated>
+    </task>
+    <task id="LOCAL-00032" summary="1.修改getHtmlContext接口，类型为2的时候返回互助基金告示&#10;2.添加互助基金资源文件，并读取文件">
+      <created>1615886391937</created>
+      <option name="number" value="00032" />
+      <option name="presentableId" value="LOCAL-00032" />
+      <option name="project" value="LOCAL" />
+      <updated>1615886391937</updated>
+    </task>
+    <task id="LOCAL-00033" summary="1.修改查询工单列表添加orderServiceType查询">
+      <created>1616471658959</created>
+      <option name="number" value="00033" />
+      <option name="presentableId" value="LOCAL-00033" />
+      <option name="project" value="LOCAL" />
+      <updated>1616471658959</updated>
+    </task>
+    <task id="LOCAL-00034" summary="1.去除多余代码">
+      <created>1616479174144</created>
+      <option name="number" value="00034" />
+      <option name="presentableId" value="LOCAL-00034" />
+      <option name="project" value="LOCAL" />
+      <updated>1616479174144</updated>
+    </task>
+    <task id="LOCAL-00035" summary="1. 去除多余的错误代码">
+      <created>1616479446837</created>
+      <option name="number" value="00035" />
+      <option name="presentableId" value="LOCAL-00035" />
+      <option name="project" value="LOCAL" />
+      <updated>1616479446837</updated>
+    </task>
+    <task id="LOCAL-00036" summary="1.修复判空语句">
+      <created>1616485146548</created>
+      <option name="number" value="00036" />
+      <option name="presentableId" value="LOCAL-00036" />
+      <option name="project" value="LOCAL" />
+      <updated>1616485146548</updated>
+    </task>
+    <task id="LOCAL-00037" summary="1.添加判断0的条件">
+      <created>1616489709345</created>
+      <option name="number" value="00037" />
+      <option name="presentableId" value="LOCAL-00037" />
+      <option name="project" value="LOCAL" />
+      <updated>1616489709345</updated>
+    </task>
+    <task id="LOCAL-00038" summary="1更新互助基金的条款内容和辅助材料收费价格">
+      <created>1617260164466</created>
+      <option name="number" value="00038" />
+      <option name="presentableId" value="LOCAL-00038" />
+      <option name="project" value="LOCAL" />
+      <updated>1617260164466</updated>
+    </task>
+    <task id="LOCAL-00039" summary="1新增获取身份证号接口&#10;2新增保存身份证号和图片接口&#10;3新增根据传入类型验证是否填写过身份证信息&#10;4配置文件新增identityCard参数开关&#10;5登录接口新增身份证信息弹窗控制开关">
+      <created>1618024551995</created>
+      <option name="number" value="00039" />
+      <option name="presentableId" value="LOCAL-00039" />
+      <option name="project" value="LOCAL" />
+      <updated>1618024551995</updated>
+    </task>
+    <option name="localTasksCounter" value="40" />
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="1" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <option name="SHOW_FILE_HISTORY_DETAILS" value="false" />
+    <MESSAGE value="（新）确认上门接口：修改bug" />
+    <MESSAGE value="修改催单回复接口" />
+    <MESSAGE value="优花安维体温接口代码" />
+    <MESSAGE value="新增的安维体温查询列表接口和保存安维体温接口" />
+    <MESSAGE value="新增新的质保金明细接口+我的钱包+完工金额明细接口" />
+    <MESSAGE value="新增新的质保金明细接口+我的钱包+完工金额明细接口&#10;修改 添加师傅接口的质保金总额" />
+    <MESSAGE value="修改EngineerCurrencyDepositDao.xml的返回类型double改为Double,查询改为 id desc" />
+    <MESSAGE value="优化新增的获取安维体温列表接口代码" />
+    <MESSAGE value="修改质保金明细接口把流水金额改为正" />
+    <MESSAGE value="限制年月不能超过当前" />
+    <MESSAGE value="1.修改配置文件添加公告通知字段&#10;web:&#10;  app:&#10;    notice-enabled: false &#10;2.修改登陆接口添加appNoticeEnabled字段&#10;3.新增获取开启/关闭互助基金接口&#10;4.新增app关闭互助基金接口（只能关闭一次" />
+    <MESSAGE value="完工金额明细接口，平台管理费和扣点没有用0-算值，直接用-号导致该值为-0" />
+    <MESSAGE value="1新增网点合作条款同意接口&#10;2新增返回网点合作条款接口&#10;3新增无需登录返回项目配置开关接口&#10;4新增保存辅材项目接口" />
+    <MESSAGE value="1修改java配置的网点条款开关的默认值为false" />
+    <MESSAGE value="1修改完工接口，把备注和辅材费用写入跟踪日志表&#10;2修改保存辅材接口，修改没上传辅材费用图片的返回的错误信息" />
+    <MESSAGE value="1. 修改保存辅材和项目服务接口，有辅材项目和费用时才需要上传辅材费用清单图片。" />
+    <MESSAGE value="1. 去除多余的代码" />
+    <MESSAGE value="1.修改getHtmlContext接口，类型为2的时候返回互助基金告示&#10;2.添加互助基金资源文件，并读取文件" />
+    <MESSAGE value="1.修改查询工单列表添加orderServiceType查询" />
+    <MESSAGE value="1.去除多余代码" />
+    <MESSAGE value="1. 去除多余的错误代码" />
+    <MESSAGE value="1.修复判空语句" />
+    <MESSAGE value="1.添加判断0的条件" />
+    <MESSAGE value="1更新互助基金的条款内容和辅助材料收费价格" />
+    <MESSAGE value="1新增获取身份证号接口&#10;2新增保存身份证号和图片接口&#10;3新增根据传入类型验证是否填写过身份证信息&#10;4配置文件新增identityCard参数开关&#10;5登录接口新增身份证信息弹窗控制开关" />
+    <option name="LAST_COMMIT_MESSAGE" value="1新增获取身份证号接口&#10;2新增保存身份证号和图片接口&#10;3新增根据传入类型验证是否填写过身份证信息&#10;4配置文件新增identityCard参数开关&#10;5登录接口新增身份证信息弹窗控制开关" />
+  </component>
+  <component name="WindowStateProjectService">
+    <state x="414" y="175" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1615889235502">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="414" y="175" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.0.1920.1040@0.0.1920.1040" timestamp="1615889235502" />
+    <state x="712" y="322" key="#com.intellij.fileTypes.FileTypeChooser" timestamp="1617258436694">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="712" y="322" key="#com.intellij.fileTypes.FileTypeChooser/0.0.1920.1040@0.0.1920.1040" timestamp="1617258436694" />
+    <state x="590" y="257" key="#com.intellij.ide.util.ExportDialog" timestamp="1617259674007">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="590" y="257" key="#com.intellij.ide.util.ExportDialog/0.0.1920.1040@0.0.1920.1040" timestamp="1617259674007" />
+    <state x="765" y="204" key="#com.intellij.ide.util.MemberChooser" timestamp="1617961299081">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="765" y="204" key="#com.intellij.ide.util.MemberChooser/0.0.1920.1040@0.0.1920.1040" timestamp="1617961299081" />
+    <state x="700" y="378" width="568" height="292" key="#com.intellij.refactoring.move.moveClassesOrPackages.MoveClassesOrPackagesDialog.classes" timestamp="1618019556309">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="700" y="378" width="568" height="292" key="#com.intellij.refactoring.move.moveClassesOrPackages.MoveClassesOrPackagesDialog.classes/0.0.1920.1040@0.0.1920.1040" timestamp="1618019556309" />
+    <state x="690" y="266" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog" timestamp="1613989982659">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="690" y="266" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog/0.0.1920.1040@0.0.1920.1040" timestamp="1613989982659" />
+    <state x="483" y="444" width="1025" height="596" key="#xdebugger.evaluate" timestamp="1618023198964">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="483" y="444" width="1025" height="596" key="#xdebugger.evaluate/0.0.1920.1040@0.0.1920.1040" timestamp="1618023198964" />
+    <state x="243" y="106" width="1410" height="822" key="CommitChangelistDialog2" timestamp="1618024547576">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="243" y="106" width="1410" height="822" key="CommitChangelistDialog2/0.0.1920.1040@0.0.1920.1040" timestamp="1618024547576" />
+    <state x="139" y="63" width="1536" height="860" key="DiffContextDialog" timestamp="1620617281414">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="139" y="63" width="1536" height="860" key="DiffContextDialog/0.0.1920.1040@0.0.1920.1040" timestamp="1620617281414" />
+    <state x="740" y="275" key="FileChooserDialogImpl" timestamp="1621323888542">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="740" y="275" key="FileChooserDialogImpl/0.0.1920.1040@0.0.1920.1040" timestamp="1621323888542" />
+    <state width="1877" height="345" key="GridCell.Tab.0.bottom" timestamp="1620695735326">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state width="1877" height="345" key="GridCell.Tab.0.bottom/0.0.1920.1040@0.0.1920.1040" timestamp="1620695735326" />
+    <state width="1877" height="345" key="GridCell.Tab.0.center" timestamp="1620695735325">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state width="1877" height="345" key="GridCell.Tab.0.center/0.0.1920.1040@0.0.1920.1040" timestamp="1620695735325" />
+    <state width="1877" height="345" key="GridCell.Tab.0.left" timestamp="1620695735325">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state width="1877" height="345" key="GridCell.Tab.0.left/0.0.1920.1040@0.0.1920.1040" timestamp="1620695735325" />
+    <state width="1877" height="345" key="GridCell.Tab.0.right" timestamp="1620695735325">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state width="1877" height="345" key="GridCell.Tab.0.right/0.0.1920.1040@0.0.1920.1040" timestamp="1620695735325" />
+    <state width="1877" height="351" key="GridCell.Tab.1.bottom" timestamp="1618378383161">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state width="1877" height="351" key="GridCell.Tab.1.bottom/0.0.1920.1040@0.0.1920.1040" timestamp="1618378383161" />
+    <state width="1877" height="351" key="GridCell.Tab.1.center" timestamp="1618378383160">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state width="1877" height="351" key="GridCell.Tab.1.center/0.0.1920.1040@0.0.1920.1040" timestamp="1618378383160" />
+    <state width="1877" height="351" key="GridCell.Tab.1.left" timestamp="1618378383160">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state width="1877" height="351" key="GridCell.Tab.1.left/0.0.1920.1040@0.0.1920.1040" timestamp="1618378383160" />
+    <state width="1877" height="351" key="GridCell.Tab.1.right" timestamp="1618378383161">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state width="1877" height="351" key="GridCell.Tab.1.right/0.0.1920.1040@0.0.1920.1040" timestamp="1618378383161" />
+    <state width="1877" height="351" key="GridCell.Tab.2.bottom" timestamp="1618378072045">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state width="1877" height="351" key="GridCell.Tab.2.bottom/0.0.1920.1040@0.0.1920.1040" timestamp="1618378072045" />
+    <state width="1877" height="351" key="GridCell.Tab.2.center" timestamp="1618378072044">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state width="1877" height="351" key="GridCell.Tab.2.center/0.0.1920.1040@0.0.1920.1040" timestamp="1618378072044" />
+    <state width="1877" height="351" key="GridCell.Tab.2.left" timestamp="1618378072044">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state width="1877" height="351" key="GridCell.Tab.2.left/0.0.1920.1040@0.0.1920.1040" timestamp="1618378072044" />
+    <state width="1877" height="351" key="GridCell.Tab.2.right" timestamp="1618378072044">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state width="1877" height="351" key="GridCell.Tab.2.right/0.0.1920.1040@0.0.1920.1040" timestamp="1618378072044" />
+    <state x="184" y="86" key="MergeDialog" timestamp="1615891213490">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="184" y="86" key="MergeDialog/0.0.1920.1040@0.0.1920.1040" timestamp="1615891213490" />
+    <state x="669" y="235" key="MultipleFileMergeDialog" timestamp="1615891215159">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="669" y="235" key="MultipleFileMergeDialog/0.0.1920.1040@0.0.1920.1040" timestamp="1615891215159" />
+    <state x="340" y="92" width="1135" height="716" key="SettingsEditor" timestamp="1616837122493">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="340" y="92" width="1135" height="716" key="SettingsEditor/0.0.1920.1040@0.0.1920.1040" timestamp="1616837122493" />
+    <state x="553" y="254" key="VcsDiffUtil.ChangesDialog" timestamp="1614420376463">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="553" y="254" key="VcsDiffUtil.ChangesDialog/0.0.1920.1040@0.0.1920.1040" timestamp="1614420376463" />
+    <state width="968" height="528" key="XDebugger.FullValuePopup" timestamp="1616390282616">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state width="968" height="528" key="XDebugger.FullValuePopup/0.0.1920.1040@0.0.1920.1040" timestamp="1616390282616" />
+    <state x="-120" y="101" width="1736" height="856" key="com.intellij.history.integration.ui.views.FileHistoryDialog" timestamp="1620373434802">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="-120" y="101" width="1736" height="856" key="com.intellij.history.integration.ui.views.FileHistoryDialog/0.0.1920.1040@0.0.1920.1040" timestamp="1620373434802" />
+    <state x="92" y="92" width="1736" height="856" key="com.intellij.history.integration.ui.views.SelectionHistoryDialog" timestamp="1614229869750">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="92" y="92" width="1736" height="856" key="com.intellij.history.integration.ui.views.SelectionHistoryDialog/0.0.1920.1040@0.0.1920.1040" timestamp="1614229869750" />
+    <state x="640" y="344" key="com.intellij.ide.util.TipDialog" timestamp="1621993919201">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="640" y="344" key="com.intellij.ide.util.TipDialog/0.0.1920.1040@0.0.1920.1040" timestamp="1621993919201" />
+    <state x="773" y="365" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2" timestamp="1621330116949">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="773" y="365" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2/0.0.1920.1040@0.0.1920.1040" timestamp="1621330116949" />
+    <state x="379" y="256" width="1082" height="605" key="com.intellij.xdebugger.impl.breakpoints.ui.BreakpointsDialogFactory$2" timestamp="1618382296628">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="379" y="256" width="1082" height="605" key="com.intellij.xdebugger.impl.breakpoints.ui.BreakpointsDialogFactory$2/0.0.1920.1040@0.0.1920.1040" timestamp="1618382296628" />
+    <state x="567" y="253" width="991" height="787" key="find.popup" timestamp="1618019939345">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="567" y="253" width="991" height="787" key="find.popup/0.0.1920.1040@0.0.1920.1040" timestamp="1618019939345" />
+    <state x="616" y="240" key="run.anything.popup" timestamp="1617951567182">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="616" y="240" key="run.anything.popup/0.0.1920.1040@0.0.1920.1040" timestamp="1617951567182" />
+    <state x="623" y="225" width="672" height="678" key="search.everywhere.popup" timestamp="1618192620567">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="623" y="225" width="672" height="678" key="search.everywhere.popup/0.0.1920.1040@0.0.1920.1040" timestamp="1618192620567" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/com/wolfking/jeesite/modules/utils/HtmlUtils.java</url>
+          <line>22</line>
+          <option name="timeStamp" value="5" />
+        </line-breakpoint>
+        <line-breakpoint type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/com/wolfking/jeesite/modules/utils/HtmlUtils.java</url>
+          <line>36</line>
+          <option name="timeStamp" value="6" />
+        </line-breakpoint>
+        <line-breakpoint type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/com/wolfking/jeesite/modules/utils/VerificationUtils.java</url>
+          <line>19</line>
+          <option name="timeStamp" value="13" />
+        </line-breakpoint>
+        <line-breakpoint type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/com/wolfking/jeesite/modules/api/service/sd/RestOrderService.java</url>
+          <line>364</line>
+          <option name="timeStamp" value="15" />
+        </line-breakpoint>
+        <line-breakpoint type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/com/wolfking/jeesite/modules/api/service/sd/RestOrderService.java</url>
+          <line>344</line>
+          <option name="timeStamp" value="16" />
+        </line-breakpoint>
+        <line-breakpoint type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/com/wolfking/jeesite/modules/api/controller/sd/RestReminderController.java</url>
+          <line>171</line>
+          <option name="timeStamp" value="22" />
+        </line-breakpoint>
+        <line-breakpoint type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/com/wolfking/jeesite/ms/cc/service/ReminderService.java</url>
+          <line>78</line>
+          <option name="timeStamp" value="23" />
+        </line-breakpoint>
+        <line-breakpoint type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/com/wolfking/jeesite/modules/api/controller/sd/RestIdentityController.java</url>
+          <line>110</line>
+          <option name="timeStamp" value="29" />
+        </line-breakpoint>
+        <line-breakpoint type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/com/wolfking/jeesite/common/config/Global.java</url>
+          <line>95</line>
+          <option name="timeStamp" value="35" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+  </component>
+  <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/kklplus_provider_api$ProviderAPIApplication.ic" NAME="ProviderAPIApplication Coverage Results" MODIFIED="1614422048269" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="idea" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" />
+  </component>
+</project>

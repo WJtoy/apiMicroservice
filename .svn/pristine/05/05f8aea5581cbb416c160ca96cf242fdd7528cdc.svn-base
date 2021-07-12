@@ -1,0 +1,23 @@
+syntax="proto3";
+
+option java_package = "com.wolfking.jeesite.modules.mq.dto";
+option java_outer_classname = "MQShortMessage";
+
+message ShortMessage{
+    //ID
+    int64 id = 1;
+    //手机号
+    string mobile = 2;
+    //区域
+    string content = 3;
+    //触发者
+    string type = 4;
+    //发送时间
+    int64 sendTime = 5;
+    //其他单号
+    string extNo = 6;
+    //触发者
+    int64 triggerBy = 7;
+    //触发时间
+    int64 triggerDate = 8;
+}

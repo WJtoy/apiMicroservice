@@ -1,0 +1,110 @@
+/**
+ * Copyright &copy; 2012-2016 <a href="https://github.com/thinkgem/jeesite">JeeSite</a> All rights reserved.
+ */
+package com.wolfking.jeesite.modules.sys.dao;
+
+import com.wolfking.jeesite.common.persistence.LongIDCrudDao;
+import com.wolfking.jeesite.modules.sys.entity.User;
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * 用户DAO接口
+ *
+ * @author ThinkGem
+ * @version 2014-05-16
+ */
+@Mapper
+public interface UserDao extends LongIDCrudDao<User> {
+
+    /**
+     * 根据id获得帐号基本信息(不关联其他表)
+     *
+     * @param id
+     * @return
+     */
+    User getBaseInfo(@Param("id") Long id);
+
+    /**
+     * 根据登录名称查询用户
+     *
+     * @param user
+     * @return
+     */
+    User getByLoginName(User user);
+
+    User getAppUserByLoginName(User user);
+
+    /**
+     * 按安维id获得登录帐号信息
+     *
+     * @param engineerId
+     * @return
+     */
+    User getByEngineerId(@Param("engineerId") Long engineerId);
+
+    /**
+     * 更新用户密码
+     *
+     * @param user
+     * @return
+     */
+    int updatePasswordById(User user);
+
+    /**
+     * 读取账户登录信息，包含ip和日期
+     *
+     * @param id
+     * @return Map:
+     * login_ip
+     * login_date
+     */
+    HashMap<String, Object> getLoginInfo(@Param("id") Long id);
+
+    /**
+     * 按手机号返回帐号delflag
+     *
+     * @param mobile
+     * @return
+     */
+    Integer getDelFlagByMobile(@Param("mobile") String mobile);
+
+    /**
+     * 按手机号返回帐号Id
+     *
+     * @param mobile
+     * @return
+     */
+    Long getIdByMobile(@Param("mobile") String mobile);
+
+    /**
+     * 按ID返回密码
+     *
+     * @param id
+     * @return
+     */
+    String getPasswordById(@Param("id") Long id);
+
+    User getBaseInfoByEngineerId(@Param("engineerId") Long engineerId);
+
+    /**
+     * 根据customerId或userId获取sys_user_customer中customerId列表
+     */
+    List<Long> findCustomerIdList(Map<String, Object> paramMap);
+
+    /**
+     * 根据客服id获取vip客户id列表
+     */
+    List<Long> findVipCustomerIdListByKefu(@Param("userId") Long userId);
+
+    /**
+     * 查询所有为主账号的安维人员列表信息
+     *
+     * @return
+     */
+    List<User> findEngineerAccountsList(@Param("engineerIds") List<Long> engineerIds, @Param("subFlag") Integer SubFlag); // TODO: 此方法在ServicePoint，Engineer，EngineerArea微服务化时来取代ServicePointDao中的 getEngineerAccountsListByAreaAndProductCategory方法 //2019-11-8
+}

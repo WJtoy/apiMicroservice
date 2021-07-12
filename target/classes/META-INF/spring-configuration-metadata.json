@@ -1,0 +1,410 @@
+{
+  "hints": [],
+  "groups": [
+    {
+      "sourceType": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties",
+      "name": "ms",
+      "type": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties",
+      "name": "ms.b2b-create-order-no",
+      "sourceMethod": "getB2bCreateOrderNo()",
+      "type": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties$WebProperties"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties",
+      "name": "ms.b2bcenter",
+      "sourceMethod": "getB2bcenter()",
+      "type": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties$B2BCenterProperties"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties",
+      "name": "ms.canbo",
+      "sourceMethod": "getCanbo()",
+      "type": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties$CanboProperties"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties",
+      "name": "ms.inse",
+      "sourceMethod": "getInse()",
+      "type": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties$InseProperties"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties",
+      "name": "ms.jd",
+      "sourceMethod": "getJd()",
+      "type": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties$JdProperties"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties",
+      "name": "ms.jdue",
+      "sourceMethod": "getJdue()",
+      "type": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties$JDUEProperties"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties",
+      "name": "ms.jdue-plus",
+      "sourceMethod": "getJduePlus()",
+      "type": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties$JDUEPlusProperties"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties",
+      "name": "ms.jinjing",
+      "sourceMethod": "getJinjing()",
+      "type": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties$JinJingProperties"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties",
+      "name": "ms.joyoung",
+      "sourceMethod": "getJoyoung()",
+      "type": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties$JoyoungProperties"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties",
+      "name": "ms.keg",
+      "sourceMethod": "getKeg()",
+      "type": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties$KegProperties"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties",
+      "name": "ms.konka",
+      "sourceMethod": "getKonka()",
+      "type": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties$KonkaProperties"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties",
+      "name": "ms.lb",
+      "sourceMethod": "getLb()",
+      "type": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties$LbProperties"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties",
+      "name": "ms.mbo",
+      "sourceMethod": "getMbo()",
+      "type": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties$MBOProperties"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties",
+      "name": "ms.mqi",
+      "sourceMethod": "getMqi()",
+      "type": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties$MqiProperties"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties",
+      "name": "ms.otlan",
+      "sourceMethod": "getOtlan()",
+      "type": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties$OtlanProperties"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties",
+      "name": "ms.pdd",
+      "sourceMethod": "getPdd()",
+      "type": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties$PddProperties"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties",
+      "name": "ms.report",
+      "sourceMethod": "getReport()",
+      "type": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties$MSReportProperties"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties",
+      "name": "ms.sf",
+      "sourceMethod": "getSf()",
+      "type": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties$SFProperties"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties",
+      "name": "ms.suning",
+      "sourceMethod": "getSuning()",
+      "type": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties$SuningProperties"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties",
+      "name": "ms.tmall",
+      "sourceMethod": "getTmall()",
+      "type": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties$TmallProperties"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties",
+      "name": "ms.um",
+      "sourceMethod": "getUm()",
+      "type": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties$UMProperties"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties",
+      "name": "ms.usaton-ga",
+      "sourceMethod": "getUsatonGa()",
+      "type": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties$UsatonGaProperties"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties",
+      "name": "ms.vio-mi",
+      "sourceMethod": "getVioMi()",
+      "type": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties$VioMiProperties"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties",
+      "name": "ms.voice-service",
+      "sourceMethod": "getVoiceService()",
+      "type": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties$VoiceServiceProperties"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties",
+      "name": "ms.weber",
+      "sourceMethod": "getWeber()",
+      "type": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties$WeberProperties"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties",
+      "name": "ms.x-ying-yan",
+      "sourceMethod": "getXYingYan()",
+      "type": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties$XYingYanProperties"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties",
+      "name": "ms.xyy",
+      "sourceMethod": "getXyy()",
+      "type": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties$XYYProperties"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties",
+      "name": "ms.xyy-plus",
+      "sourceMethod": "getXyyPlus()",
+      "type": "com.wolfking.jeesite.ms.common.config.MicroServicesProperties$XYYPlusProperties"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.common.config.WebProperties",
+      "name": "web",
+      "type": "com.wolfking.jeesite.common.config.WebProperties"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.common.config.WebProperties",
+      "name": "web.app",
+      "sourceMethod": "getApp()",
+      "type": "com.wolfking.jeesite.common.config.WebProperties$App"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.common.config.WebProperties",
+      "name": "web.cache",
+      "sourceMethod": "getCache()",
+      "type": "com.wolfking.jeesite.common.config.WebProperties$CacheProperties"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.common.config.WebProperties",
+      "name": "web.logistics",
+      "sourceMethod": "getLogistics()",
+      "type": "com.wolfking.jeesite.common.config.WebProperties$LogisticsProperties"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.common.config.WebProperties",
+      "name": "web.page",
+      "sourceMethod": "getPage()",
+      "type": "com.wolfking.jeesite.common.config.WebProperties$PageProperties"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.common.config.WebProperties",
+      "name": "web.sequence",
+      "sourceMethod": "getSequence()",
+      "type": "com.wolfking.jeesite.common.config.WebProperties$SequenceProperties"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.common.config.WebProperties",
+      "name": "web.service-point",
+      "sourceMethod": "getServicePoint()",
+      "type": "com.wolfking.jeesite.common.config.WebProperties$ServicePointProperties"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.common.config.WebProperties",
+      "name": "web.short-message",
+      "sourceMethod": "getShortMessage()",
+      "type": "com.wolfking.jeesite.common.config.WebProperties$ShortMessageProperties"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.common.config.WebProperties",
+      "name": "web.site",
+      "sourceMethod": "getSite()",
+      "type": "com.wolfking.jeesite.common.config.WebProperties$SiteProperties"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.common.config.WebProperties",
+      "name": "web.user-files",
+      "sourceMethod": "getUserFiles()",
+      "type": "com.wolfking.jeesite.common.config.WebProperties$UserFilesProperties"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.common.config.WebProperties",
+      "name": "web.voice-service",
+      "sourceMethod": "getVoiceService()",
+      "type": "com.wolfking.jeesite.common.config.WebProperties$VoiceServiceProperties"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.modules.api.wx.config.WeChatConfig",
+      "name": "wechat",
+      "type": "com.wolfking.jeesite.modules.api.wx.config.WeChatConfig"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.modules.api.wx.config.WeChatConfig",
+      "name": "wechat.we-chat-data-config",
+      "sourceMethod": "getWeChatDataConfig()",
+      "type": "com.wolfking.jeesite.modules.api.wx.config.WeChatConfig$WeChatDataConfig"
+    }
+  ],
+  "properties": [
+    {
+      "sourceType": "com.wolfking.jeesite.common.config.WebProperties$App",
+      "defaultValue": false,
+      "name": "web.app.identity-card-enabled",
+      "type": "java.lang.Boolean"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.common.config.WebProperties$App",
+      "defaultValue": "0.0.0.0",
+      "name": "web.app.ios-audited-app-version",
+      "description": "已审核成功的iOS app版本",
+      "type": "java.lang.String"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.common.config.WebProperties$App",
+      "defaultValue": false,
+      "name": "web.app.notice-enabled",
+      "description": "启用APP公告",
+      "type": "java.lang.Boolean"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.common.config.WebProperties$App",
+      "defaultValue": "0.0.0.0",
+      "name": "web.app.notice-version",
+      "type": "java.lang.String"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.common.config.WebProperties$App",
+      "defaultValue": false,
+      "name": "web.app.service-point-cooperation-terms-enabled",
+      "type": "java.lang.Boolean"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.common.config.WebProperties$CacheProperties",
+      "name": "web.cache.timeout",
+      "type": "java.lang.Long"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.common.config.WebProperties",
+      "defaultValue": false,
+      "name": "web.engineer-health-enabled",
+      "type": "java.lang.Boolean"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.common.config.WebProperties",
+      "defaultValue": "",
+      "name": "web.go-live-date",
+      "type": "java.lang.String"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.common.config.WebProperties$LogisticsProperties",
+      "defaultValue": false,
+      "name": "web.logistics.material-flag",
+      "type": "java.lang.Boolean"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.common.config.WebProperties$LogisticsProperties",
+      "defaultValue": false,
+      "name": "web.logistics.order-flag",
+      "type": "java.lang.Boolean"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.common.config.WebProperties",
+      "defaultValue": "",
+      "name": "web.order-prefix",
+      "type": "java.lang.String"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.common.config.WebProperties$PageProperties",
+      "defaultValue": 12,
+      "name": "web.page.page-size",
+      "description": "页尺寸",
+      "type": "java.lang.Integer"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.common.config.WebProperties",
+      "defaultValue": "",
+      "name": "web.product-name",
+      "type": "java.lang.String"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.common.config.WebProperties",
+      "defaultValue": false,
+      "name": "web.push-enabled",
+      "type": "java.lang.Boolean"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.common.config.WebProperties$SequenceProperties",
+      "defaultValue": 0,
+      "name": "web.sequence.data-center-id",
+      "type": "java.lang.Integer"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.common.config.WebProperties$SequenceProperties",
+      "defaultValue": 0,
+      "name": "web.sequence.worker-id",
+      "type": "java.lang.Integer"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.common.config.WebProperties$ServicePointProperties",
+      "defaultValue": false,
+      "name": "web.service-point.insurance-enabled",
+      "description": "启用网点保险",
+      "type": "java.lang.Boolean"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.common.config.WebProperties$ServicePointProperties",
+      "defaultValue": false,
+      "name": "web.service-point.insurance-forced",
+      "description": "强制网点保险（该配置会强制APP主账号必须同意保险条款）",
+      "type": "java.lang.Boolean"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.common.config.WebProperties$ShortMessageProperties",
+      "defaultValue": "",
+      "name": "web.short-message.ignore-data-sources",
+      "type": "java.lang.String"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.common.config.WebProperties$SiteProperties",
+      "defaultValue": "",
+      "name": "web.site.code",
+      "type": "java.lang.String"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.common.config.WebProperties$SiteProperties",
+      "defaultValue": "",
+      "name": "web.site.name",
+      "type": "java.lang.String"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.common.config.WebProperties$UserFilesProperties",
+      "defaultValue": "",
+      "name": "web.user-files.base-dir",
+      "type": "java.lang.String"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.common.config.WebProperties$UserFilesProperties",
+      "defaultValue": "",
+      "name": "web.user-files.host",
+      "type": "java.lang.String"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.common.config.WebProperties$UserFilesProperties",
+      "defaultValue": "",
+      "name": "web.user-files.upload-dir",
+      "type": "java.lang.String"
+    },
+    {
+      "sourceType": "com.wolfking.jeesite.common.config.WebProperties$VoiceServiceProperties",
+      "defaultValue": false,
+      "name": "web.voice-service.enabled",
+      "type": "java.lang.Boolean"
+    }
+  ]
+}

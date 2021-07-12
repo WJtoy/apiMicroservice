@@ -1,0 +1,25 @@
+syntax="proto3";
+
+option java_outer_classname = "MQCustomer";
+
+package com.wolfking.jeesite.modules.mq.dto; //package声明符
+
+//客户
+message Customer{
+    //客户ID
+    int64 id = 1;
+    //客户code
+    string code = 2;
+    //客户name
+    string name = 3;
+    //签约日期
+    int64 contractDate = 4;
+    //业务员ID
+    int64 salesId = 5;
+    //业务员
+    string salesName = 6;
+    //付款方式
+    int32 paymentType = 7;
+    //付款方式名称
+    string paymentTypeName = 8;
+}

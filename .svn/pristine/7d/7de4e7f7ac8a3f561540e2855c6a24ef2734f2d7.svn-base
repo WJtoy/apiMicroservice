@@ -1,0 +1,17 @@
+package com.wolfking.jeesite.modules.sd.dao;
+
+import com.wolfking.jeesite.common.persistence.BaseDao;
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
+
+
+@Mapper
+public interface OrderAdditionalInfoDao extends BaseDao {
+
+    String getOrderAdditionalInfo(@Param("orderId") Long orderId,
+                                  @Param("quarter") String quarter);
+
+    int updateOrderAdditionalInfo(@Param("orderId") Long orderId,
+                                   @Param("quarter") String quarter,
+                                   @Param("orderInfoJson") String orderInfoJson);
+}

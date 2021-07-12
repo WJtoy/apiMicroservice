@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wolfking.jeesite.modules.mq.dao.OrderAutoCompleteDao">
+	
+	<insert id="insert">
+		INSERT INTO mq_order_auto_complete(
+			id,
+			order_id,
+			quarter,
+			retry_times,
+			status,
+			trigger_by,
+			trigger_date,
+			create_date,
+			update_date,
+			remarks
+		) VALUES (
+			#{id},
+			#{orderId},
+			#{quarter},
+			#{retryTimes},
+			#{status},
+			#{triggerBy},
+			#{triggerDate},
+			#{createDate},
+			#{updateDate},
+			#{remarks}
+		)
+	</insert>
+
+</mapper>

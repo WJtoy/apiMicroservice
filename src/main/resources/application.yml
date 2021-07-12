@@ -1,0 +1,191 @@
+server:
+  port: 8878
+eureka:
+  instance:
+    prefer-ip-address: true
+    metadata-map:
+      zone: dev
+      function: provider-api
+  client:
+    serviceUrl:
+      defaultZone: http://dev:dev.123@192.168.1.230:8800/eureka/
+    healthcheck:
+      enabled: true
+feign:
+  hystrix:
+    enabled: true
+hystrix:
+  command:
+    default:
+      execution:
+        isolation:
+          thread:
+            timeoutInMilliseconds: 20000
+info:
+  app:
+    name: ${spring.application.name}
+    desc: provider-api
+  version: 0.0.1
+management:
+  security:
+    enabled: false
+    roles: SUPERUSER
+  add-application-context-header: false
+logging:
+  level:
+    root: error
+    com.woflking: error
+  path: ./kklplus/logs
+spring:
+  profiles: dev
+  application:
+    name: provider-api
+  #自动重启
+  devtools:
+    restart:
+    livereload:
+      enabled: true
+  jmx:
+    default-domain: kklplus-web
+  datasource:
+    driver-class-name: com.mysql.jdbc.Driver
+    type: com.zaxxer.hikari.HikariDataSource
+    url: jdbc:mysql://119.23.43.232:18355/kklplus?useUnicode=true&characterEncoding=utf-8&allowMultiQueries=true
+    username: kklplus
+    password: kklplus.Test
+    hikari:
+      minimumIdle: 20
+      maximumPoolSize: 50
+      autoCommit: true
+      idleTimeout: 300000
+      poolName: kklplus-web
+      maxLifetime: 1800000
+      connectionTimeout: 600000
+      connectionTestQuery: SELECT 1
+  redis:
+    database: 0
+    host: 192.168.1.230
+    port: 6379
+    #password: 8677505
+    pool:
+      max-active: 1000
+      max-wait: -1
+      max-idle: 100
+      min-idle: 0
+    timeout: 0
+  rabbitmq:
+    host: 192.168.1.162
+    port: 5672
+    username: admin
+    password: admin
+    publisherConfirms: true
+    cache:
+      connection:
+        mode: channel
+    listener:
+      simple:
+        auto-startup: true
+        acknowledge-mode: manual
+        concurrency: 1
+        max-concurrency: 1
+        prefetch: 1
+    template:
+      retry:
+        enabled: true
+  http:
+    multipart:
+      max-file-size: 10Mb
+      max-request-size: 10Mb
+  session:
+    store-type: redis
+#mybatis的配置
+mybatis:
+  config-location: classpath:/mybatis-config.xml
+  mapper-locations: classpath:/mappings/**/*.xml
+  type-aliases-package: com.wolfking.jeesite
+web:
+  app:
+    notice-enabled: true #app公告通知
+    noticeVersion: 0.0.0.1
+    ios-audited-app-version: 2.7.0.1
+    service-point-cooperation-terms-enabled: true
+    identity-card-enabled: false #启用身份证信息收集弹窗
+  service-point:
+    insurance-enabled: false #启用网点保险扣除
+    insurance-forced: false  #强制APP同意网点保险扣除
+  page:
+    page-size: 12
+  user-files:
+    base-dir: /data/jeesite/upload
+    upload-dir: /data/images
+    host: https://wy.kklgo.com/upload
+  cache:
+    timeout: 518400 #普通redis缓存过期时间,单位秒,12*60*60
+  order-prefix: V
+  go-live-date: 2018-08-15
+  product-name: ProviderApi
+  push-enabled: true
+  engineer-health-enabled: true
+  sequence:
+    data-center-id: 1
+    worker-id: 3
+  short-message:
+    ignore-data-sources: 7
+  site:
+    code: WY
+    name: 家居
+  voice-service:
+    enabled: true
+  logistics:
+    order-flag: false
+    material-flag: false
+ms:
+  b2bcenter:
+    enabled: true
+    mq:
+      order:
+        consumer:
+          enabled: true
+        retryConsumer:
+          enabled: true
+  tmall:
+    enabled: true
+    routing-enabled: true
+    search-by-customer-enabled: true
+    directly-cancel-enabled: true
+    #开启天猫待转工单列表的忽略操作按钮
+    ignoreOrder: true
+  canbo:
+    enabled: false
+  jd:
+    enabled: true
+    routingEnabled: true
+    canProcessKKLOrder: false
+  inse:
+    enabled: false
+    #是否向樱雪发送日志的开关
+    logEnabled: false
+  xYingYan:
+    enabled: false
+    app-key: xyy
+    app-secret: bb986637211fe6f50a4542af21d35dca
+    methods[0]: /ms/xyingyan/createOrder
+  suning:
+    enabled: true
+    canModifyKKLOrder: true
+    routing-enabled: true
+  voiceService:
+    enabled: true
+  rechargeService:
+    enabled: true
+    accessKey: 011b712cb1a811e98df800163e048532
+    submitUrl: https://wy.kklgo.com/recharge/submitForm
+  report:
+    enabled: true
+  #微信配置
+wechat:
+  we-chat-data-config:
+    app-id: wx102d20db8bf44206
+    app-secret: 809211ecd74c84adf84388266130d7dd
+    we-chat-url: https://api.weixin.qq.com/sns/jscode2session
+    authorization-code: authorization_code

@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.wolfking.jeesite.modules.sd.dao.AuxiliaryMaterialMasterDao">
+
+    <sql id="AuxiliaryMaterialMasterColumns">
+        a.order_id,
+        a.qty,
+        a.total,
+        a.actual_total_charge,
+        a.remarks,
+        a.create_by     AS "createBy.id",
+        a.create_date,
+        a.update_by     AS "updateBy.id",
+        a.update_date,
+        a.quarter,
+        a.del_flag,
+        a.file_path
+    </sql>
+
+    <select id="getAuxiliaryMaterialMasterByOrderId" resultType="AuxiliaryMaterialMaster">
+        SELECT
+          <include refid="AuxiliaryMaterialMasterColumns"/>
+        FROM sd_auxiliary_material_master a
+        <where>
+            a.order_id = #{orderId}
+            <if test="quarter != null and quarter != ''.toString()">
+                AND a.quarter = #{quarter}
+            </if>
+        </where>
+    </select>
+
+    <insert id="insert">
+        INSERT INTO sd_auxiliary_material_master
+        (
+          order_id,
+          qty,
+          total,
+          actual_total_charge,
+          remarks,
+          create_by,
+          create_date,
+          update_by,
+          update_date,
+          quarter,
+          file_path
+        )
+        VALUES
+        (
+          #{orderId},
+          #{qty},
+          #{total},
+          #{actualTotalCharge},
+          #{remarks},
+          #{createBy.id},
+          #{createDate},
+          #{createBy.id},
+          #{createDate},
+          #{quarter},
+          #{filePath}
+        )
+    </insert>
+
+    <update id="update" parameterType="AuxiliaryMaterialMaster">
+        UPDATE sd_auxiliary_material_master
+        <set>
+            qty = #{qty},
+            total = #{total},
+            actual_total_charge = #{actualTotalCharge},
+            remarks = #{remarks},
+            update_by   = #{updateBy.id},
+            update_date = #{updateDate}
+            <if test="isUpdatePhoto">
+                ,file_path = #{filePath}
+            </if>
+        </set>
+        <where>
+            order_id = #{orderId}
+            <if test="quarter != null and quarter != ''.toString()">
+                AND quarter = #{quarter}
+            </if>
+        </where>
+    </update>
+
+
+    <delete id="delete">
+        UPDATE sd_auxiliary_material_master
+        SET
+            del_flag    = 1,
+            update_by   = #{updateBy.id},
+            update_date = #{updateDate}
+        <where>
+            id = #{id}
+            <if test="quarter != null and quarter != '' ">
+                AND quarter = #{quarter}
+            </if>
+        </where>
+    </delete>
+
+
+</mapper>

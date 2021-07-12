@@ -1,0 +1,227 @@
+/**
+ * Copyright &copy; 2012-2016 <a href="https://github.com/thinkgem/jeesite">JeeSite</a> All rights reserved.
+ */
+package com.wolfking.jeesite.modules.sys.service;
+
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.wolfking.jeesite.common.config.redis.RedisConstant;
+import com.wolfking.jeesite.common.persistence.Page;
+import com.wolfking.jeesite.common.service.LongIDTreeService;
+import com.wolfking.jeesite.common.utils.RedisUtilsLocal;
+import com.wolfking.jeesite.modules.sys.dao.AreaDao;
+import com.wolfking.jeesite.modules.sys.entity.Area;
+import com.wolfking.jeesite.ms.providersys.feign.MSSysAreaFeign;
+import com.wolfking.jeesite.ms.providersys.service.MSSysAreaService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+/**
+ * 区域Service
+ *
+ * @author ThinkGem
+ * @version 2014-05-16
+ */
+@Service
+@Transactional(propagation = Propagation.NOT_SUPPORTED)
+public class AreaService extends LongIDTreeService<AreaDao, Area> {
+
+    @Autowired
+    private RedisUtilsLocal redisUtilsLocal;
+    @SuppressWarnings("rawtypes")
+    @Autowired
+    public RedisTemplate redisTemplate;
+
+    @Autowired
+    private MSSysAreaService msSysAreaService;
+
+    public Area getFromCache(Long id) {
+        if (id == null || id == 0) {
+            return null;
+        }
+        Area area = null;
+        if (redisUtilsLocal.exists(RedisConstant.RedisDBType.REDIS_SYS_DB, "area:type:all")) {
+            area = (Area) redisUtilsLocal.zRangeOneByScore(RedisConstant.RedisDBType.REDIS_SYS_DB, "area:type:all", id, id, Area.class);
+            /*
+            // mark on 2020-12-8 begin
+            if (area != null) {
+                return area;
+            }
+            // mark on 2020-12-8 end
+            */
+        }
+        if (area == null) {
+            area = dao.get(id);
+        }
+
+        // add on 2020-12-8 begin
+        Area areaFromMS = msSysAreaService.getFromCache(id);
+        msSysAreaService.compareSingleArea(id.toString(), area, areaFromMS, "areaService.getFromCache");
+        // add on 2020-12-8 end
+        return area;
+
+    }
+
+    public Area getFromCache(Long id, int type) {
+        if (id == null || id == 0) {
+            return null;
+        }
+        Area area = null;
+        String key = String.format(RedisConstant.SYS_AREA_TYPE, type);
+        if (redisUtilsLocal.exists(RedisConstant.RedisDBType.REDIS_SYS_DB, key)) {
+            area = (Area) redisUtilsLocal.zRangeOneByScore(RedisConstant.RedisDBType.REDIS_SYS_DB, key, id, id, Area.class);
+            /*
+            // mark on 2020-12-8 begin
+            if (area != null) {
+                return area;
+            }
+            // mark on 2020-12-8 end
+            */
+        }
+//        return areaDao.get(id);
+        if (area == null) {
+            area = dao.get(id);
+        }
+
+        // add on 2020-12-8 begin
+        Area areaFromMS = msSysAreaService.getFromCache(id, type);
+        msSysAreaService.compareSingleArea(String.format("id=%s,type=%s", id, type), area, areaFromMS, "areaService.getFromCache");
+        // add on 2020-12-8 end
+
+        return area;
+    }
+
+    public Area getTownFromCache(Long areaId, Long townId) {
+        //
+        // 此方法无处调用，后续代码将被删除  //add on 2020-12-8
+        //
+        String key = String.format(RedisConstant.SYS_AREA_TYPE_TOWN, areaId);
+        if (redisUtilsLocal.exists(RedisConstant.RedisDBType.REDIS_SYS_DB, key)) {
+            Area area = (Area) redisUtilsLocal.zRangeOneByScore(RedisConstant.RedisDBType.REDIS_SYS_DB, key, townId, townId, Area.class);
+            if (area != null) {
+                return area;
+            }
+        }
+        return dao.get(townId);
+    }
+
+    /**
+     * 按区域类型返回所有区域清单
+     *
+     * @param type
+     * @return
+     */
+    public List<Area> findListByType(Integer type) {
+        /*
+        String key = new String(String.format(RedisConstant.SYS_AREA_TYPE, type));
+//		String key = "area:type:"+type;
+        if (redisUtilsLocal.exists(RedisConstant.RedisDBType.REDIS_SYS_DB, key)) {
+            return redisUtilsLocal.zRange(RedisConstant.RedisDBType.REDIS_SYS_DB, key, 0, -1, Area.class);
+            //return sets.stream().collect(Collectors.toList());
+        } else {
+            List<Area> list = dao.findListByType(type);
+            if (list != null && list.size() > 0) {
+                int counter = list.size();
+                Area area;
+                for (int i = 0; i < counter; i++) {
+                    area = list.get(i);
+                    redisUtilsLocal.zAdd(RedisConstant.RedisDBType.REDIS_SYS_DB, key, area, area.getId(), 0);
+                }
+            }
+            return list;
+        }
+        */
+
+        // add on 2020-12-8 begin
+        List<Area> areaList = Lists.newArrayList();
+        String key = new String(String.format(RedisConstant.SYS_AREA_TYPE, type));
+        if (redisUtilsLocal.exists(RedisConstant.RedisDBType.REDIS_SYS_DB, key)) {
+            areaList = redisUtilsLocal.zRange(RedisConstant.RedisDBType.REDIS_SYS_DB, key, 0, -1, Area.class);
+        } else {
+            List<Area> list = dao.findListByType(type);
+            if (list != null && list.size() > 0) {
+                int counter = list.size();
+                Area area;
+                for (int i = 0; i < counter; i++) {
+                    area = list.get(i);
+                    redisUtilsLocal.zAdd(RedisConstant.RedisDBType.REDIS_SYS_DB, key, area, area.getId(), 0);
+                }
+            }
+            if (!list.isEmpty()) {
+                areaList.addAll(list);
+            }
+        }
+
+        List<Area> areaListFromMS = msSysAreaService.findListByTypeFromCache(type);
+        msSysAreaService.compareListArea(type.toString(), areaList, areaListFromMS, "findListByType");
+        return areaList;
+        // add on 2020-12-8 end
+    }
+
+    /**
+     * 按区域类型返回所有区域Map<id,area>
+     *
+     * @param type
+     * @return
+     */
+    public Map<Long, Area> findMapByType(Integer type) {
+        List<Area> areas = findListByType(type);
+        if (areas == null || areas.size() == 0) {
+            return Maps.newHashMap();
+        }
+        return areas.stream().collect(Collectors.toMap(
+                e -> e.getId(),
+                e -> e
+        ));
+    }
+
+
+    public List<Area> findAreasForServicePointOrEngineer(List<Long> areaIds) {
+        int pageNo = 1;
+        Page<Area> areaPage = new Page<>();
+        areaPage.setPageSize(1000);
+        areaPage.setPageNo(pageNo);
+        List<Area> areaListFromDb = dao.findAreasForServicePointOrEngineer(areaIds, areaPage);
+
+        while (pageNo < areaPage.getPageCount()) {
+            pageNo++;
+            areaPage.setPageNo(pageNo);
+            areaListFromDb.addAll(dao.findAreasForServicePointOrEngineer(areaIds, areaPage));
+        }
+
+        // add on 2020-12-9 begin
+        List<Area> areaListFromMS = msSysAreaService.findAreasForServicePointOrEngineer(areaIds);  // add on 2020-7-29
+        msSysAreaService.compareListArea(areaIds.toString(), areaListFromDb, areaListFromMS, "findAreasForServicePointOrEngineer");
+        // add on 2020-12-9 end
+
+        return areaListFromDb;
+    }
+
+    public List<Area> findServicePointAreas(List<Long> areaIds) {
+        List<Area> areaList = Lists.newArrayList();
+        if (areaIds != null && !areaIds.isEmpty()) {
+            if (areaIds.size() > 200) {
+                List<Area> finalAreaList = Lists.newArrayList();
+                Lists.partition(areaIds, 200).forEach(ids -> {
+                    List<Area> areaListFromDb = findAreasForServicePointOrEngineer(ids);
+                    if (areaListFromDb != null && !areaListFromDb.isEmpty()) {
+                        finalAreaList.addAll(areaListFromDb);
+                    }
+                });
+                if (finalAreaList != null && !finalAreaList.isEmpty()) {
+                    areaList.addAll(finalAreaList);
+                }
+            } else {
+                areaList = findAreasForServicePointOrEngineer(areaIds);
+            }
+        }
+        return areaList;
+    }
+}

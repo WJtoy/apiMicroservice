@@ -1,0 +1,2092 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wolfking.jeesite.modules.sd.dao.OrderDao">
+
+	<!-- 返回对象定义 BEGIN -->
+	<resultMap id="OrderConditionResult" type="OrderCondition">
+		<id property="orderId" column="order_id"/>
+		<result property="orderNo" column="order_no" />
+		<result property="quarter" column="quarter" />
+		<result property="userName" column="user_name" />
+		<result property="phone1" column="phone1" />
+		<result property="phone2" column="phone2" />
+		<result property="phone3" column="phone3" />
+		<result property="servicePhone" column="service_phone" />
+		<result property="address" column="address" />
+		<result property="serviceAddress" column="service_address" />
+		<result property="totalQty" column="total_qty" />
+		<result property="feedbackId" column="feedback_id" />
+		<result property="feedbackFlag" column="feedback_flag" />
+		<result property="feedbackDate" column="feedback_date" />
+		<result property="feedbackTitle" column="feedback_title" />
+		<result property="replyFlag" column="reply_flag" />
+		<result property="replyFlagKefu" column="reply_flag_kefu" />
+		<result property="replyFlagCustomer" column="reply_flag_customer" />
+		<result property="appAbnormalyFlag" column="app_abnormaly_flag" />
+		<result property="operationAppFlag" column="operation_app_flag" />
+
+		<!-- 停滞 -->
+		<result property="pendingFlag" column="pending_flag" />
+		<result property="pendingTypeDate" column="pending_type_date" />
+		<result property="appointmentDate" column="appointment_date" />
+		<!-- 预约 -->
+		<result property="reservationDate" column="reservation_date" />
+		<result property="reservationTimes" column="reservation_times" />
+
+        <result property="closeDate" column="close_date" />
+        <result property="createDate" column="create_date" />
+        <result property="updateDate" column="update_date" />
+        <result property="partsFlag" column="parts_flag" />
+        <result property="returnPartsFlag" column="return_parts_flag" />
+        <result property="finishPhotoQty" column="finish_photo_qty" />
+        <result property="arrivalDate" column="arrival_date" />
+		<result property="chargeFlag" column="charge_flag" />
+		<result property="appCompleteType" column="app_complete_type" />
+		<result property="appCompleteDate" column="app_complete_date" />
+		<result property="timeLiness" column="time_liness" />
+		<result property="gradeFlag" column="grade_flag" />
+		<result property="productCategoryId" column="product_category_id" />
+		<result property="productIds" column="product_ids" />
+		<result property="serviceTypes" column="service_types" />
+		<result property="orderServiceType" column="order_service_type" />
+		<!-- 突击 -->
+		<result property="rushOrderFlag" column="rush_order_flag" />
+		<result property="serviceTimes" column="service_times" />
+		<!-- 进度跟踪 -->
+		<result property="trackingFlag" column="tracking_flag" />
+		<result property="trackingMessage" column="tracking_message" />
+		<result property="trackingDate" column="tracking_date" />
+		<result property="subStatus" column="sub_status"/>
+		<result property="customerOwner" column="customer_owner"/>
+		<!--可突击标识-->
+		<result property="canRush" column="can_rush"/>
+
+		<association property="pendingType" column="pending_type" javaType="Dict">
+			<result property="label" column="pending_type_label"/>
+			<result property="value" column="pending_type"/>
+		</association>
+		<association property="urgentLevel" column="urgent_level" javaType="UrgentLevel">
+			<id property="id" column="urgent_level_id"/>
+		</association>
+		<association property="area"  column="order_area" javaType="Area" >
+			<id property="id" column="area_id"/>
+			<result property="name" column="area_name"/>
+			<result property="fullName" column="area_full_name"/>
+		</association>
+		<association property="subArea"  column="order_subArea" javaType="Area" >
+			<id property="id" column="sub_area_id"/>
+		</association>
+		<association property="kefu"  column="order_kefu" javaType="User" >
+			<id property="id" column="kefu_id"/>
+			<result property="name" column="kefu_name"/>
+			<result property="qq" column="kefu_qq"/>
+			<result property="mobile" column="kefu_mobile"/>
+			<result property="phone" column="kefu_phone"/>
+		</association>
+		<association property="customer" column="order_customer" javaType="Customer" >
+			<id property="id" column="customer_id" />
+			<result property="code" column="customer_code" />
+			<result property="name" column="customer_name" />
+			<result property="remarks" column="customer_remarks" />
+			<association property="sales"  column="order_customer_sales" javaType="User" >
+				<id property="id" column="sales_id" />
+				<result property="name" column="sales_name" />
+				<result property="mobile" column="sales_mobile"/>
+				<result property="qq" column="sales_qq"/>
+			</association>
+		</association>
+		<association property="servicePoint"  column="order_servicePoint" javaType="ServicePoint" >
+			<id property="id" column="servicepoint_id" />
+			<result property="name" column="servicepoint_name"/>
+			<result property="servicePointNo" column="servicepoint_no"/>
+		</association>
+		<association property="engineer"  column="order_engineer" javaType="User" >
+			<id property="id" column="engineer_id" />
+			<result property="name" column="engineer_name"/>
+			<result property="mobile" column="engineer_contactinfo"/>
+		</association>
+
+		<association property="createBy"  column="order_create_by" javaType="User" >
+			<id property="id" column="create_by" />
+			<result property="name" column="create_name"/>
+		</association>
+		<association property="updateBy"  column="update_by" javaType="User" >
+			<id property="id" column="update_by" />
+			<result property="name" column="update_name"/>
+		</association>
+		<association property="status"  column="condition_status" javaType="Dict" >
+			<result property="label" column="status_label"/>
+			<result property="value" column="status_value"/>
+		</association>
+	</resultMap>
+
+	<resultMap id="OrderFeeResult" type="OrderFee">
+		<id property="orderId" column="order_id"/>
+		<result column="expect_charge" property="expectCharge" />
+		<result column="blocked_charge" property="blockedCharge" />
+		<result column="service_charge" property="serviceCharge" />
+		<result column="material_charge" property="materialCharge" />
+		<result column="express_charge" property="expressCharge" />
+		<result column="travel_charge" property="travelCharge" />
+		<result column="other_charge" property="otherCharge" />
+		<result column="customer_time_liness" property="customerTimeLiness" />
+		<result column="customer_time_liness_charge" property="customerTimeLinessCharge" />
+		<result column="customer_urgent_charge" property="customerUrgentCharge" />
+		<result column="praise_fee" property="praiseFee" />
+		<result column="order_charge" property="orderCharge" />
+		<!-- 应付 -->
+		<result column="engineer_service_charge" property="engineerServiceCharge" />
+		<result column="engineer_travel_charge" property="engineerTravelCharge" />
+		<result column="engineer_express_charge" property="engineerExpressCharge" />
+		<result column="engineer_material_charge" property="engineerMaterialCharge" />
+		<result column="insurance_charge" property="insuranceCharge" />
+		<result column="engineer_other_charge" property="engineerOtherCharge" />
+		<result column="engineer_urgent_charge" property="engineerUrgentCharge" />
+		<result column="time_liness_charge" property="timeLinessCharge" />
+		<result column="subsidy_time_liness_charge" property="subsidyTimeLinessCharge" />
+		<result column="customer_urgent_charge" property="customerUrgentCharge" />
+		<result column="engineer_praise_fee" property="engineerPraiseFee" />
+		<result column="engineer_tax_fee" property="engineerTaxFee" />
+		<result column="engineer_info_fee" property="engineerInfoFee" />
+		<result column="engineer_total_charge" property="engineerTotalCharge" />
+		<!-- 其他 -->
+		<result column="plan_travel_charge" property="planTravelCharge" />
+		<result column="customer_plan_travel_charge" property="customerPlanTravelCharge" />
+		<result column="customer_plan_other_charge" property="customerPlanOtherCharge" />
+		<result column="plan_travel_no" property="planTravelNo" />
+		<result column="plan_other_charge" property="planOtherCharge" />
+		<result column="plan_distance" property="planDistance" />
+		<result column="rebate_flag" property="rebateFlag" />
+
+
+		<association property="orderPaymentType"  column="fee_orderPaymentType" javaType="Dict" >
+			<result property="value" column="order_payment_type_value"/>
+			<result property="label" column="order_payment_type_label"/>
+		</association>
+		<association property="engineerPaymentType"  column="fee_engineerPaymentType" javaType="Dict" >
+			<result property="value" column="engineer_payment_type_value"/>
+			<result property="label" column="engineer_payment_type_label"/>
+		</association>
+	</resultMap>
+
+	<resultMap id="OrderStatusResult" type="OrderStatus">
+		<id property="orderId" column="order_id"/>
+		<result property="customerApproveFlag" column="customer_approve_flag" />
+		<result property="customerApproveDate" column="customer_approve_date" />
+		<result property="acceptDate" column="accept_date" />
+		<result property="planDate" column="plan_date" />
+		<result property="planComment" column="plan_comment" />
+		<result property="firstContactDate" column="first_contact_date" />
+		<result property="serviceFlag" column="service_flag" />
+		<result property="serviceDate" column="service_date" />
+		<result property="serviceComment" column="service_comment" />
+		<result property="serviceTimes" column="service_times" />
+		<result property="closeFlag" column="close_flag" />
+		<result property="chargeDate" column="charge_date" />
+		<result property="engineerInvoiceDate" column="engineer_invoice_date" />
+		<result property="customerInvoiceDate" column="customer_invoice_date" />
+		<result property="cancelSponsor" column="cancel_sponsor" />
+		<result property="cancelApplyDate" column="cancel_apply_date" />
+		<result property="cancelApplyComment" column="cancel_apply_comment" />
+		<result property="cancelApproveFlag" column="cancel_approve_flag" />
+		<result property="cancelApproveDate" column="cancel_approve_date" />
+		<result property="urgentDate" column="urgent_date" />
+		<result property="reminderStatus" column="reminder_status" />
+		<result property="complainFlag" column="complain_flag" />
+		<result property="complainStatus" column="complain_status" />
+		<association property="customerApproveBy"  column="customerApproveBy" javaType="User" >
+			<id property="id" column="customer_approve_by" />
+			<result property="name" column="customer_approve_name"/>
+		</association>
+		<association property="planBy"  column="planBy" javaType="User" >
+			<id property="id" column="plan_by" />
+			<result property="name" column="plan_by_name"/>
+		</association>
+		<association property="closeBy"  column="closeby" javaType="User" >
+			<id property="id" column="close_by" />
+			<result property="name" column="close_by_name"/>
+		</association>
+		<association property="chargeBy"  column="chargeBy" javaType="User" >
+			<id property="id" column="charge_by" />
+			<result property="name" column="charge_by_name"/>
+		</association>
+		<association property="cancelResponsible"  column="cancelResponsible" javaType="Dict" >
+			<result property="value" column="cancel_responsible"/>
+			<result property="label" column="cancel_responsible_label"/>
+		</association>
+		<association property="cancelApplyBy"  column="cancelApplyBy" javaType="User" >
+			<id property="id" column="cancel_apply_by" />
+			<result property="name" column="cancel_apply_by_name"/>
+		</association>
+		<association property="cancelApproveBy"  column="cancelApproveBy" javaType="User" >
+			<id property="id" column="cancel_approve_by" />
+			<result property="name" column="cancel_approve_by_name"/>
+		</association>
+	</resultMap>
+
+	<resultMap id="OrderResult" type="Order" >
+		<id property="id" column="id"/>
+		<result property="b2bOrderId" column="b2b_order_id"/>
+		<result property="workCardId" column="workcard_id" />
+		<result property="orderNo" column="order_no" />
+		<result property="remarks" column="remarks" />
+		<result property="verificationCode" column="verification_code" />
+		<result property="confirmDoor" column="confirm_door" />
+		<result property="description" column="description" />
+		<result property="repeateNo" column="repeate_no" />
+		<result property="quarter" column="quarter" />
+		<result property="totalQty" column="total_qty" />
+		<result property="writeOff" column="write_off" />
+		<result property="orderItemJson" column="orderitem_json"/>
+		<result property="orderInfo" column="order_info_json"/><!-- Added by Zhoucy, 2018-12-21 15:07 -->
+		<result property="parentBizOrderId" column="parent_biz_order_id"/>
+		<association property="dataSource"  column="data_source" javaType="Dict" >
+			<result property="value" column="data_source"/>
+		</association>
+		<association property="orderType"  column="order_type" javaType="Dict" >
+			<result property="label" column="order_type_label"/>
+			<result property="value" column="order_type"/>
+		</association>
+        <association property="b2bShop"  column="order_b2bShop" javaType="B2bCustomerMap" >
+			<result property="shopId" column="shop_id"/>
+		</association>
+		<association property="orderChannel"  column="order_orderChannel" javaType="Dict" >
+			<result property="value" column="order_channel"/>
+		</association>
+	</resultMap>
+
+	<resultMap id="OrderDetailResult" type="OrderDetail">
+		<id property="id" column="id"/>
+		<result property="orderId" column="order_id"/>
+		<result property="itemNo" column="item_no"/>
+		<result property="serviceTimes" column="service_times"/>
+		<result property="brand" column="brand"/>
+		<result property="productSpec" column="product_spec"/>
+		<result property="qty" column="qty"/>
+		<!-- engineer -->
+		<result property="engineerStandPrice" column="engineer_stand_price"/>
+		<result property="engineerDiscountPrice" column="engineer_discount_price"/>
+		<result property="engineerServiceCharge" column="engineer_service_charge"/>
+		<result property="engineerTravelCharge" column="engineer_travel_charge"/>
+		<result property="engineerExpressCharge" column="engineer_express_charge"/>
+		<result property="engineerMaterialCharge" column="engineer_material_charge"/>
+		<result property="engineerOtherCharge" column="engineer_other_charge"/>
+		<result property="engineerInvoiceDate" column="engineer_invoice_date"/>
+		<!-- customer -->
+		<result property="standPrice" column="stand_price"/>
+		<result property="discountPrice" column="discount_price"/>
+		<result property="charge" column="charge"/>
+		<result property="materialCharge" column="material_charge"/>
+		<result property="expressCharge" column="express_charge"/>
+		<result property="travelCharge" column="travel_charge"/>
+		<result property="travelNo" column="travel_no"/>
+		<result property="otherCharge" column="other_charge"/>
+		<result property="createDate" column="create_date"/>
+		<result property="updateDate" column="update_date"/>
+
+		<result property="remarks" column="remarks"/>
+		<result property="delFlag" column="del_flag"/>
+		<result property="otherActionRemark" column="other_action_remark"/>
+		<result property="syncChargeTags" column="sync_charge_tags"/>
+
+		<association property="servicePoint"  column="detail_servicePoint" javaType="ServicePoint" >
+			<result property="id" column="servicepoint_id"/>
+			<result property="name" column="servicepoint_name"/>
+		</association>
+		<association property="engineer"  column="detail_engineer" javaType="Engineer" >
+			<result property="id" column="engineer_id"/>
+			<result property="name" column="engineer_name"/>
+		</association>
+		<association property="engineerPaymentType"  column="detail_engineerPaymentType" javaType="Dict" >
+			<result property="value" column="engineer_payment_type"/>
+			<result property="label" column="engineer_payment_type_label"/>
+		</association>
+		<association property="serviceType"  column="detail_serviceType" javaType="ServiceType" >
+			<id property="id" column="service_type_id"/>
+			<result property="name" column="service_type_name"/>
+		</association>
+		<association property="product" column="detail_product" javaType="Product">
+			<id property="id" column="product_id"/>
+			<result property="name" column="product_name"/>
+			<result property="setFlag" column="product_set_flag"/>
+			<association property="category"  column="detail_product_category" javaType="ProductCategory" >
+				<id property="id" column="product_category_id"/>
+			</association>
+		</association>
+		<association property="createBy"  column="detail_createBy" javaType="User" >
+			<id property="id" column="create_by"/>
+		</association>
+		<association property="updateBy"  column="detail_updateBy" javaType="User" >
+			<id property="id" column="update_by"/>
+		</association>
+		<!-- 故障-->
+		<association property="serviceCategory"  column="detail_serviceCategory" javaType="Dict" >
+			<result property="value" column="service_category_id"/>
+		</association>
+		<association property="errorType"  column="detail_errorType" javaType="com.kkl.kklplus.entity.md.MDErrorType" >
+			<id property="id" column="error_type_id"/>
+		</association>
+		<association property="errorCode"  column="detail_errorCode" javaType="com.kkl.kklplus.entity.md.MDErrorCode" >
+			<id property="id" column="error_code_id"/>
+		</association>
+		<association property="actionCode"  column="detail_actionCode" javaType="com.kkl.kklplus.entity.md.dto.MDActionCodeDto" >
+			<id property="id" column="action_code_id"/>
+			<result property="name" column="action_name"/>
+		</association>
+	</resultMap>
+
+	<!-- 客评 -->
+	<resultMap id="OrderGradeResult" type="OrderGrade">
+		<id property="id" column="grade_id"/>
+		<result property="quarter" column="quarter" />
+		<result property="orderId" column="order_id"/>
+		<result property="orderNo" column="order_no"/>
+		<result property="gradeName" column="grade_name"/>
+		<result property="gradeItemId" column="grade_item_id"/>
+		<result property="sort" column="sort"/>
+		<result property="dictType" column="dict_type"/>
+		<result property="point" column="point"/>
+		<result property="remarks" column="remarks"/>
+		<association property="engineer"  column="grade_engineer" javaType="Engineer" >
+			<id property="id" column="engineer_id"/>
+			<result property="name" column="engineer_name"/>
+		</association>
+		<association property="servicePoint"  column="grade_servicepoint" javaType="ServicePoint" >
+			<id property="id" column="servicepoint_id"/>
+		</association>
+		<collection property="items" ofType="GradeItem">
+			<id property="id" column="item_id"/>
+			<result property="point" column="item_point"/>
+			<result property="remarks" column="item_remarks"/>
+			<result property="dictValue" column="dict_value"/>
+		</collection>
+	</resultMap>
+
+	<resultMap id="OrderToGradeResult" type="OrderCondition">
+		<id property="orderId" column="order_id"/>
+		<result property="orderNo" column="order_no" />
+		<result property="quarter" column="quarter" />
+		<result property="gradeFlag" column="grade_flag" />
+		<result property="subStatus" column="sub_status"/>
+		<result property="appAbnormalyFlag" column="app_abnormaly_flag" />
+		<association property="status"  column="condition_status" javaType="Dict" >
+			<result property="value" column="status_value"/>
+		</association>
+		<association property="customer"  column="condition_customer" javaType="Customer" >
+			<result property="id" column="customer_id"/>
+		</association>
+		<association property="area"  column="condition_area" javaType="Area" >
+			<result property="id" column="area_id"/>
+		</association>
+		<association property="kefu"  column="condition_kefu" javaType="User" >
+			<result property="id" column="kefu_id"/>
+		</association>
+	</resultMap>
+
+    <resultMap id="CrushPlanOrderMap" type="HistoryPlanOrderModel">
+        <id property="orderId" column="order_id"/>
+        <result property="orderNo" column="order_no" />
+        <result property="quarter" column="quarter" />
+        <result property="userName" column="user_name" />
+        <result property="userPhone" column="service_phone" />
+        <result property="userAddress" column="service_address" />
+        <result property="createDate" column="create_date" />
+        <result property="productCategoryId" column="product_category_id" />
+        <result property="servicePointId" column="servicepoint_id" />
+        <result property="statusValue" column="status" />
+        <result property="itemJson" column="orderitem_json" />
+        <association property="area"  column="order_area" javaType="Area" >
+            <id property="id" column="area_id"/>
+            <result property="name" column="area_name"/>
+        </association>
+        <association property="subArea"  column="order_subArea" javaType="Area" >
+            <id property="id" column="sub_area_id"/>
+        </association>
+    </resultMap>
+
+	<resultMap id="CrushPlanOrderServiceMap" type="HistoryPlanOrderModel">
+		<id property="orderId" column="order_id"/>
+		<collection property="serviceItems" ofType="com.wolfking.jeesite.modules.sd.entity.viewModel.HistoryPlanOrderServiceItem">
+			<result property="brand" column="brand"/>
+			<result property="productSpec" column="product_spec"/>
+			<result property="qty" column="qty"/>
+			<result property="productId" column="product_id"/>
+			<result property="serviceTypeId" column="service_type_id"/>
+			<result property="engineerServiceCharge" column="engineer_service_charge"/>
+			<result property="engineerTravelCharge" column="engineer_travel_charge"/>
+			<result property="engineerExpressCharge" column="engineer_express_charge"/>
+			<result property="engineerMaterialCharge" column="engineer_material_charge"/>
+			<result property="engineerOtherCharge" column="engineer_other_charge"/>
+		</collection>
+	</resultMap>
+
+	<resultMap id="kefuResultMap" type="User">
+		<id property="id" column="id"/>
+		<result property="name" column="name"/>
+		<result property="phone" column="phone"/>
+		<result property="mobile" column="mobile"/>
+		<result property="qq" column="qq"/>
+	</resultMap>
+
+	<!-- 返回对象定义 END -->
+
+	<!-- 以下是查询主体 -->
+	<!-- status -->
+	<sql id="selectOrderStatus">
+		SELECT
+			s.order_id,
+			s.customer_approve_flag,
+			s.customer_approve_date,
+			s.accept_date,
+			s.plan_date,
+			s.plan_comment,
+			s.first_contact_date,
+			s.service_flag,
+			s.service_date,
+			s.service_comment,
+			s.close_flag,
+			s.charge_date,
+			s.engineer_invoice_date,
+			s.customer_invoice_date,
+			s.service_times,
+			s.cancel_sponsor,
+			s.cancel_responsible,
+			'' as cancel_responsible_label,
+			s.cancel_apply_date,
+			s.cancel_apply_comment,
+			s.cancel_approve_flag,
+			s.cancel_approve_date,
+			s.customer_approve_by,
+			'' as customer_approve_name,
+			s.plan_by,
+			'' as plan_by_name,
+			s.close_by,
+			'' as close_by_name,
+			s.charge_by,
+			'' as charge_by_name,
+			s.cancel_apply_by,
+			'' as cancel_apply_by_name,
+			s.cancel_approve_by,
+			'' as cancel_approve_by_name,
+			s.urgent_date,
+			s.reminder_status,
+		    s.complain_flag,
+		    s.complain_status
+		FROM sd_order_status s
+			<!--
+			LEFT join sys_user ucp on s.customer_approve_by = ucp.id
+			LEFT join sys_user upl on s.plan_by = upl.id
+			LEFT join sys_user ucl on s.close_by = ucl.id
+			LEFT join sys_user uch on s.charge_by = uch.id
+			LEFT JOIN sys_user uca	on s.cancel_apply_by = uca.id
+			LEFT JOIN sys_user ucn on s.cancel_approve_by = ucn.id
+			-->
+	</sql>
+
+	<select id="getOrderStatusById" resultMap="OrderStatusResult">
+		<if test="fromMasterDb != null and fromMasterDb == true">
+			/*#mycat:db_type=master*/
+		</if>
+		<include refid="selectOrderStatus"/>
+		WHERE
+			<if test="quarter != null and quarter != ''.toString()"> s.quarter = #{quarter} and </if>
+			s.order_id = #{orderId}
+	</select>
+
+	<update id="updateStatus" parameterType="java.util.HashMap">
+		update sd_order_status
+		<set >
+			<if test="customerApproveFlag != null" >
+				customer_approve_flag = #{customerApproveFlag},
+			</if>
+			<if test="customerApproveBy != null and customerApproveBy.id != null" >
+				customer_approve_by = #{customerApproveBy.id},
+			</if>
+			<if test="customerApproveDate != null" >
+				customer_approve_date = #{customerApproveDate},
+			</if>
+			<if test="_parameter.containsKey('acceptDate')" >
+				accept_date = #{acceptDate},
+			</if>
+			<if test="planBy != null" >
+				plan_by = #{planBy.id},
+			</if>
+			<if test="_parameter.containsKey('planDate')" >
+				plan_date = #{planDate},
+				<choose>
+					<when test="_parameter.containsKey('firstPlanDate')" >
+						first_plan_date = #{firstPlanDate},
+					</when>
+					<otherwise>
+						first_plan_date = case when first_plan_date is null and #{planDate} is not null then #{planDate} else first_plan_date end,
+					</otherwise>
+				</choose>
+			</if>
+			<if test="_parameter.containsKey('planComment')" >
+				plan_comment = #{planComment},
+			</if>
+			<if test="_parameter.containsKey('firstContactDate')" >
+				first_contact_date = #{firstContactDate},
+			</if>
+			<if test="serviceFlag != null" >
+				service_flag = #{serviceFlag},
+			</if>
+			<if test="serviceDate != null" >
+				service_date = #{serviceDate},
+			</if>
+			<if test="serviceComment != null" >
+				service_comment = #{serviceComment},
+			</if>
+			<if test="serviceTimes != null" >
+				service_times = #{serviceTimes},
+			</if>
+			<if test="closeFlag != null" >
+				close_flag = #{closeFlag},
+			</if>
+			<if test="closeBy != null and closeBy.id != null" >
+				close_by = #{closeBy.id},
+			</if>
+			<if test="servicePoint != null and servicePoint.id != null" >
+				servicepoint_id = #{servicePoint.id},
+			</if>
+			<if test="engineer != null and engineer.id != null" >
+				engineer_id = #{engineer.id},
+			</if>
+			<if test="chargeFlag != null" >
+				charge_flag = #{chargeFlag},
+			</if>
+			<if test="chargeDate != null" >
+				charge_date = #{chargeDate},
+			</if>
+			<if test="chargeBy != null and chargeBy.id != null" >
+				charge_by = #{chargeBy.id},
+			</if>
+
+			<if test="engineerInvoiceDate != null " >
+				engineer_invoice_date = #{engineerInvoiceDate},
+			</if>
+			<if test="customerInvoiceDate != null" >
+				customer_invoice_date = #{customerInvoiceDate},
+			</if>
+
+			<if test="cancelSponsor != null" >
+				cancel_sponsor = #{cancelSponsor},
+			</if>
+			<if test="cancelResponsible != null" >
+				cancel_responsible = #{cancelResponsible},
+			</if>
+			<if test="cancelApplyBy != null and cancelApplyBy.id != null" >
+				cancel_apply_by = #{cancelApplyBy.id},
+			</if>
+			<if test="cancelApplyDate != null" >
+				cancel_apply_date = #{cancelApplyDate},
+			</if>
+			<if test="cancelApplyComment != null " >
+				cancel_apply_comment = #{cancelApplyComment},
+			</if>
+			<if test="cancelApproveFlag != null" >
+				cancel_approve_flag = #{cancelApproveFlag},
+			</if>
+			<if test="cancelApproveBy != null and cancelApproveBy.id != null" >
+				cancel_approve_by = #{cancelApproveBy.id},
+			</if>
+			<if test="cancelApproveDate != null" >
+				cancel_approve_date = #{cancelApproveDate},
+			</if>
+            <if test="_parameter.containsKey('urgentDate')" >
+                urgent_date = #{urgentDate},
+            </if>
+			<if test="reminderStatus != null">
+				reminder_status = #{reminderStatus},
+			</if>
+		</set>
+		where
+			<if test="quarter != null and quarter != ''.toString()"> quarter = #{quarter} and </if>
+			order_id = #{orderId}
+	</update>
+
+    <!-- 催单 -->
+    <update id="updateReminderInfo" parameterType="java.util.Map">
+        update sd_order_status
+        <set>
+            <if test="reminderStatus != null">
+                reminder_status = #{reminderStatus},
+            </if>
+            <if test="reminderCreateBy != null">
+                reminder_create_by = #{reminderCreateBy},
+            </if>
+            <if test="reminderCreateAt != null">
+                reminder_create_at = #{reminderCreateAt},
+            </if>
+        </set>
+        where
+            quarter = #{quarter}
+            and order_id = #{orderId}
+    </update>
+
+ 	<!-- 催单 -->
+    <update id="updateConditionReminderFlag" parameterType="java.util.Map">
+        update sd_order_condition
+        <set>
+            <if test="reminderStatus != null">
+                reminder_flag = #{reminderStatus},
+            </if>
+        </set>
+        where
+			order_id = #{orderId}
+			and quarter = #{quarter}
+    </update>
+
+	<!--投诉-->
+	<update id="updateComplainInfo" parameterType="java.util.Map">
+		update sd_order_status
+		<set>
+			<if test="complainFlag != null and complainFlag>0">
+				complain_flag = #{complainFlag},
+			</if>
+			<if test="complainBy !=null and complainBy!=''">
+				complain_by = #{complainBy},
+			</if>
+			<if test="complainAt != null">
+				complain_at = #{complainAt},
+			</if>
+			<if test="complainStatus != null">
+				complain_status = #{complainStatus},
+			</if>
+		</set>
+		where
+		quarter = #{quarter}
+		and order_id = #{orderId}
+	</update>
+
+	<!-- order -->
+	<sql id="selectOrder">
+		SELECT
+		o.id,
+		o.quarter,
+		o.b2b_order_id,
+		o.workcard_id,
+		o.parent_biz_order_id,
+		o.data_source,
+		o.order_no,
+		o.total_qty,
+		o.order_type,
+		o.remarks,
+		o.verification_code,
+		o.confirm_door,
+		o.description,
+		o.repeate_no,
+		o.write_off,
+		o.shop_id,
+		o.order_channel,
+		'' as order_type_label,
+		o.orderitem_json,
+		o.order_info_json
+        FROM sd_order o
+    </sql>
+
+	<!-- 返回订单完整数据 -->
+	<select id="getOrderById" resultMap="OrderResult">
+		<include refid="selectOrder"/>
+		WHERE
+			<if test="quarter != null and quarter != ''.toString()"> o.quarter = #{quarter} and </if>
+			o.id = #{orderId}
+	</select>
+
+	<!-- Fee -->
+	<sql id="selectOrderFee">
+		SELECT
+		o.order_id,
+		o.expect_charge,
+		o.blocked_charge,
+		o.service_charge,
+		o.material_charge,
+		o.express_charge,
+		o.travel_charge,
+		o.other_charge,
+		o.customer_time_liness,
+		o.customer_time_liness_charge,
+		o.customer_urgent_charge,
+		o.praise_fee,
+		o.order_charge,
+		o.engineer_service_charge,
+		o.engineer_travel_charge,
+		o.engineer_express_charge,
+		o.engineer_material_charge,
+		o.engineer_other_charge,
+		o.insurance_charge,
+		o.time_liness_charge,
+		o.subsidy_time_liness_charge,
+	    o.engineer_urgent_charge,
+	    o.engineer_praise_fee,
+	    o.engineer_tax_fee,
+	    o.engineer_info_fee,
+		o.engineer_total_charge,
+		o.plan_travel_charge,
+		o.customer_plan_travel_charge,
+		o.customer_plan_other_charge,
+		o.plan_travel_no,
+		o.plan_other_charge,
+		o.plan_distance,
+		o.rebate_flag,
+		'' as order_payment_type_label,
+		o.order_payment_type as order_payment_type_value,
+		'' as engineer_payment_type_label,
+		o.engineer_payment_type as engineer_payment_type_value
+		FROM sd_order_fee o
+	</sql>
+
+	<!-- 完整数据 -->
+	<select id="getOrderFeeById" resultMap="OrderFeeResult">
+		<if test="fromMasterDb != null and fromMasterDb == true">
+			/*#mycat:db_type=master*/
+		</if>
+		<include refid="selectOrderFee"/>
+		WHERE
+			<if test="quarter != null and quarter != ''.toString()"> o.quarter = #{quarter} and </if>
+			o.order_id = #{orderId}
+	</select>
+
+    <!-- Condition -->
+    <sql id="selectOrderCondition">
+        SELECT
+			o.quarter,
+			o.order_id,
+			o.order_no,
+			o.area_id,
+			o.area_name,
+			o.sub_area_id,
+			o.customer_id,
+			'' as customer_code,
+			'' as customer_name,
+			0 as sales_id,
+			'' as sales_name,
+			'' as sales_mobile,
+			'' as sales_qq,
+			'' as customer_remarks,
+			o.user_name,
+			o.phone1,
+			o.phone2,
+			o.phone3,
+			o.address,
+			o.service_address,
+			o.service_phone,
+			o.pending_flag,
+			o.pending_type,
+			'' as pending_type_label,
+			o.pending_type_date,
+			o.feedback_id,
+			o.feedback_flag,
+			o.feedback_date,
+			o.feedback_title,
+			o.reply_flag,
+			o.reply_flag_kefu,
+			o.reply_flag_customer,
+			o.close_date,
+			o.parts_flag,
+			o.return_parts_flag,
+			o.app_abnormaly_flag,
+			o.operation_app_flag,
+			o.appointment_date,
+			o.grade_flag,
+			o.create_by,
+			o.total_qty,
+			o.customer_owner,
+			'' as create_name,
+			o.create_date,
+			o.update_by,
+			'' as update_name,
+			o.update_date,
+			o.product_category_id,
+			o.product_ids,
+			o.service_types,
+			o.order_service_type,
+			o.kefu_id,
+			'' as kefu_name,
+			'' as kefu_qq,
+			'' as kefu_mobile,
+			'' as kefu_phone,
+			o.servicepoint_id,
+			<!--
+		    //ServicePoint改成微服务调用s.name as servicepoint_name,
+			s.servicepoint_no as servicepoint_no,-->
+			o.engineer_id,
+		    <!--
+		    //Engineer改为微服务调用
+			e.name as engineer_name,
+			e.contact_info as engineer_contactinfo,
+			-->
+			<!-- eu.app_loged as engineer_appLoged, -->
+			o.service_times,
+			'' as status_label,
+			o.status as status_value,
+			o.charge_flag,
+			o.finish_photo_qty,
+			o.tracking_flag,
+			o.tracking_message,
+			o.tracking_date,
+			o.app_complete_type,
+			o.app_complete_date,
+			o.reservation_date,
+			o.reservation_times,
+			o.rush_order_flag,
+			o.time_liness,
+			o.arrival_date,
+			o.urgent_level_id,
+			o.sub_status,
+		    o.can_rush
+        FROM sd_order_condition o
+		<!--
+		//ServicePoint改成微服务调用
+		LEFT join md_servicepoint s on o.servicepoint_id = s.id
+		-->
+		<!--
+		//Engineer改成微服务调用
+        LEFT JOIN md_engineer e on o.engineer_id = e.id
+        LEFT JOIN sys_user eu on e.id = eu.engineer_id
+        -->
+	<!--LEFT JOIN sys_user eu on o.engineer_id > 0 and o.engineer_id = eu.engineer_id -->
+</sql>
+
+	<select id="getCurrentServicePointId" resultType="java.lang.Long">
+		select
+			o.servicepoint_id
+		from
+			sd_order_condition o
+		where
+			o.order_id = #{orderId}
+			and o.quarter = #{quarter}
+	</select>
+
+	<!-- from master -->
+	<select id="getOrderConditionFromMasterById" resultMap="OrderConditionResult">
+		/*#mycat:db_type=master*/<include refid="selectOrderCondition"/>
+		<where>
+			o.order_id = #{orderId}
+			<if test="quarter != null and quarter != ''.toString()"> and o.quarter = #{quarter}</if>
+		</where>
+	</select>
+
+	<!-- 从主库读取个别字段 -->
+	<select id="getOrderConditionSpecialFromMasterById" resultType="java.util.HashMap">
+		/*#mycat:db_type=master*/
+		select o.status as status_value,o.charge_flag,o.grade_flag,o.parts_flag
+		from sd_order_condition o
+		<where>
+			o.order_id = #{orderId}
+			<if test="quarter != null and quarter != ''.toString()"> and o.quarter = #{quarter}</if>
+		</where>
+		limit 1
+	</select>
+
+	<select id="getOrderConditionImportantPropertiesFromMasterById" resultType="OrderCondition">
+		/*#mycat:db_type=master*/
+		SELECT
+			  	soc.status 				AS "status.value",
+			  	soc.service_times,
+			  	soc.app_abnormaly_flag,
+			  	soc.grade_flag,
+				soc.pending_flag,
+				soc.charge_flag,
+				soc.parts_flag,
+				soc.reply_flag,
+				soc.reply_flag_kefu,
+				soc.reply_flag_customer,
+				soc.rush_order_flag,
+				soc.time_liness,
+				soc.arrival_date,
+				soc.app_complete_date,
+				soc.app_complete_type,
+				soc.sub_status
+		FROM	sd_order_condition soc
+		<where>
+			<if test="quarter != null and quarter != ''.toString()">
+				soc.quarter = #{quarter} AND
+			</if>
+				soc.order_id = #{orderId}
+		</where>
+		LIMIT 1
+	</select>
+
+	<select id="getOrderConditionImportantInfoById" resultType="OrderCondition">
+		SELECT
+				soc.status 				AS "status.value",
+				soc.service_times,
+				soc.app_abnormaly_flag,
+				soc.grade_flag,
+				soc.pending_flag,
+				soc.charge_flag,
+				soc.parts_flag,
+				soc.reply_flag,
+				soc.reply_flag_kefu,
+				soc.reply_flag_customer,
+				soc.rush_order_flag,
+				soc.time_liness,
+				soc.arrival_date,
+				soc.app_complete_date,
+				soc.app_complete_type,
+				soc.sub_status
+		FROM	sd_order_condition soc
+		<where>
+			<if test="quarter != null and quarter != ''.toString()">
+				soc.quarter = #{quarter} AND
+			</if>
+			soc.order_id = #{orderId}
+		</where>
+		LIMIT 1
+	</select>
+
+	<!-- 根据订单号获得订单id及分片 -->
+	<select id="getOrderIdByNo" resultType="java.util.Map">
+		select
+			id,order_no
+		from
+			sd_order
+		<where>
+			<if test="quarter != null and quarter != ''.trim()">
+				and quarter = #{quarter}
+			</if>
+			and order_no = #{orderNo}
+		</where>
+		limit 1
+	</select>
+
+
+	<!-- 物理删除订单主表，用于新增订单分布提交时，订单其它表保存错误时调用 -->
+	<delete id="delete">
+		delete from sd_order
+		where
+			<if test="quarter != null and quarter != ''.toString()"> quarter = #{quarter} and </if>
+			id = #{id}
+	</delete>
+
+	<update id="updateOrder" parameterType="java.util.HashMap">
+		update sd_order
+		<set >
+			<if test="totalQty != null" >
+				total_qty = #{totalQty},
+			</if>
+			<if test="orderType != null and orderType.value != null and orderType.value != ''.toString()" >
+				order_type = #{orderType.value},
+			</if>
+			<if test="verificationCode != null and verificationCode != ''.toString()" >
+				verification_code = #{verificationCode},
+			</if>
+			<if test="confirmDoor != null" >
+				confirm_door = #{confirmDoor},
+			</if>
+			<if test="operationAppFlag != null" >
+				operation_app_flag = #{operationAppFlag},
+			</if>
+			<if test="trackingFlag != null" >
+				tracking_flag = #{trackingFlag},
+			</if>
+			<if test="remarks != null" >
+				remarks = #{remarks},
+			</if>
+			<if test="description != null" >
+				description = #{description},
+			</if>
+			<if test="feedback != null and feedback.id != null and feedback.id != 0 " >
+				feedback_id = #{feedback.id},
+			</if>
+			<if test="feedbackDate != null" >
+				feedback_date = #{feedbackDate},
+			</if>
+			<if test="orderInfo != null and orderInfo != ''.toString()" >
+				order_info_json = #{orderInfo},
+			</if>
+			<if test="_parameter.containsKey('orderItemJson')">
+				orderitem_json = #{orderItemJson},
+			</if>
+			<if test="_parameter.containsKey('shopId')">
+				shop_id = #{shopId},
+			</if>
+			<if test="_parameter.containsKey('orderChannel')">
+				order_channel = #{orderChannel},
+			</if>
+			<if test="_parameter.containsKey('workCardId')">
+				workcard_id = #{workCardId},
+			</if>
+			<if test="_parameter.containsKey('parentBizOrderId')">
+				parent_biz_order_id = #{parentBizOrderId},
+			</if>
+		</set>
+		where
+			<if test="quarter != null and quarter != ''.toString()"> quarter = #{quarter} and </if>
+			id = #{id}
+	</update>
+
+
+	<update id="updateCondition" parameterType="java.util.HashMap">
+		update sd_order_condition
+		<set >
+			<if test="provinceId != null" >
+				province_id = #{provinceId},
+			</if>
+			<if test="cityId != null" >
+				city_id = #{cityId},
+			</if>
+			<if test="area != null" >
+				area_id = #{area.id},
+			</if>
+			<if test="subArea != null" >
+				sub_area_id = #{subArea.id},
+			</if>
+			<if test="area != null" >
+				area_name = #{area.name},
+			</if>
+			<if test="userName != null" >
+				user_name = #{userName},
+			</if>
+			<if test="phone1 != null" >
+				phone1 = #{phone1},
+			</if>
+			<if test="servicePhone != null" >
+				service_phone = #{servicePhone},
+			</if>
+			<if test="phone2 != null" >
+				phone2 = #{phone2},
+			</if>
+			<if test="phone3 != null" >
+				phone3 = #{phone3},
+			</if>
+			<if test="address != null" >
+				address = #{address},
+			</if>
+			<if test="serviceAddress != null" >
+				service_address = #{serviceAddress},
+			</if>
+			<if test="status != null and status.value != null and status.value != ''.toString() " >
+				status = CONVERT(#{status.value},SIGNED),
+			</if>
+			<!--停滞 -->
+			<if test="pendingType != null and pendingType.value != null and pendingType.value != ''.toString() " >
+				pending_type = CONVERT(#{pendingType.value},SIGNED),
+			</if>
+			<if test="pendingFlag != null" >
+				pending_flag = #{pendingFlag},
+			</if>
+			<if test="pendingTypeDate != null" >
+				pending_type_date = #{pendingTypeDate},
+			</if>
+			<if test="appointmentDate != null" >
+				appointment_date = #{appointmentDate},
+			</if>
+			<!-- 将预约时间置为null -->
+			<if test="resetAppointmentDate != null and resetAppointmentDate == true" >
+				appointment_date = null,
+			</if>
+			<!--预约 -->
+			<if test="reservationTimes != null and reservationTimes>0">
+				reservation_times = reservation_times + #{reservationTimes},
+			</if>
+			<if test="reservationDate != null" >
+				reservation_date = #{reservationDate},
+			</if>
+			<if test="feedbackId != null and feedbackId != 0" >
+				feedback_id = #{feedbackId},
+			</if>
+			<if test="feedbackFlag != null" >
+				feedback_flag = #{feedbackFlag},
+			</if>
+			<if test="feedbackTitle != null and feedbackTitle != ''.toString()" >
+				feedback_title = #{feedbackTitle},
+			</if>
+			<if test="feedbackDate != null" >
+				feedback_date = #{feedbackDate},
+			</if>
+			<if test="closeDate != null" >
+				close_date = #{closeDate},
+			</if>
+			<if test="partsFlag != null" >
+				parts_flag = #{partsFlag},
+			</if>
+			<if test="partsApplyDate != null and partsApplyDate >= 0" >
+				parts_apply_date = #{partsApplyDate},
+			</if>
+			<if test="returnPartsFlag != null" >
+				return_parts_flag = #{returnPartsFlag},
+			</if>
+			<if test="appAbnormalyFlag != null" >
+				app_abnormaly_flag = #{appAbnormalyFlag},
+			</if>
+			<if test="replyFlag != null" >
+				reply_flag = #{replyFlag},
+			</if>
+			<if test="replyFlagKefu != null" >
+				reply_flag_kefu = #{replyFlagKefu},
+			</if>
+			<if test="replyFlagCustomer != null" >
+				reply_flag_customer = #{replyFlagCustomer},
+			</if>
+			<if test="gradeFlag != null" >
+				grade_flag = #{gradeFlag},
+			</if>
+			<if test="autoChargeFlag != null" >
+				auto_charge_flag = #{autoChargeFlag},
+			</if>
+			<if test="productCategoryId != null" >
+				product_category_id = #{productCategoryId},
+			</if>
+			<if test="productIds != null" >
+				product_ids = #{productIds},
+			</if>
+			<if test="hasSet != null" >
+				has_set = #{hasSet},
+			</if>
+			<if test="kefu != null and kefu.id != null" >
+				kefu_id = #{kefu.id},
+			</if>
+			<if test="servicePoint != null and servicePoint.id != null" >
+				servicepoint_id = #{servicePoint.id},
+			</if>
+			<if test="engineer != null and engineer.id != null" >
+				engineer_id = #{engineer.id},
+			</if>
+			<if test="serviceTimes != null" >
+				service_times = #{serviceTimes},
+			</if>
+			<if test="serviceTypes != null" >
+				service_types = #{serviceTypes},
+			</if>
+			<if test="appSubmitService != null" >
+				app_submit_service = #{appSubmitService},
+			</if>
+			<if test="updateDate != null" >
+				update_date = #{updateDate},
+			</if>
+			<if test="updateBy != null and updateBy.id != null and updateBy.id != 0" >
+				update_by = #{updateBy.id},
+			</if>
+			<if test="totalQty != null" >
+				total_qty = #{totalQty},
+			</if>
+			<if test="finishPhotoQty != null" >
+				finish_photo_qty = finish_photo_qty + #{finishPhotoQty},
+			</if>
+			<if test="operationAppFlag != null" >
+				operation_app_flag = #{operationAppFlag},
+			</if>
+			<if test="trackingFlag != null" >
+				tracking_flag = #{trackingFlag},
+			</if>
+			<if test="trackingMessage != null" >
+				tracking_message = #{trackingMessage},
+			</if>
+			<if test="trackingDate != null" >
+				tracking_date = #{trackingDate},
+			</if>
+			<if test="orderServiceType != null and orderServiceType >0" >
+				order_service_type = #{orderServiceType},
+			</if>
+			<if test="appCompleteType != null" >
+				app_complete_type = #{appCompleteType},
+			</if>
+			<if test="appCompleteDate != null" >
+				app_complete_date = #{appCompleteDate},
+			</if>
+			<if test="transToHistoried != null" >
+				trans_to_historied = #{transToHistoried},
+			</if>
+			<!--<if test="isComplained != null" >
+				is_complained = #{isComplained},
+			</if>-->
+			<if test="rushOrderFlag != null and rushOrderFlag > 0" >
+				rush_order_flag = #{rushOrderFlag},
+			</if>
+			<if test="timeLiness != null and timeLiness > 0" >
+                time_liness = #{timeLiness},
+			</if>
+            <if test="arrivalDate != null" >
+                arrival_date = #{arrivalDate},
+            </if>
+			<if test="subStatus != null">
+				sub_status = #{subStatus},
+			</if>
+            <if test="urgentLevel != null and urgentLevel.id != null">
+                urgent_level_id = #{urgentLevel.id},
+            </if>
+		</set>
+		where
+			<if test="quarter != null and quarter != ''.toString()">quarter = #{quarter} and</if>
+			order_id = #{orderId}
+	</update>
+
+	<!-- 标记为自动对账中 -->
+	<update id="signAutoChargeing" parameterType="java.util.HashMap">
+		update sd_order_condition
+		<set>
+			auto_charge_flag = #{autoChargeFlag},
+		</set>
+		where
+			order_id = #{orderId}
+			and auto_charge_flag = 0
+			and status = 80
+			and quarter = #{quarter}
+	</update>
+
+	<update id="updateFee" parameterType="java.util.HashMap">
+		update sd_order_fee
+		<set >
+			<if test="expectCharge != null" >
+				expect_charge = #{expectCharge},
+			</if>
+			<if test="blockedCharge != null" >
+				blocked_charge = #{blockedCharge},
+			</if>
+            <!-- 客户 -->
+			<if test="orderPaymentType != null and orderPaymentType.value != null and orderPaymentType.value != ''.toString()" >
+				order_payment_type = #{orderPaymentType.value},
+			</if>
+			<if test="serviceCharge != null" >
+				service_charge = #{serviceCharge},
+			</if>
+			<if test="materialCharge != null" >
+				material_charge = #{materialCharge},
+			</if>
+			<if test="expressCharge != null" >
+				express_charge = #{expressCharge},
+			</if>
+			<if test="travelCharge != null" >
+				travel_charge = #{travelCharge},
+			</if>
+			<if test="otherCharge != null" >
+				other_charge = #{otherCharge},
+			</if>
+            <if test="customerTimeLinessCharge != null" >
+                customer_time_liness_charge = #{customerTimeLinessCharge},
+                <if test="orderCharge == null">
+                    order_charge = order_charge + #{customerTimeLinessCharge},
+                </if>
+            </if>
+            <if test="customerTimeLiness != null" >
+                customer_time_liness = #{customerTimeLiness},
+            </if>
+			<if test="customerUrgentCharge != null" >
+				customer_urgent_charge = #{customerUrgentCharge},
+				<if test="orderCharge == null">
+					order_charge = order_charge + #{customerUrgentCharge},
+				</if>
+			</if>
+			<if test="orderCharge != null" >
+				order_charge = #{orderCharge},
+			</if>
+            <!-- 网点 -->
+			<if test="engineerServiceCharge != null" >
+				engineer_service_charge = #{engineerServiceCharge},
+			</if>
+            <if test="engineerMaterialCharge != null" >
+                engineer_material_charge = #{engineerMaterialCharge},
+            </if>
+            <if test="engineerExpressCharge != null" >
+                engineer_express_charge = #{engineerExpressCharge},
+            </if>
+            <if test="engineerTravelCharge != null" >
+				engineer_travel_charge = #{engineerTravelCharge},
+            </if>
+			<if test="engineerOtherCharge != null" >
+				engineer_other_charge = #{engineerOtherCharge},
+			</if>
+			<!-- 快可立补贴时效奖励 -->
+            <if test="timeLinessCharge != null" >
+                time_liness_charge = #{timeLinessCharge},
+                <if test="engineerTotalCharge == null and timeLinessCharge != 0">
+                    engineer_total_charge = engineer_total_charge + #{timeLinessCharge},
+                </if>
+            </if>
+			<!-- 客户补贴时效费 -->
+			<if test="subsidyTimeLinessCharge != null" >
+				subsidy_time_liness_charge = #{subsidyTimeLinessCharge},
+				<if test="engineerTotalCharge == null and subsidyTimeLinessCharge != 0">
+					engineer_total_charge = engineer_total_charge + #{subsidyTimeLinessCharge},
+				</if>
+			</if>
+            <if test="insuranceCharge != null" >
+                insurance_charge = #{insuranceCharge},
+            </if>
+			<if test="engineerUrgentCharge != null" >
+                engineer_urgent_charge = #{engineerUrgentCharge},
+                <if test="engineerTotalCharge == null">
+                    engineer_total_charge = engineer_total_charge + #{engineerUrgentCharge},
+                </if>
+			</if>
+			<if test="engineerTotalCharge != null" >
+				engineer_total_charge = #{engineerTotalCharge},
+			</if>
+			<if test="engineerPaymentType != null and engineerPaymentType.value != null and engineerPaymentType.value != ''.toString()">
+				engineer_payment_type = #{engineerPaymentType.value},
+			</if>
+            <!-- 派单 -->
+			<if test="planTravelCharge != null" >
+				plan_travel_charge = #{planTravelCharge},
+			</if>
+			<if test="customerPlanTravelCharge != null and customerPlanTravelCharge != 0 " >
+				customer_plan_travel_charge = #{customerPlanTravelCharge},
+			</if>
+			<if test="customerPlanOtherCharge != null and customerPlanOtherCharge != 0 " >
+				customer_plan_other_charge = #{customerPlanOtherCharge},
+			</if>
+			<if test="planTravelNo != null" >
+				plan_travel_no = #{planTravelNo},
+			</if>
+			<if test="planOtherCharge != null" >
+                plan_other_charge = #{planOtherCharge},
+			</if>
+            <if test="planDistance != null" >
+                plan_distance = #{planDistance},
+			</if>
+			<if test="rebateFlag != null" >
+				rebate_flag = #{rebateFlag},
+			</if>
+		</set>
+		where
+			<if test="quarter != null and quarter != ''.toString()"> quarter = #{quarter} and </if>
+			order_id = #{orderId}
+	</update>
+
+	<!-- 下单 end -->
+
+	<!-- 保存订单操作日志 -->
+	<insert id="insertProcessLog" keyProperty="id" useGeneratedKeys="true">
+		insert into sd_orderprocesslog (
+		    <if test="id != null">id,</if>
+			quarter,
+			order_id,
+			action,
+			action_comment,
+			status,
+			status_value,
+			status_flag,
+			close_flag,
+			visibility_flag,
+			create_by,
+			create_date
+		) VALUES (
+          <if test="id != null">#{id},</if>
+			#{quarter},
+			#{orderId},
+			#{action},
+			#{actionComment},
+			#{status},
+			#{statusValue},
+			#{statusFlag},
+			#{closeFlag},
+			#{visibilityFlag},
+			#{createBy.id},
+			#{createDate}
+		)
+	</insert>
+
+	<!-- 读取APP订单日志 -->
+	<select id="getAppOrderLogs" resultType="OrderProcessLog">
+		select l.id,l.action_comment,l.create_date,l.status_value,create_by as "createBy.id"
+		from sd_orderprocesslog l
+		where
+		<if test="quarter != null and quarter != ''.toString()"> l.quarter = #{quarter} and </if>
+			l.order_id = #{orderId}
+			and l.close_flag IN (0, 2)
+			AND l.status_value between 40 AND 85
+			AND l.visibility_flag in (0,5,7)
+		order by l.create_date desc
+	</select>
+
+	<!-- detail -->
+	<select id="getOrderDetails" resultMap="OrderDetailResult">
+		<if test="fromMasterDb != null and fromMasterDb == true">
+			/*#mycat:db_type=master*/
+		</if>
+		SELECT
+			d.id,
+			d.order_id,
+			d.item_no,
+			d.service_times,
+			d.brand,
+			d.product_spec,
+			d.qty,
+			d.service_type_id,
+			d.product_id,
+			d.servicepoint_id,
+			d.engineer_id,
+			d.engineer_stand_price,
+			d.engineer_discount_price,
+			d.engineer_payment_type,
+			'' as engineer_payment_type_label,
+			d.engineer_service_charge,
+			d.engineer_travel_charge,
+			d.engineer_express_charge,
+			d.engineer_material_charge,
+			d.engineer_other_charge,
+			d.engineer_invoice_date,
+			d.stand_price,
+			d.discount_price,
+			d.charge,
+			d.material_charge,
+			d.express_charge,
+			d.travel_charge,
+			d.travel_no,
+			d.other_charge,
+			d.create_by,
+			d.create_date,
+			d.update_by,
+			d.update_date,
+			d.remarks,
+			d.del_flag,
+			d.service_category_id,
+			d.error_type_id,
+			d.error_code_id,
+			d.action_code_id,
+			d.action_name,
+			d.other_action_remark,
+			d.sync_charge_tags
+		FROM sd_orderdetail d
+		where
+			<if test="quarter != null and quarter != ''.toString()">d.quarter = #{quarter} and </if>
+			d.order_id = #{orderId}
+			and d.del_flag = 0
+		order by d.service_times,d.id
+	</select>
+    <!-- 插入上门服务项 -->
+    <insert id="insertDetail" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO sd_orderdetail
+        (
+            quarter,order_id,service_times, item_no, product_id, brand, product_spec,
+            service_type_id, stand_price, discount_price,engineer_stand_price, engineer_discount_price,
+            qty, servicepoint_id, engineer_id,engineer_payment_type,
+            engineer_service_charge, engineer_travel_charge,
+            engineer_express_charge, engineer_material_charge, engineer_other_charge,
+            charge,express_charge, travel_charge, material_charge, other_charge,
+            travel_no,create_by, create_date, remarks,
+            service_category_id,error_type_id,error_code_id,action_code_id,action_name,other_action_remark,
+            sync_charge_tags
+        )
+        values
+        (
+            #{quarter},#{orderId},#{serviceTimes},#{itemNo},#{product.id},#{brand},#{productSpec},
+            #{serviceType.id},#{standPrice},#{discountPrice},#{engineerStandPrice},#{engineerDiscountPrice},
+            #{qty},#{servicePoint.id},#{engineer.id},#{engineerPaymentType.value},
+            #{engineerServiceCharge},#{engineerTravelCharge},
+            #{engineerExpressCharge},#{engineerMaterialCharge}, #{engineerOtherCharge},
+            #{charge},#{expressCharge}, #{travelCharge}, #{materialCharge}, #{otherCharge},
+            #{travelNo},#{createBy.id},#{createDate},#{remarks},
+            #{serviceCategory.intValue},#{errorType.id},#{errorCode.id},#{actionCode.id},#{actionCode.name},#{otherActionRemark},
+            #{syncChargeTags}
+        )
+    </insert>
+
+	<!-- 更新服务项目 -->
+	<update id="updateDetail" parameterType="java.util.HashMap">
+		update sd_orderdetail
+		<set >
+			<if test="itemNo != null" >
+				item_no = #{itemNo},
+			</if>
+			<if test="engineerServiceCharge != null" >
+				engineer_service_charge = #{engineerServiceCharge},
+			</if>
+			<if test="engineerMaterialCharge != null" >
+				engineer_material_charge = #{engineerMaterialCharge},
+			</if>
+			<if test="materialCharge != null" >
+				material_charge = #{materialCharge},
+			</if>
+			<if test="charge != null" >
+				charge = #{charge},
+			</if>
+			<if test="delFlag != null" >
+				del_flag = #{delFlag},
+			</if>
+			<if test="updateBy != null" >
+				update_by = #{updateBy.id},
+			</if>
+			<if test="updateDate != null" >
+				update_date = #{updateDate},
+			</if>
+			<if test="syncChargeTags != null">
+				sync_charge_tags = #{syncChargeTags},
+			</if>
+		</set>
+		where <if test="quarter != null and quarter != ''.toString()"> quarter = #{quarter} and</if> id = #{id}
+	</update>
+
+	<!-- 修改服务项目 -->
+	<update id="editDetail" parameterType="java.util.HashMap">
+		update sd_orderdetail
+		<set >
+			<if test="itemNo != null" >
+				item_no = #{itemNo},
+			</if>
+			<if test="brand != null" >
+				brand = #{brand},
+			</if>
+			<if test="productSpec != null" >
+				product_spec = #{productSpec},
+			</if>
+			<if test="serviceType != null and serviceType.id != null" >
+				service_type_id = #{serviceType.id},
+			</if>
+			<if test="product != null and product.id != null" >
+				product_id = #{product.id},
+			</if>
+			<if test="qty != null and qty > 0" >
+				qty = #{qty},
+			</if>
+			<!-- engineer -->
+			<if test="engineerStandPrice != null" >
+				engineer_stand_price = #{engineerStandPrice},
+			</if>
+			<if test="engineerDiscountPrice != null" >
+				engineer_discount_price = #{engineerDiscountPrice},
+			</if>
+			<if test="engineerServiceCharge != null" >
+				engineer_service_charge = #{engineerServiceCharge},
+			</if>
+			<if test="engineerTravelCharge != null" >
+				engineer_travel_charge = #{engineerTravelCharge},
+			</if>
+			<if test="engineerExpressCharge != null" >
+				engineer_express_charge = #{engineerExpressCharge},
+			</if>
+			<if test="engineerMaterialCharge != null" >
+				engineer_material_charge = #{engineerMaterialCharge},
+			</if>
+			<if test="engineerOtherCharge != null" >
+				engineer_other_charge = #{engineerOtherCharge},
+			</if>
+
+			<if test="standPrice != null" >
+				stand_price = #{standPrice},
+			</if>
+			<if test="discountPrice != null" >
+				discount_price = #{discountPrice},
+			</if>
+			<if test="charge != null" >
+				charge = #{charge},
+			</if>
+			<if test="materialCharge != null" >
+				material_charge = #{materialCharge},
+			</if>
+			<if test="expressCharge != null" >
+				express_charge = #{expressCharge},
+			</if>
+			<if test="travelCharge != null" >
+				travel_charge = #{travelCharge},
+			</if>
+			<if test="travelNo != null" >
+				travel_no = #{travelNo},
+			</if>
+			<if test="otherCharge != null" >
+				other_charge = #{otherCharge},
+			</if>
+
+			<if test="remarks != null" >
+				remarks = #{remarks},
+			</if>
+			<if test="updateBy != null" >
+				update_by = #{updateBy.id},
+			</if>
+			<if test="updateDate != null" >
+				update_date = #{updateDate},
+			</if>
+			<!-- repaire -->
+			<if test="serviceCategoryId != null">
+                service_category_id = #{serviceCategoryId},
+            </if>
+			<if test="errorTypeId != null">
+                error_type_id = #{errorTypeId},
+            </if>
+			<if test="errorCodeId != null">
+                error_code_id = #{errorCodeId},
+            </if>
+			<if test="actionCodeId != null">
+                action_code_id = #{actionCodeId},
+            </if>
+			<if test="actionCodeName != null">
+                action_name = #{actionCodeName},
+            </if>
+			<if test="otherActionRemark != null">
+				other_action_remark = #{otherActionRemark},
+            </if>
+			<if test="syncChargeTags != null">
+				sync_charge_tags = #{syncChargeTags},
+			</if>
+		</set>
+		where
+			id = #{id}
+		    <if test="quarter != null and quarter != ''.toString()"> and quarter = #{quarter}</if>
+	</update>
+
+	<sql id="tempOrderColumns">
+		o.id,
+		o.customer_id as "customer.id",
+		o.user_name,
+		o.phone,
+		o.tel,
+		o.address,
+		o.product_id as "product.id",
+		o.product_name as "product.name",
+		o.product_brand as "brand",
+		o.product_spec as "productSpec",
+		o.service_type_id as "serviceType.id",
+		'' as "serviceType.name",
+		o.description,
+		o.qty,
+		o.error_msg,
+		o.success_flag,
+		o.order_no,
+		o.create_by as "createBy.id",
+		o.create_date,
+		o.remarks,
+		o.express_company as "expressCompany.value",
+		o.express_no
+	</sql>
+	<!-- 导入订单 END -->
+
+    <!-- 派单记录表 -->
+    <resultMap id="OrderPlanResult" type="OrderPlan">
+        <id property="id" column="id"/>
+        <result property="planTimes" column="plan_times"/>
+        <!-- customer -->
+        <result property="estimatedServiceCost" column="estimated_servicecost"/>
+        <result property="estimatedDistance" column="estimated_distance"/>
+        <result property="estimatedTravelCost" column="estimated_travelcost"/>
+        <result property="estimatedOtherCost" column="estimated_othercost"/>
+
+        <result property="createDate" column="create_date"/>
+        <result property="updateDate" column="update_date"/>
+
+        <result property="remarks" column="remarks"/>
+        <result property="isComplained" column="is_complained"/>
+        <result property="serviceFlag" column="service_flag"/>
+
+        <association property="servicePoint"  column="plan_servicePoint" javaType="ServicePoint" >
+            <result property="id" column="servicepoint_id"/>
+        </association>
+        <association property="engineer"  column="plan_engineer" javaType="Engineer" >
+            <result property="id" column="engineer_id"/>
+        </association>
+        <association property="createBy"  column="plan_createBy" javaType="User" >
+            <id property="id" column="create_by"/>
+        </association>
+        <association property="updateBy"  column="plan_updateBy" javaType="User" >
+            <id property="id" column="update_by"/>
+        </association>
+    </resultMap>
+
+    <select id="getOrderPlan" parameterType="java.util.Map" resultMap="OrderPlanResult">
+      select
+        id,
+        servicepoint_id,
+        engineer_id,
+        plan_times,
+        estimated_servicecost,
+        estimated_distance,
+        estimated_travelcost,
+        estimated_othercost,
+        create_by,
+        create_date,
+        update_by,
+        update_date,
+       	is_complained,
+       	service_flag,
+        remarks
+      from
+        sd_order_plan
+      where
+        quarter = #{quarter}
+        and order_id = #{orderId}
+        and servicepoint_id = #{servicePointId}
+        and engineer_id = #{engineerId}
+      limit 1
+    </select>
+
+	<select id="getOrderPlanList" parameterType="java.util.Map" resultMap="OrderPlanResult">
+		select
+        id,
+        servicepoint_id,
+        engineer_id,
+        plan_times,
+        estimated_servicecost,
+        estimated_distance,
+        estimated_travelcost,
+        estimated_othercost,
+        create_by,
+        create_date,
+        update_by,
+        update_date,
+        is_complained,
+		service_flag,
+        remarks,
+		is_master
+      from
+        sd_order_plan
+      where
+        quarter = #{quarter}
+        and order_id = #{orderId}
+        <if test="isMaster != null">
+			and is_master = #{isMaster}
+		</if>
+      order by create_date
+      limit 30
+	</select>
+
+    <!-- 最大派单序号 -->
+    <select id="getOrderPlanMaxTimes" resultType="java.lang.Integer">
+      select
+        max(plan_times)
+      from
+        sd_order_plan
+      where
+        quarter = #{quarter}
+        and order_id = #{orderId}
+    </select>
+
+    <insert id="insertOrderPlan">
+        insert into sd_order_plan (
+          order_id,quarter,
+          servicepoint_id,engineer_id,is_master,plan_times,is_complained,
+          estimated_servicecost,estimated_distance,estimated_travelcost,estimated_othercost,
+          create_by,create_date,remarks
+        )
+        values(
+          #{orderId},#{quarter},
+          #{servicePoint.id},#{engineer.id},#{isMaster},#{planTimes},#{isComplained},
+          #{estimatedServiceCost},#{estimatedDistance},#{estimatedTravelCost},#{estimatedOtherCost},
+          #{createBy.id},#{createDate},#{remarks}
+        )
+    </insert>
+
+    <update id="UpdateOrderPlan" parameterType="java.util.HashMap">
+      update
+        sd_order_plan
+      <set>
+          <if test="planTimes != null" >
+            plan_times = #{planTimes},
+          </if>
+          <if test="isComplained != null" >
+              is_complained = #{isComplained},
+          </if>
+          <if test="estimatedServiceCost != null" >
+              estimated_servicecost = #{estimatedServiceCost},
+          </if>
+          <if test="estimatedDistance != null" >
+              estimated_distance = #{estimatedDistance},
+          </if>
+          <if test="estimatedTravelCost != null" >
+              estimated_travelcost = #{estimatedTravelCost},
+          </if>
+          <if test="estimatedOtherCost != null" >
+			  estimated_othercost = #{estimatedOtherCost},
+          </if>
+          <if test="updateBy != null" >
+              update_by = #{updateBy.id},
+          </if>
+          <if test="updateDate != null" >
+              update_date = #{updateDate},
+          </if>
+      </set>
+      where
+        id = #{id}
+    </update>
+
+	<update id="updateServiceFlagOfOrderPlan">
+		update
+			sd_order_plan
+		<set>
+			<if test="serviceFlag != null" >
+				service_flag = #{serviceFlag},
+			</if>
+			<if test="updateBy != null" >
+				update_by = #{updateBy},
+			</if>
+			<if test="updateDate != null" >
+				update_date = #{updateDate},
+			</if>
+		</set>
+		where
+			 quarter = #{quarter}
+		     and order_id = #{orderId}
+		     and servicepoint_id = #{servicePointId}
+		     and engineer_id = #{engineerId}
+	</update>
+
+	<select id="getOrderInsuranceByServicePoint" resultType="OrderInsurance">
+		select
+			id,order_id,order_no,insurance_no,servicepoint_id,assured,phone,address,insure_date,insurance_duration,amount,del_flag
+		from sd_order_insurance
+		where
+			quarter = #{quarter}
+			and order_id = #{orderId}
+			and servicepoint_id = #{servicePointId}
+		limit 1
+	</select>
+
+	<insert id="insertOrderInsurance" >
+		INSERT INTO sd_order_insurance
+		(
+			quarter,
+			order_id,
+			order_no,
+			insurance_no,
+			servicepoint_id,
+			assured,
+			phone,
+			address,
+			insure_date,
+			insurance_duration,
+			amount,
+			create_by,
+			create_date,
+			del_flag
+		)
+		VALUES
+		(
+			#{quarter},
+			#{orderId},
+			#{orderNo},
+			#{insuranceNo},
+			#{servicePointId},
+			#{assured},
+			#{phone},
+			#{address},
+			#{insureDate},
+			#{insuranceDuration},
+			#{amount},
+			#{createBy.id},
+			#{createDate},
+			1
+		);
+	</insert>
+
+	<update id="updateOrderInsurance">
+		update sd_order_insurance
+		set
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			del_flag = #{delFlag}
+		where
+			order_id = #{orderId}
+			and servicepoint_id = #{servicePointId}
+	</update>
+
+	<!-- 工单保险单 END -->
+
+    <!-- 工单网点费用统计表 -->
+    <insert id="insertOrderServicePointFee">
+        INSERT INTO sd_order_servicepoint_fee
+        (
+            quarter,
+            order_id,
+            servicepoint_id,
+            service_charge,
+            express_charge,
+            travel_charge,
+            material_charge,
+            other_charge,
+            insurance_charge,
+            insurance_no,
+            time_liness,
+            time_liness_charge,
+            customer_time_liness,
+            customer_time_liness_charge,
+            urgent_charge,
+            order_charge,
+            del_flag,
+            rebate_flag
+        )
+        VALUES
+        (
+            #{quarter},
+            #{orderId},
+            #{servicePoint.id},
+            #{serviceCharge},
+            #{expressCharge},
+            #{travelCharge},
+            #{materialCharge},
+            #{otherCharge},
+            #{insuranceCharge},
+            #{insuranceNo},
+            #{timeLiness},
+            #{timeLinessCharge},
+            #{customerTimeLiness},
+            #{customerTimeLinessCharge},
+            #{urgentCharge},
+            #{orderCharge},
+            #{delFlag},
+            0
+        )
+    </insert>
+
+    <update id="updateOrderServicePointFeeByMaps" parameterType="java.util.HashMap">
+        update
+          sd_order_servicepoint_fee
+        <set>
+			<if test="_parameter.containsKey('rebateFlag')">
+				rebate_flag = #{rebateFlag},
+			</if>
+			<if test="_parameter.containsKey('delFlag')">
+				del_flag = #{delFlag},
+			</if>
+			<if test="_parameter.containsKey('insuranceNo')">
+				insurance_no = #{insuranceNo},
+			</if>
+
+            <bind name="_serviceCharge" value="0.00" />
+            <if test="_parameter.containsKey('serviceCharge')">
+                service_charge = #{serviceCharge},
+                <bind name="_serviceCharge" value="serviceCharge" />
+            </if>
+            <bind name="_expressCharge" value="0.00" />
+            <if test="_parameter.containsKey('expressCharge')">
+                express_charge = #{expressCharge},
+                <bind name="_expressCharge" value="expressCharge" />
+            </if>
+            <bind name="_travelCharge" value="0.00" />
+            <if test="_parameter.containsKey('travelCharge')">
+                travel_charge = #{travelCharge},
+                <bind name="_travelCharge" value="travelCharge" />
+            </if>
+            <bind name="_materialCharge" value="0.00" />
+            <if test="_parameter.containsKey('materialCharge')">
+                material_charge = #{materialCharge},
+                <bind name="_materialCharge" value="materialCharge" />
+            </if>
+            <bind name="_otherCharge" value="0.00" />
+            <if test="_parameter.containsKey('otherCharge')">
+                other_charge = #{otherCharge},
+                <bind name="_otherCharge" value="otherCharge" />
+            </if>
+            <bind name="_insuranceCharge" value="0.00" />
+            <if test="_parameter.containsKey('insuranceCharge')">
+                insurance_charge = #{insuranceCharge},
+                <bind name="_insuranceCharge" value="insuranceCharge" />
+            </if>
+            <if test="_parameter.containsKey('timeLiness')">
+                time_liness = #{timeLiness},
+            </if>
+            <bind name="_timeLinessCharge" value="0.00" />
+            <if test="_parameter.containsKey('timeLinessCharge')">
+                time_liness_charge = #{timeLinessCharge},
+                <bind name="_timeLinessCharge" value="timeLinessCharge" />
+            </if>
+			<if test="_parameter.containsKey('customerTimeLiness')">
+				customer_time_liness = #{customerTimeLiness},
+			</if>
+			<bind name="_customerTimeLinessCharge" value="0.00" />
+			<if test="_parameter.containsKey('customerTimeLinessCharge')">
+				customer_time_liness_charge = #{customerTimeLinessCharge},
+				<bind name="_customerTimeLinessCharge" value="customerTimeLinessCharge" />
+			</if>
+            <bind name="_urgentCharge" value="0.00" />
+            <if test="_parameter.containsKey('urgentCharge')">
+                urgent_charge = #{urgentCharge},
+                <bind name="_urgentCharge" value="urgentCharge" />
+            </if>
+            <choose>
+                <!-- 传入orderCharge,就使用传入值 -->
+                <when test="_parameter.containsKey('orderCharge')">
+                    order_charge = #{orderCharge},
+                </when>
+                <!-- 否则汇总 -->
+                <otherwise>
+                    order_charge = order_charge + #{_serviceCharge} + #{_expressCharge} + #{_travelCharge}+ #{_materialCharge}+ #{_otherCharge}+ #{_insuranceCharge} + #{_timeLinessCharge} + #{_customerTimeLinessCharge} + #{_urgentCharge},
+                </otherwise>
+            </choose>
+
+        </set>
+        <where>
+          <if test="quarter != null  and quarter != ''.toString()">
+           quarter = #{quarter}
+          </if>
+          and order_id = #{orderId}
+          and servicepoint_id = #{servicePointId}
+        </where>
+    </update>
+
+    <select id="getOrderServicePointFees" resultType="OrderServicePointFee">
+		<if test="fromMasterDb != null and fromMasterDb == true">
+			/*#mycat:db_type=master*/
+		</if>
+        select
+            quarter,
+            order_id,
+            servicepoint_id as "servicePoint.id",
+            service_charge,
+            express_charge,
+            travel_charge,
+            material_charge,
+            other_charge,
+            insurance_charge,
+            insurance_no,
+            time_liness,
+            time_liness_charge,
+			customer_time_liness,
+			customer_time_liness_charge,
+            urgent_charge,
+            order_charge,
+            del_flag,
+            rebate_flag,
+			praise_fee,
+			tax_fee,
+			info_fee
+        from
+          sd_order_servicepoint_fee
+        <where>
+            <if test="quarter != null  and quarter != ''.toString()">
+                quarter = #{quarter}
+            </if>
+          and order_id = #{orderId}
+          and del_flag = 0
+        </where>
+    </select>
+    <select id="getOrderServicePointFee" resultType="OrderServicePointFee">
+        select
+            quarter,
+            order_id,
+            servicepoint_id as "servicePoint.id",
+            service_charge,
+            express_charge,
+            travel_charge,
+            material_charge,
+            other_charge,
+            insurance_charge,
+            insurance_no,
+            time_liness,
+            time_liness_charge,
+			customer_time_liness,
+			customer_time_liness_charge,
+            urgent_charge,
+            order_charge,
+            del_flag,
+            rebate_flag,
+			praise_fee,
+			tax_fee,
+			info_fee
+        from
+          sd_order_servicepoint_fee
+        <where>
+            <if test="quarter != null  and quarter != ''.toString()">
+                quarter = #{quarter}
+            </if>
+          and order_id = #{orderId}
+          and servicepoint_id = #{servicePointId}
+        </where>
+    </select>
+
+    <!-- 订单保险费合计 -->
+    <select id="getTotalOrderInsurance" resultType="java.lang.Double">
+        /*#mycat:db_type=master*/
+        select
+          sum(insurance_charge)
+        from
+          sd_order_servicepoint_fee
+        <where>
+            <if test="quarter != null  and quarter != ''.toString()">
+                quarter = #{quarter}
+            </if>
+          and order_id = #{orderId}
+          and del_flag = 0
+        </where>
+    </select>
+
+</mapper>

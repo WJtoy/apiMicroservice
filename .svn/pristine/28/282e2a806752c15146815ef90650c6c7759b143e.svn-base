@@ -1,0 +1,29 @@
+package com.wolfking.jeesite.modules.md.service;
+
+import com.wolfking.jeesite.common.service.LongIDBaseService;
+import com.wolfking.jeesite.modules.md.entity.ProductCategory;
+import com.wolfking.jeesite.ms.providermd.service.MSProductCategoryNewService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+
+/**
+ * Created by Jeff on 2017/4/24.
+ */
+@Service
+@Transactional(propagation = Propagation.NOT_SUPPORTED)
+public class ProductCategoryService extends LongIDBaseService {
+
+    @Autowired
+    private MSProductCategoryNewService msProductCategoryNewService;
+
+    /**
+     * 优先从缓存读取
+     */
+    public ProductCategory getFromCache(Long id) {
+        return msProductCategoryNewService.getFromCacheForMDWithEntity(id);
+    }
+}

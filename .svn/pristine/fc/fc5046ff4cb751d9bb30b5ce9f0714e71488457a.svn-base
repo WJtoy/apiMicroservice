@@ -1,0 +1,194 @@
+package com.wolfking.jeesite.modules.api.controller.md;
+
+import com.google.gson.JsonObject;
+import com.wolfking.jeesite.modules.api.controller.RestBaseController;
+import com.wolfking.jeesite.modules.api.entity.common.RestAppException;
+import com.wolfking.jeesite.modules.api.entity.md.*;
+import com.wolfking.jeesite.modules.api.util.ErrorCode;
+import com.wolfking.jeesite.modules.api.util.RestResult;
+import com.wolfking.jeesite.modules.api.util.RestResultGenerator;
+import com.wolfking.jeesite.modules.api.util.RestSessionUtils;
+import com.wolfking.jeesite.modules.md.entity.Engineer;
+import com.wolfking.jeesite.modules.md.entity.ServicePoint;
+import com.wolfking.jeesite.modules.md.service.AppServicePointService;
+import com.wolfking.jeesite.modules.md.service.ServicePointService;
+import com.wolfking.jeesite.modules.sys.entity.User;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RestController;
+
+import javax.servlet.http.HttpServletRequest;
+
+@Slf4j
+@RestController
+@RequestMapping("/api/servicePoint/")
+public class RestServicePointController extends RestBaseController {
+
+    @Autowired
+    private AppServicePointService appServicePointService;
+
+    @Autowired
+    private ServicePointService servicePointService;
+
+    /**
+     * 保险条款内容接口
+     */
+    @RequestMapping(value = "getInsuranceClause", method = RequestMethod.POST, produces = "application/json;charset=UTF-8")
+    public RestResult<Object> getInsuranceClause() {
+        try {
+            StringBuffer sb = new StringBuffer();
+            sb.append("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;");
+            sb.append("保险条款是保险合同双方当事人协商一致确定的有关双方权利和义务的条文，保险人对其所承保的保险标的履行保险责任的依据。");
+            sb.append("<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;");
+            sb.append("一般由三部分组成; ①基本条款。保险人在事先准备且在保险单上订立的基本事项，包括法定条款和任选条款两部分。" +
+                    "法定条款是法律规定必须列入的条款，而任选条款则是保险人根据其业务本身的需要而由保险人自己规定的条款。");
+            sb.append("<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;");
+            sb.append("②附加条款。保险人为适应各类投保人的特殊需要，在保险单上已有基本条款的基础上，另行增加的一些条款，" +
+                    "籍以扩大原保险单的责任范围，或变更原保险单的内容，或将原保险单规定的事项加以变更。");
+            sb.append("<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;");
+            sb.append("③保证条款(亦称特约条款)。保险人要求被保险人保证做或保证不做某事，或者保证某种事态存在或不存在的条款。");
+            JsonObject jo = new JsonObject();
+            jo.addProperty("insuranceClause", sb.toString());
+            return RestResultGenerator.success(jo);
+        } catch (Exception e) {
+            return RestResultGenerator.custom(ErrorCode.DATA_PROCESS_ERROR.code, ErrorCode.DATA_PROCESS_ERROR.message);
+        }
+
+    }
+
+    /**
+     * APP阅读且同意（或不同意）保险条款接口
+     */
+    @RequestMapping(value = "readInsuranceClause", method = RequestMethod.POST, produces = "application/json;charset=UTF-8")
+    public RestResult<Object> enableServicePointInsurance(HttpServletRequest request,
+                                                          @RequestBody RestReadInsuranceClause readInsuranceClause) {
+        RestLoginUserInfo userInfo = null;
+        try {
+            userInfo = RestSessionUtils.getLoginUserInfoFromRestSession(request.getAttribute("sessionUserId").toString());
+            if (userInfo == null || userInfo.getUserId() == null) {
+                return RestResultGenerator.custom(ErrorCode.LOGIN_INFO_MISSING.code, ErrorCode.LOGIN_INFO_MISSING.message);
+            }
+            if (!userInfo.getPrimary()) {
+                return RestResultGenerator.custom(ErrorCode.USRE_NO_ACCESS_APP.code, "您的帐号不是网点主帐号，无须阅读保险条款");
+            }
+            Engineer engineer = servicePointService.getEngineerFromCache(userInfo.getServicePointId(), userInfo.getEngineerId());
+            if (null == engineer) {
+                return RestResultGenerator.custom(ErrorCode.MEMBER_ENGINEER_NO_EXSIT.code, "读取帐号信息失败");
+            }
+            ServicePoint servicePoint = servicePointService.getFromCache(userInfo.getServicePointId());
+            if (null == servicePoint) {
+                return RestResultGenerator.custom(ErrorCode.MEMBER_ENGINEER_NO_EXSIT.code, "读取帐号信息失败");
+            }
+            User user = new User();
+            user.setId(userInfo.getUserId());
+            user.setName(engineer.getName());
+            appServicePointService.appReadInsuranceClause(servicePoint, readInsuranceClause.getAppInsuranceFlag(), user);
+            return RestResultGenerator.success();
+        } catch (Exception e) {
+            log.error("[RestServicePointController.enableServicePointInsurance] user:{}", userInfo != null && userInfo.getUserId() != null ? userInfo.getUserId() : 0, e);
+            return RestResultGenerator.exception("确认服务合作条款失败");
+        }
+    }
+
+    /**
+     * 保存网点地址信息接口
+     */
+    @RequestMapping(value = "saveServicePointAddress", method = RequestMethod.POST, produces = "application/json;charset=UTF-8")
+    public RestResult<Object> saveServicePointAddress(HttpServletRequest request,
+                                                      @RequestBody RestServicePointAddress servicePointAddress) {
+        RestLoginUserInfo userInfo = null;
+        try {
+            userInfo = RestSessionUtils.getLoginUserInfoFromRestSession(request.getAttribute(REQUEST_ATTRIBUTE_NAME_SESSION_USER_ID).toString());
+            if (userInfo == null || userInfo.getUserId() == null) {
+                return RestResultGenerator.custom(ErrorCode.LOGIN_INFO_MISSING.code, ErrorCode.LOGIN_INFO_MISSING.message);
+            }
+            if (!userInfo.getPrimary()) {
+                return RestResultGenerator.custom(ErrorCode.USRE_NO_ACCESS_APP.code, "您的帐号不是网点主帐号，无权修改网点地址");
+            }
+            Engineer engineer = servicePointService.getEngineerFromCache(userInfo.getServicePointId(), userInfo.getEngineerId());
+            if (null == engineer) {
+                return RestResultGenerator.custom(ErrorCode.MEMBER_ENGINEER_NO_EXSIT.code, "读取帐号信息失败");
+            }
+            User user = new User();
+            user.setId(userInfo.getUserId());
+            user.setName(engineer.getName());
+            appServicePointService.saveServicePointAddress(userInfo.getServicePointId(), servicePointAddress, user);
+            return RestResultGenerator.success();
+        } catch (RestAppException e) {
+            return RestResultGenerator.exception(e.getMessage());
+        } catch (Exception e) {
+            log.error("[RestServicePointController.saveServicePointAddress] user:{}", userInfo != null && userInfo.getUserId() != null ? userInfo.getUserId() : 0, e);
+            return RestResultGenerator.exception("保存网点地址失败");
+        }
+    }
+
+    /**
+     * 保存网点银行账号信息接口
+     */
+    @RequestMapping(value = "saveServicePointBankAccountInfo", method = RequestMethod.POST, produces = "application/json;charset=UTF-8")
+    public RestResult<Object> saveServicePointBankAccountInfo(HttpServletRequest request,
+                                                              @RequestBody RestServicePointBankAccountInfo bankAccountInfo) {
+        RestLoginUserInfo userInfo = null;
+        try {
+            userInfo = RestSessionUtils.getLoginUserInfoFromRestSession(request.getAttribute(REQUEST_ATTRIBUTE_NAME_SESSION_USER_ID).toString());
+            if (userInfo == null || userInfo.getUserId() == null) {
+                return RestResultGenerator.custom(ErrorCode.LOGIN_INFO_MISSING.code, ErrorCode.LOGIN_INFO_MISSING.message);
+            }
+            if (!userInfo.getPrimary()) {
+                return RestResultGenerator.custom(ErrorCode.USRE_NO_ACCESS_APP.code, "您的帐号不是网点主帐号，无权修改网点银行账号信息");
+            }
+            Engineer engineer = servicePointService.getEngineerFromCache(userInfo.getServicePointId(), userInfo.getEngineerId());
+            if (null == engineer) {
+                return RestResultGenerator.custom(ErrorCode.MEMBER_ENGINEER_NO_EXSIT.code, "读取帐号信息失败");
+            }
+            User user = new User();
+            user.setId(userInfo.getUserId());
+            user.setName(engineer.getName());
+            appServicePointService.saveServicePointBankAccountInfo(userInfo.getServicePointId(), engineer, bankAccountInfo, user);
+            return RestResultGenerator.success();
+        } catch (RestAppException e) {
+            return RestResultGenerator.exception(e.getMessage());
+        } catch (Exception e) {
+            log.error("[RestServicePointController.saveServicePointBankAccountInfo] user:{}", userInfo != null && userInfo.getUserId() != null ? userInfo.getUserId() : 0, e);
+            return RestResultGenerator.exception("保存网点银行账号信息失败");
+        }
+    }
+
+
+    /**
+     * 保存网点收货地址接口
+     */
+    @RequestMapping(value = "saveServicePointConsigneeAddress", method = RequestMethod.POST, produces = "application/json;charset=UTF-8")
+    public RestResult<Object> saveServicePointConsigneeAddress(HttpServletRequest request,
+                                                               @RequestBody RestServicePointConsigneeAddress address) {
+        RestLoginUserInfo userInfo = null;
+        try {
+            userInfo = RestSessionUtils.getLoginUserInfoFromRestSession(request.getAttribute(REQUEST_ATTRIBUTE_NAME_SESSION_USER_ID).toString());
+            if (userInfo == null || userInfo.getUserId() == null) {
+                return RestResultGenerator.custom(ErrorCode.LOGIN_INFO_MISSING.code, ErrorCode.LOGIN_INFO_MISSING.message);
+            }
+            if (!userInfo.getPrimary()) {
+                return RestResultGenerator.custom(ErrorCode.USRE_NO_ACCESS_APP.code, "您的帐号不是网点主帐号，无权修改网点收货地址");
+            }
+            Engineer engineer = servicePointService.getEngineerFromCache(userInfo.getServicePointId(), userInfo.getEngineerId());
+            if (null == engineer) {
+                return RestResultGenerator.custom(ErrorCode.MEMBER_ENGINEER_NO_EXSIT.code, "读取帐号信息失败");
+            }
+            User user = new User();
+            user.setId(userInfo.getUserId());
+            user.setName(engineer.getName());
+            appServicePointService.saveServicePointConsigneeAddress(userInfo.getServicePointId(), address, user);
+            return RestResultGenerator.success();
+        } catch (RestAppException e) {
+            return RestResultGenerator.exception(e.getMessage());
+        } catch (Exception e) {
+            log.error("[RestServicePointController.saveServicePointConsigneeAddress] user:{}", userInfo != null && userInfo.getUserId() != null ? userInfo.getUserId() : 0, e);
+            return RestResultGenerator.exception("保存网点收货地址失败");
+        }
+    }
+
+
+}

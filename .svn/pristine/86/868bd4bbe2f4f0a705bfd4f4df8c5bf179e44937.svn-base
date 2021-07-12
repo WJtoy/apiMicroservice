@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wolfking.jeesite.modules.fi.dao.EngineerCurrencyDepositDao">
+
+    <select id="getDepositList" resultType="com.wolfking.jeesite.modules.fi.entity.EngineerCurrencyDeposit">
+        select
+				id,
+				currency_type,
+				currency_no,
+				before_balance,
+				balance,
+				amount,
+				payment_type,
+				action_type,
+				create_date,
+				remarks
+		from 	fi_engineercurrency_deposit
+        <where>
+            service_point_id = #{servicePointId}
+            and quarter = #{quarter}
+            <if test="beginCreateDate != null">
+                and create_date >= #{beginCreateDate}
+            </if>
+            <if test="endCreateDate != null">
+                and <![CDATA[create_date <= #{endCreateDate} ]]>
+            </if>
+
+        </where>
+        order by create_date desc
+
+    </select>
+
+
+    <select id="getServicePointDepositRechargeTotalMonth" resultType="double">
+        SELECT
+                sum(amount)
+        FROM    fi_engineercurrency_deposit
+        WHERE   quarter = #{quarter}
+                AND service_point_id = #{servicePointId}
+                AND create_date >= #{beginCreateDate} AND <![CDATA[ create_date < #{endCreateDate} ]]>
+                and action_type = 10
+
+    </select>
+
+    <select id="getServicePointDepositCompleteTotalMonth" resultType="double">
+        SELECT
+                sum(amount)
+        FROM    fi_engineercurrency_deposit
+        WHERE   quarter = #{quarter}
+                AND service_point_id = #{servicePointId}
+                AND create_date >= #{beginCreateDate} AND <![CDATA[ create_date < #{endCreateDate} ]]>
+
+                and action_type = 20
+
+    </select>
+
+
+
+
+
+    <select id="getServicePointDeposit" resultType="com.wolfking.jeesite.modules.fi.entity.ServicePointDeposit">
+        SELECT
+                a.id,
+                a.deposit,
+                a.deposit_recharge
+        FROM    md_servicepoint_finance a
+            WHERE   a.id =#{servicePointId}
+    </select>
+
+</mapper>

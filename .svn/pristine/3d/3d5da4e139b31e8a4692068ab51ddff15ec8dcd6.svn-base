@@ -1,0 +1,17 @@
+package com.wolfking.jeesite.modules.api.util;
+
+/**
+ * @Auther wj
+ * @Date 2021/1/13 13:29
+ */
+public class EngineerTemperatureUtil {
+
+    public static boolean isNormal(Integer healthOption,Double temperature) {
+        boolean result = true;
+        if (temperature<35.5 || temperature>37.2 || healthOption.equals(1)){
+            result= false;
+        }
+        return result;
+    }
+
+}

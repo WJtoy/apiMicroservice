@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.wolfking.jeesite.ms.tmall.mq.dao.MqB2bTmallDao">
+
+<!--    <sql id="MqB2bTmallColumns">-->
+<!--        a.id,-->
+<!--        a.queue_id,-->
+<!--        a.message_json,-->
+<!--        a.process_flag,-->
+<!--        a.process_time,-->
+<!--        a.process_comment,-->
+<!--        a.create_by AS "createBy.id",-->
+<!--        a.create_date,-->
+<!--        a.update_by AS "updateBy.id",-->
+<!--        a.update_date,-->
+<!--        a.quarter-->
+<!--    </sql>-->
+
+<!--    <insert id="insert" parameterType="com.wolfking.jeesite.ms.tmall.mq.entity.MqB2bTmallLog" keyProperty="id" useGeneratedKeys="true">-->
+<!--        INSERT INTO mq_b2b_tmall (-->
+<!--            queue_id,-->
+<!--            message_json,-->
+<!--            process_flag,-->
+<!--            process_time,-->
+<!--            process_comment,-->
+<!--            create_by,-->
+<!--            create_date,-->
+<!--            update_by,-->
+<!--            update_date,-->
+<!--            quarter-->
+<!--        ) VALUES (-->
+<!--            #{queueId},-->
+<!--            #{messageJson},-->
+<!--            #{processFlag},-->
+<!--            #{processTime},-->
+<!--            #{processComment},-->
+<!--            #{createBy.id},-->
+<!--            #{createDate},-->
+<!--            #{updateBy.id},-->
+<!--            #{updateDate},-->
+<!--            #{quarter}-->
+<!--        )-->
+<!--    </insert>-->
+
+</mapper>

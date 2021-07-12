@@ -1,0 +1,54 @@
+package com.wolfking.jeesite.modules.md.entity;
+
+import com.google.common.collect.Lists;
+import com.google.gson.annotations.JsonAdapter;
+import com.wolfking.jeesite.common.persistence.LongIDDataEntity;
+import com.wolfking.jeesite.modules.md.utils.CustomerMaterialAdapter;
+import lombok.Data;
+
+import java.util.List;
+
+@Data
+@JsonAdapter(CustomerMaterialAdapter.class)
+public class CustomerMaterial extends LongIDDataEntity<CustomerMaterial> {
+
+    private Customer customer;
+
+    private Product product;
+
+    private Long productCategoryId;
+
+    private CustomerProductModel customerProductModel;
+
+    private Material material;
+    /**
+     * (是否反件)
+     * */
+    private Integer isReturn = 0;
+
+    private Double price = 0.00;
+    //客户配件编码
+    private String customerPartCode = "";
+    //客户配件名称
+    private String customerPartName = "";
+    //质保期
+    private Integer warrantyDay = 0;
+
+    List<CustomerMaterialItem> itemList = Lists.newArrayList();
+
+    public CustomerMaterial(){
+    }
+    public CustomerMaterial(Long id){
+        this.id=id;
+    }
+
+    //region stram 使用
+    public Long getMaterialId(){
+        if(this.material == null){
+            return 0l;
+        }
+        return this.material.getId();
+    }
+
+    //endregion
+}

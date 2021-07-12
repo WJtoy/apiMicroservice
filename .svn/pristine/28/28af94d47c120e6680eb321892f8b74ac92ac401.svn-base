@@ -1,0 +1,70 @@
+syntax="proto3";
+
+//option java_package = "com.wolfking.jeesite.modules.mq.dto";
+option java_outer_classname = "MQOrderReport";
+
+import "Customer.proto";
+
+package com.wolfking.jeesite.modules.mq.dto; //package声明符
+
+message OrderReport{
+    //ID
+    int64 id = 1;
+    //分片
+    string quarter = 2;
+    //订单ID
+    int64 orderId = 3;
+    //客户
+    com.wolfking.jeesite.modules.mq.dto.Customer customer = 4;
+    //客服ID
+    Kefu kefu = 5;
+    //订单类型
+    // 20:下单 30：接单 40：派单 50：上门服务 80:完成 90：退单 100:取消
+    int32 orderType = 6;
+    //省
+    int64 provinceId = 7;
+    string provinceName = 8;
+    //市
+    int64 cityId = 9;
+    string cityName = 10;
+    //区
+    int64 areaId = 11;
+    string areaName = 12;
+    //数量
+    int32 qty = 13;
+    //金额
+    double amount = 14;
+    //触发者
+    int64 triggerBy = 15;
+    //触发时间
+    int64 triggerDate = 16;
+}
+
+//客户 ,使用Customer.proto中定义
+/*
+message Customer{
+    //客户ID
+    int64 id = 1;
+    //客户code
+    string code = 2;
+    //客户name
+    string name = 3;
+    //签约日期
+    int64 contractDate = 4;
+    //业务员ID
+    int64 salesId = 5;
+    //业务员
+    string salesName = 6;
+    //付款方式
+    int32 paymentType = 7;
+    //付款方式名称
+    string paymentTypeName = 8;
+}*/
+
+//用户
+message Kefu{
+    //ID
+    int64 id = 1;
+    //姓名
+    string name = 2;
+}

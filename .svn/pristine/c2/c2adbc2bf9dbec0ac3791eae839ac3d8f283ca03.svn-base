@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.wolfking.jeesite.modules.md.dao.EngineerTemperatureDao">
+
+    <select id="getEngineerTemperatureList" resultType="com.wolfking.jeesite.modules.md.entity.EngineerTemperature">
+        select id,engineer_id,temperature,health_option,health_status,create_date,create_by,update_date,update_by
+        from md_engineer_temperature
+        <where>
+            engineer_id = #{engineerId}
+            AND quarter = #{quarter}
+            AND create_date >= #{beginCreateDate}
+            AND <![CDATA[create_date < #{endCreateDate}]]>
+        </where>
+        order by create_date desc
+
+    </select>
+
+
+
+    <insert id="insert" keyProperty="id" useGeneratedKeys="true">
+        INSERT into md_engineer_temperature(
+            engineer_id,
+            temperature,
+            health_option,
+            health_status,
+            create_by,
+            create_date,
+            update_by,
+            update_date,
+            quarter
+        )values (
+        #{engineerId},
+        #{temperature},
+        #{healthOption},
+        #{healthStatus},
+        #{createById},
+        #{createDate},
+        #{updateById},
+        #{updateDate},
+        #{quarter}
+        )
+    </insert>
+
+</mapper>

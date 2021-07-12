@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wolfking.jeesite.modules.sd.dao.OrderStatusFlagDao">
+
+	<resultMap id="BaseResultMap" type="OrderStatusFlag">
+		<result column="order_id" property="orderId" jdbcType="BIGINT" />
+		<result column="quarter" property="quarter" jdbcType="VARCHAR"/>
+		<result column="praise_status" property="praiseStatus" jdbcType="TINYINT"/>
+		<result column="complete_status" property="completeStatus" jdbcType="TINYINT"/>
+	</resultMap>
+
+	<select id="getById" resultType="OrderStatusFlag">
+		select
+			order_id,
+			quarter,
+			praise_status,
+			complete_status
+		from
+			sd_order_status_flag
+		where
+			order_id = #{orderId}
+			and quarter = #{quarter}
+		limit 1
+	</select>
+
+	<insert id="insert">
+		insert into sd_order_status_flag(
+			order_id,
+			quarter
+		) values(
+			#{orderId},
+			#{quarter}
+		)
+	</insert>
+
+	<update id="UpdatePraiseStatus">
+		update
+			sd_order_status_flag
+		set
+			praise_status = #{praiseStatus}
+		where
+			order_id = #{orderId}
+			<![CDATA[ and praise_status <> #{praiseStatus} ]]>
+			<if test="quarter != null and quarter != '' ">
+				and quarter = #{quarter}
+			</if>
+	</update>
+
+	<update id="UpdateOrderCompleteStatus">
+		update
+			sd_order_status_flag
+		set
+			complete_status = #{completeStatus}
+		where
+			order_id = #{orderId}
+		<![CDATA[ and complete_status <> #{completeStatus} ]]>
+		<if test="quarter != null and quarter != '' ">
+			and quarter = #{quarter}
+		</if>
+	</update>
+
+	<select id="getStatusFlagMapByOrderIds" resultMap="BaseResultMap">
+       select
+            order_id,
+            praise_status
+       FROM sd_order_status_flag
+		<where>
+			quarter = #{quarter}
+			and order_id in
+			<foreach collection="orderIds" item="orderId" index="index" open="(" close=")" separator=",">
+				#{orderId}
+			</foreach>
+		</where>
+	</select>
+</mapper>

@@ -1,0 +1,43 @@
+package com.wolfking.jeesite.ms.providermd.fallback;
+
+
+import com.kkl.kklplus.common.exception.MSErrorCode;
+import com.kkl.kklplus.common.response.MSResponse;
+import com.kkl.kklplus.entity.common.NameValuePair;
+import com.kkl.kklplus.entity.md.MDErrorType;
+import com.wolfking.jeesite.ms.providermd.feign.MSCustomerErrorTypeFeign;
+import feign.hystrix.FallbackFactory;
+import org.springframework.stereotype.Component;
+
+import java.util.List;
+
+
+@Component
+public class MSCustomerErrorTypeFeignFallbackFactory implements FallbackFactory<MSCustomerErrorTypeFeign> {
+    @Override
+    public MSCustomerErrorTypeFeign create(Throwable throwable) {
+        return new MSCustomerErrorTypeFeign() {
+
+            @Override
+            public MSResponse<List<MDErrorType>> findListByProductIdAndIdsFromCache(Long customerId, List<NameValuePair<Long, Long>> nameValuePairs) {
+                return new MSResponse<>(MSErrorCode.FALLBACK_FAILURE);
+            }
+
+
+            @Override
+            public MSResponse<List<MDErrorType>> findListByProductIdAndCustomerIdFromCache(Long productId, Long customerId) {
+                return new MSResponse<>(MSErrorCode.FALLBACK_FAILURE);
+            }
+
+            @Override
+            public MSResponse<List<MDErrorType>> findErrorTypesByProductId(Long productId, Long customerId) {
+                return new MSResponse<>(MSErrorCode.FALLBACK_FAILURE);
+            }
+
+            @Override
+            public MSResponse<MDErrorType> getByProductIdAndCustomerIdFromCache(Long customerId, Long productId, Long id) {
+                return new MSResponse<>(MSErrorCode.FALLBACK_FAILURE);
+            }
+        };
+    }
+}

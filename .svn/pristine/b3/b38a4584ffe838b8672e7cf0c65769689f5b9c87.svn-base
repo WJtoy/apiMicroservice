@@ -1,0 +1,32 @@
+syntax="proto3";
+
+option java_package = "com.wolfking.jeesite.modules.mq.dto";
+option java_outer_classname = "MQNoticeMessage";
+
+import "WebSocketMessage.proto";
+
+message NoticeMessage{
+    //ID
+    int64 id = 1;
+    //类型
+    //1: 未读问题反馈
+    //2: 待处理问题反馈
+    //3: app异常
+    int32  noticeType = 2;
+    //订单id
+    int64 orderId = 3;
+    //分片
+    string quarter = 4;
+    //客户
+    int64 customerId = 5;
+    //区域
+    int64 areaId = 6;
+    //客服
+    int64 kefuId = 7;
+    //增量
+    int64 delta = 8;
+    //触发者/发送者
+    User triggerBy = 9;
+    //触发时间
+    int64 triggerDate = 10;
+}

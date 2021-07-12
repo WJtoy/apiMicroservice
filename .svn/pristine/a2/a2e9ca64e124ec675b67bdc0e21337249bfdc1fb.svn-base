@@ -1,0 +1,37 @@
+package com.wolfking.jeesite;
+
+import com.wolfking.jeesite.modules.sys.entity.User;
+import com.wolfking.jeesite.ms.cc.service.ReminderService;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.junit4.SpringRunner;
+
+/**
+ * @Auther wj
+ * @Date 2020/11/10 13:56
+ */
+
+@RunWith(SpringRunner.class)
+@SpringBootTest
+@Slf4j
+@ActiveProfiles("dev")
+public class ReminderApplicationTest {
+
+    @Autowired
+    ReminderService reminderService;
+
+    @Test
+    public void test(){
+        User user = new User();
+        user.setId(1L);
+        reminderService.replyReminder(1328572222419238912L,1296683321711005696L,"20203","测试",user,15L);
+
+    }
+
+
+
+}

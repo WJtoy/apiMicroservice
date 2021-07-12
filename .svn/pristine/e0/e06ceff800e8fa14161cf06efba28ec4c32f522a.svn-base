@@ -1,0 +1,591 @@
+package com.wolfking.jeesite.ms.viomi.sd.service;
+
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+import com.googlecode.protobuf.format.JsonFormat;
+import com.kkl.kklplus.common.exception.MSErrorCode;
+import com.kkl.kklplus.common.response.MSResponse;
+import com.kkl.kklplus.entity.b2bcenter.md.B2BDataSourceEnum;
+import com.kkl.kklplus.entity.b2bcenter.pb.MQB2BOrderStatusUpdateMessage;
+import com.kkl.kklplus.entity.b2bcenter.sd.B2BOrderActionEnum;
+import com.kkl.kklplus.entity.b2bcenter.sd.B2BOrderCompletedItem;
+import com.kkl.kklplus.entity.b2bcenter.sd.B2BOrderStatusEnum;
+import com.kkl.kklplus.entity.b2bcenter.sd.B2BOrderTransferResult;
+import com.kkl.kklplus.entity.common.NameValuePair;
+import com.kkl.kklplus.entity.md.MDActionCode;
+import com.kkl.kklplus.entity.md.MDErrorCode;
+import com.kkl.kklplus.entity.md.MDErrorType;
+import com.kkl.kklplus.entity.viomi.sd.VioMiOrderCancel;
+import com.kkl.kklplus.entity.viomi.sd.VioMiOrderHandle;
+import com.kkl.kklplus.entity.viomi.sd.VioMiOrderSnCode;
+import com.kkl.kklplus.entity.viomi.sd.VioMiParts;
+import com.kkl.kklplus.utils.StringUtils;
+import com.wolfking.jeesite.modules.md.entity.CustomerMaterial;
+import com.wolfking.jeesite.modules.md.entity.ProductCompletePicItem;
+import com.wolfking.jeesite.modules.sd.entity.*;
+import com.wolfking.jeesite.modules.sd.service.OrderCacheReadService;
+import com.wolfking.jeesite.modules.sd.service.OrderItemCompleteService;
+import com.wolfking.jeesite.modules.sd.service.OrderLocationService;
+import com.wolfking.jeesite.modules.sd.utils.OrderAdditionalInfoUtils;
+import com.wolfking.jeesite.modules.sd.utils.OrderPicUtils;
+import com.wolfking.jeesite.modules.sd.utils.OrderUtils;
+import com.wolfking.jeesite.modules.sys.entity.User;
+import com.wolfking.jeesite.modules.sys.utils.LogUtils;
+import com.wolfking.jeesite.ms.b2bcenter.md.utils.B2BMDUtils;
+import com.wolfking.jeesite.ms.b2bcenter.sd.dao.B2BOrderDao;
+import com.wolfking.jeesite.ms.b2bcenter.sd.entity.B2BOrderProcessLogReqEntity;
+import com.wolfking.jeesite.ms.b2bcenter.sd.entity.B2BOrderStatusUpdateReqEntity;
+import com.wolfking.jeesite.ms.b2bcenter.sd.service.B2BOrderManualBaseService;
+import com.wolfking.jeesite.ms.material.mq.entity.mapper.B2BMaterialMapper;
+import com.wolfking.jeesite.ms.providermd.service.MSCustomerErrorActionService;
+import com.wolfking.jeesite.ms.providermd.service.MSCustomerErrorCodeService;
+import com.wolfking.jeesite.ms.providermd.service.MSCustomerErrorTypeService;
+import com.wolfking.jeesite.ms.providermd.service.MSCustomerMaterialService;
+import com.wolfking.jeesite.ms.utils.MSUserUtils;
+import com.wolfking.jeesite.ms.viomi.sd.feign.VioMiOrderFeign;
+import lombok.extern.slf4j.Slf4j;
+import org.assertj.core.util.Lists;
+import org.mapstruct.factory.Mappers;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import javax.annotation.Resource;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+@Service
+@Transactional(propagation = Propagation.NOT_SUPPORTED)
+@Slf4j
+public class VioMiOrderService extends B2BOrderManualBaseService {
+
+    private static final User KKL_VIOMI_B2B_USER = new User(0L, "快可立全国联保", "075729235666");
+    private static final TwoTuple<Double, Double> DEFAULT_LOCATION = new TwoTuple<>(113.27661753, 22.75775595);
+    private static final String VIOMI_VERIFY_CODE = "200618";
+    private static B2BMaterialMapper mapper = Mappers.getMapper(B2BMaterialMapper.class);
+
+    @Resource
+    private B2BOrderDao b2BOrderDao;
+
+    @Autowired
+    private VioMiOrderFeign vioMiOrderFeign;
+    @Autowired
+    private OrderCacheReadService orderCacheReadService;
+    @Autowired
+    private OrderLocationService orderLocationService;
+    @Autowired
+    private OrderItemCompleteService orderItemCompleteService;
+    @Autowired
+    private MSCustomerMaterialService msCustomerMaterialService;
+    @Autowired
+    private MSCustomerErrorTypeService msCustomerErrorTypeService;
+    @Autowired
+    private MSCustomerErrorCodeService msCustomerErrorCodeService;
+    @Autowired
+    private MSCustomerErrorActionService msCustomerErrorActionService;
+
+
+    //region 工单转换
+
+    /**
+     * 取消工单转换
+     */
+    public MSResponse cancelOrderTransition(B2BOrderTransferResult b2BOrderTransferResult) {
+        return vioMiOrderFeign.cancelOrderTransition(b2BOrderTransferResult);
+    }
+
+    /**
+     * 批量检查工单是否可转换
+     */
+    public MSResponse checkB2BOrderProcessFlag(List<B2BOrderTransferResult> b2bOrderNos) {
+        return vioMiOrderFeign.checkWorkcardProcessFlag(b2bOrderNos);
+    }
+
+    /**
+     * 调用微服务的B2B工单转换进度更新接口
+     */
+    public MSResponse sendB2BOrderConversionProgressUpdateCommandToB2B(List<B2BOrderTransferResult> progressList) {
+        return vioMiOrderFeign.updateTransferResult(Lists.newArrayList(progressList));
+    }
+
+    //endregion 工单转换
+
+    //region 工单处理
+
+    /**
+     * 派单
+     */
+    private MSResponse<Integer> orderPlan(MQB2BOrderStatusUpdateMessage.B2BOrderStatusUpdateMessage message) {
+        VioMiOrderHandle params = new VioMiOrderHandle();
+        params.setUniqueId(message.getMessageId());
+        params.setB2bOrderId(message.getB2BOrderId());
+        params.setOrderNumber(message.getB2BOrderNo());
+        params.setEngineerName(message.getEngineerName());
+        params.setEngineerPhone(message.getEngineerMobile());
+        params.setStatus(B2BOrderActionEnum.PLAN.value);
+        params.setOperator(message.getUpdaterName());
+        params.setCreateById(message.getUpdaterId());
+        params.setCreateDt(message.getUpdateDt());
+        return vioMiOrderFeign.planing(params);
+    }
+
+    /**
+     * 预约
+     */
+    private MSResponse<Integer> orderAppoint(MQB2BOrderStatusUpdateMessage.B2BOrderStatusUpdateMessage message) {
+        VioMiOrderHandle params = new VioMiOrderHandle();
+        params.setUniqueId(message.getMessageId());
+        params.setB2bOrderId(message.getB2BOrderId());
+        params.setOrderNumber(message.getB2BOrderNo());
+        params.setTimeOfAppointment(message.getEffectiveDt());
+        params.setRemarks(message.getRemarks());
+        params.setStatus(B2BOrderActionEnum.APPOINT.value);
+        params.setOperator(message.getUpdaterName());
+        params.setCreateById(message.getUpdaterId());
+        params.setCreateDt(message.getUpdateDt());
+        return vioMiOrderFeign.appointment(params);
+    }
+
+    /**
+     * 打卡
+     */
+    private MSResponse<Integer> orderClockInHome(MQB2BOrderStatusUpdateMessage.B2BOrderStatusUpdateMessage message) {
+        VioMiOrderHandle params = new VioMiOrderHandle();
+        params.setUniqueId(message.getMessageId());
+        params.setB2bOrderId(message.getB2BOrderId());
+        params.setOrderNumber(message.getB2BOrderNo());
+        params.setLocation(String.format("%.5f,%.5f", message.getLongitude(), message.getLatitude()));
+        params.setOperator(message.getUpdaterName());
+        params.setCreateById(message.getUpdaterId());
+        params.setCreateDt(message.getUpdateDt());
+        params.setStatus(B2BOrderActionEnum.SERVICE.value);
+        return vioMiOrderFeign.clockInHome(params);
+    }
+
+    private MSResponse<Integer> processComplete(MQB2BOrderStatusUpdateMessage.B2BOrderStatusUpdateMessage message) {
+        VioMiOrderHandle params = new VioMiOrderHandle();
+        params.setUniqueId(message.getMessageId());
+        params.setB2bOrderId(message.getB2BOrderId());
+        params.setOrderNumber(message.getB2BOrderNo());
+
+        if (message.getCompletedItemCount() > 0) {
+            MQB2BOrderStatusUpdateMessage.CompletedItem firstItem = message.getCompletedItem(0);
+            params.setMiSn(firstItem.getBarcode());
+            params.setBuyDate(firstItem.getBuyDt());
+            params.setAttachment(Lists.newArrayList(firstItem.getPic1(), firstItem.getPic2(), firstItem.getPic3(), firstItem.getPic4()));
+            //维修故障
+            if (firstItem.getErrorItemCount() > 0) {
+                MQB2BOrderStatusUpdateMessage.ErrorItem errorItem = firstItem.getErrorItem(0);
+                List<String> faults = Lists.newArrayList(errorItem.getErrorType(), errorItem.getErrorCode(), errorItem.getErrorAnalysis());
+                String faultType = faults.stream().filter(StringUtils::isNotBlank).collect(Collectors.joining("/"));
+                params.setFaultType(faultType);
+                params.setServiceMeasures(errorItem.getErrorAction());
+            }
+            //配件
+            if (firstItem.getMaterialCount() > 0) {
+                List<VioMiParts> parts = Lists.newArrayList();
+                VioMiParts part;
+                for (MQB2BOrderStatusUpdateMessage.Material item : firstItem.getMaterialList()) {
+                    part = new VioMiParts();
+                    part.setYunmiCode(item.getMaterialCode());
+                    part.setCount(item.getQty());
+                    parts.add(part);
+                }
+                params.setParts(parts);
+            }
+        }
+
+        params.setOperator(message.getUpdaterName());
+        params.setCreateById(message.getUpdaterId());
+        params.setCreateDt(message.getUpdateDt());
+        params.setStatus(B2BOrderActionEnum.APP_COMPLETE.value);
+        return vioMiOrderFeign.processComplete(params);
+    }
+
+    private MSResponse<Integer> applyFinished(MQB2BOrderStatusUpdateMessage.B2BOrderStatusUpdateMessage message) {
+        VioMiOrderHandle params = new VioMiOrderHandle();
+        params.setUniqueId(message.getMessageId());
+        params.setB2bOrderId(message.getB2BOrderId());
+        params.setOrderNumber(message.getB2BOrderNo());
+        params.setVerifyCode(VIOMI_VERIFY_CODE);
+        params.setOperator(message.getUpdaterName());
+        params.setCreateById(message.getUpdaterId());
+        params.setCreateDt(message.getUpdateDt());
+        params.setStatus(B2BOrderActionEnum.COMPLETE.value);
+        return vioMiOrderFeign.applyFinished(params);
+    }
+
+    private MSResponse<Integer> orderReturnVisit(MQB2BOrderStatusUpdateMessage.B2BOrderStatusUpdateMessage message) {
+        VioMiOrderHandle params = new VioMiOrderHandle();
+        params.setUniqueId(message.getMessageId() + 1);
+        params.setB2bOrderId(message.getB2BOrderId());
+        params.setOrderNumber(message.getB2BOrderNo());
+        params.setOperator(message.getUpdaterName());
+        params.setCreateById(message.getUpdaterId());
+        params.setCreateDt(message.getUpdateDt());
+        params.setStatus(B2BOrderActionEnum.COMPLETE.value + 1);
+        return vioMiOrderFeign.orderReturnVisit(params);
+    }
+
+    /**
+     * 取消
+     */
+    private MSResponse orderCancel(MQB2BOrderStatusUpdateMessage.B2BOrderStatusUpdateMessage message) {
+        VioMiOrderCancel params = new VioMiOrderCancel();
+        params.setUniqueId(message.getMessageId());
+        params.setB2bOrderId(message.getB2BOrderId());
+        params.setOrderNumber(message.getB2BOrderNo());
+        params.setReason(message.getB2BReason());
+        params.setRemarks(message.getRemarks());
+        params.setOperator(message.getUpdaterName());
+        params.setCreateById(message.getUpdaterId());
+        params.setCreateDt(message.getUpdateDt());
+        return vioMiOrderFeign.cancel(params);
+    }
+
+    /**
+     * 往微服务发送工单状态更新命令
+     */
+    public MSResponse sendOrderStatusUpdateCommandToB2B(MQB2BOrderStatusUpdateMessage.B2BOrderStatusUpdateMessage message) {
+        MSResponse response = null;
+        if (message.getStatus() == B2BOrderStatusEnum.PLANNED.value) {
+            response = orderPlan(message);
+        } else if (message.getStatus() == B2BOrderStatusEnum.APPOINTED.value) {
+            response = orderAppoint(message);
+        } else if (message.getStatus() == B2BOrderStatusEnum.SERVICED.value) {
+            response = orderClockInHome(message);
+        } else if (message.getStatus() == B2BOrderStatusEnum.APP_COMPLETED.value) {
+            response = processComplete(message);
+        } else if (message.getStatus() == B2BOrderStatusEnum.COMPLETED.value) {
+            response = applyFinished(message);
+            response = orderReturnVisit(message);
+        } else if (message.getStatus() == B2BOrderStatusEnum.CANCELED.value) {
+            response = orderCancel(message);
+        } else {
+            response = new MSResponse<>(MSErrorCode.SUCCESS);
+            String msgJson = new JsonFormat().printToString(message);
+            LogUtils.saveLog("B2B工单状态变更消息的状态错误", "VioMiOrderService.sendOrderStatusUpdateCommandToB2B", msgJson, null, null);
+        }
+        return response;
+    }
+
+    /**
+     * 创建派单请求对象
+     */
+    public TwoTuple<Boolean, B2BOrderStatusUpdateReqEntity.Builder> createPlanRequestEntity(String engineerName, String engineerMobile, User updater) {
+        TwoTuple<Boolean, B2BOrderStatusUpdateReqEntity.Builder> result = new TwoTuple<>(false, null);
+        if (StringUtils.isNotBlank(engineerName) && StringUtils.isNotBlank(engineerMobile)) {
+            B2BOrderStatusUpdateReqEntity.Builder builder = new B2BOrderStatusUpdateReqEntity.Builder();
+            builder.setEngineerName(engineerName)
+                    .setEngineerMobile(engineerMobile)
+                    .setUpdaterName(updater != null && StringUtils.isNotBlank(updater.getName()) ? updater.getName() : "");
+            result.setAElement(true);
+            result.setBElement(builder);
+        }
+        return result;
+    }
+
+    /**
+     * 创建预约请求对象
+     */
+    public TwoTuple<Boolean, B2BOrderStatusUpdateReqEntity.Builder> createAppointRequestEntity(Date appointmentDate, User updater, String remarks) {
+        TwoTuple<Boolean, B2BOrderStatusUpdateReqEntity.Builder> result = new TwoTuple<>(false, null);
+        if (updater != null && StringUtils.isNotBlank(updater.getName()) && appointmentDate != null) {
+            B2BOrderStatusUpdateReqEntity.Builder builder = new B2BOrderStatusUpdateReqEntity.Builder();
+            builder.setUpdaterName(updater.getName())
+                    .setEffectiveDate(appointmentDate)
+                    .setRemarks(StringUtils.toString(remarks));
+            result.setAElement(true);
+            result.setBElement(builder);
+        }
+        return result;
+    }
+
+    /**
+     * 创建上门请求对象
+     */
+    public TwoTuple<Boolean, B2BOrderStatusUpdateReqEntity.Builder> createServiceRequestEntity(Long kklOrderId, String kklQuarter, User updater) {
+        TwoTuple<Boolean, B2BOrderStatusUpdateReqEntity.Builder> result = new TwoTuple<>(false, null);
+        if (kklOrderId != null) {
+            OrderLocation location = orderLocationService.getByOrderId(kklOrderId, kklQuarter);
+            if (location == null) {
+                location = new OrderLocation();
+                location.setLongitude(DEFAULT_LOCATION.getAElement());
+                location.setLatitude(DEFAULT_LOCATION.getBElement());
+            }
+            B2BOrderStatusUpdateReqEntity.Builder builder = new B2BOrderStatusUpdateReqEntity.Builder();
+            builder.setLongitude(location.getLongitude())
+                    .setLatitude(location.getLatitude())
+                    .setUpdaterName(updater != null && StringUtils.isNotBlank(updater.getName()) ? updater.getName() : "");
+            result.setAElement(true);
+            result.setBElement(builder);
+        }
+        return result;
+    }
+
+    /**
+     * 创建App完工请求对象
+     */
+    @Transactional()
+    public TwoTuple<Boolean, B2BOrderStatusUpdateReqEntity.Builder> createAppCompleteRequestEntity(Long customerId, Long orderId, String quarter, Date orderCreateDate, User updater) {
+        TwoTuple<Boolean, B2BOrderStatusUpdateReqEntity.Builder> result = new TwoTuple<>(false, null);
+        if (orderId != null && orderId > 0) {
+            long buyDt = 0;
+            String additionalInfoJson = b2BOrderDao.getOrderAdditionalInfo(orderId, quarter);
+            OrderAdditionalInfo orderAdditionalInfo = OrderAdditionalInfoUtils.fromOrderAdditionalInfoJson(additionalInfoJson);
+            if (orderAdditionalInfo != null && orderAdditionalInfo.getBuyDate() != null && orderAdditionalInfo.getBuyDate() > 0) {
+                buyDt = orderAdditionalInfo.getBuyDate();
+            } else {
+                buyDt = orderCreateDate != null ? orderCreateDate.getTime() : 0;
+            }
+            List<B2BOrderCompletedItem> completedItems = getOrderCompletedItems(customerId, orderId, quarter, buyDt);
+            B2BOrderStatusUpdateReqEntity.Builder builder = new B2BOrderStatusUpdateReqEntity.Builder();
+            builder.setOrderCompletedItems(completedItems)
+                    .setUpdaterName(updater != null && StringUtils.isNotBlank(updater.getName()) ? updater.getName() : "");
+            ;
+            result.setAElement(true);
+            result.setBElement(builder);
+        }
+        return result;
+    }
+
+    private List<B2BOrderCompletedItem> getOrderCompletedItems(Long customerId, Long orderId, String quarter, long buyDt) {
+        List<B2BOrderCompletedItem> result = Lists.newArrayList();
+        if (orderId != null && orderId > 0) {
+            Set<Long> productIdSet = Sets.newHashSet();
+
+            Map<Long, B2BOrderCompletedItem> completedItemMap = Maps.newConcurrentMap();
+            List<OrderItemComplete> completeList = orderItemCompleteService.getByOrderId(orderId, quarter);
+            B2BOrderCompletedItem completedItem;
+            Map<String, ProductCompletePicItem> picItemMap;
+            ProductCompletePicItem picItem;
+            if (completeList != null && !completeList.isEmpty()) {
+                for (OrderItemComplete item : completeList) {
+                    productIdSet.add(item.getProduct().getId());
+                    completedItem = new B2BOrderCompletedItem();
+                    completedItem.setProductId(item.getProduct().getId());
+                    completedItem.setUnitBarcode(StringUtils.toString(item.getUnitBarcode()));
+
+                    item.setItemList(OrderUtils.fromProductCompletePicItemsJson(item.getPicJson()));
+                    picItemMap = Maps.newHashMap();
+                    for (ProductCompletePicItem innerItem : item.getItemList()) {
+                        picItemMap.put(innerItem.getPictureCode(), innerItem);
+                    }
+                    picItem = picItemMap.get("pic1");
+                    if (picItem != null && StringUtils.isNotBlank(picItem.getUrl())) {
+                        completedItem.setPic1(OrderPicUtils.getOrderPicHostDir() + picItem.getUrl());
+                    }
+                    picItem = picItemMap.get("pic2");
+                    if (picItem != null && StringUtils.isNotBlank(picItem.getUrl())) {
+                        completedItem.setPic2(OrderPicUtils.getOrderPicHostDir() + picItem.getUrl());
+                    }
+                    picItem = picItemMap.get("pic3");
+                    if (picItem != null && StringUtils.isNotBlank(picItem.getUrl())) {
+                        completedItem.setPic3(OrderPicUtils.getOrderPicHostDir() + picItem.getUrl());
+                    }
+                    picItem = picItemMap.get("pic4");
+                    if (picItem != null && StringUtils.isNotBlank(picItem.getUrl())) {
+                        completedItem.setPic4(OrderPicUtils.getOrderPicHostDir() + picItem.getUrl());
+                    }
+                    //多个相同的产品仅保存第一个
+                    if (!completedItemMap.containsKey(item.getProduct().getId())) {
+                        completedItemMap.put(item.getProduct().getId(), completedItem);
+                    }
+                    result.add(completedItem);
+                }
+            }
+
+            //读取维修故障信息
+            Map<Long, List<B2BOrderCompletedItem.ErrorItem>> errorMap = Maps.newConcurrentMap();
+            List<OrderDetail> details = b2BOrderDao.getOrderErrors(orderId, quarter);
+            if (details != null && !details.isEmpty()) {
+                List<NameValuePair<Long, Long>> errorTypeIds = Lists.newArrayList();
+                List<NameValuePair<Long, Long>> errorCodeIds = Lists.newArrayList();
+                List<NameValuePair<Long, Long>> errorActionIds = Lists.newArrayList();
+                for (OrderDetail detail : details) {
+                    productIdSet.add(detail.getProductId());
+                    errorTypeIds.add(new NameValuePair<>(detail.getProduct().getId(), detail.getErrorType().getId()));
+                    errorCodeIds.add(new NameValuePair<>(detail.getProduct().getId(), detail.getErrorCode().getId()));
+                    errorActionIds.add(new NameValuePair<>(detail.getProduct().getId(), detail.getActionCode().getId()));
+                }
+                List<MDErrorType> errorTypes = msCustomerErrorTypeService.findListByCustomerIdAndProductIdsAndIds(customerId, errorTypeIds);
+                List<MDErrorCode> errorCodes = msCustomerErrorCodeService.findListByCustomerIdAndProductIdsAndIds(customerId, errorCodeIds);
+                List<MDActionCode> actionCodes = msCustomerErrorActionService.findListByCustomerIdAndProductIdsAndIds(customerId, errorActionIds);
+                Map<String, MDErrorType> errorTypeMap = Maps.newConcurrentMap();
+                for (MDErrorType type : errorTypes) {
+                    errorTypeMap.put(String.format("%d:%d", type.getProductId(), type.getId()), type);
+                }
+                Map<String, MDErrorCode> errorCodeMap = Maps.newConcurrentMap();
+                for (MDErrorCode code : errorCodes) {
+                    errorCodeMap.put(String.format("%d:%d", code.getProductId(), code.getId()), code);
+                }
+                Map<String, MDActionCode> errorActionMap = Maps.newConcurrentMap();
+                for (MDActionCode action : actionCodes) {
+                    errorActionMap.put(String.format("%d:%d", action.getProductId(), action.getId()), action);
+                }
+                Long productId;
+                MDErrorType errorType;
+                MDErrorCode errorCode;
+                MDActionCode actionCode;
+                B2BOrderCompletedItem.ErrorItem errorItem;
+                for (OrderDetail detail : details) {
+                    errorItem = new B2BOrderCompletedItem.ErrorItem();
+                    productId = detail.getProductId();
+                    errorType = errorTypeMap.get(String.format("%d:%d", productId, detail.getErrorType().getId()));
+                    if (errorType != null) {
+                        errorItem.setErrorTypeId(errorType.getId());
+                        errorItem.setErrorType(errorType.getName());
+                    }
+                    errorCode = errorCodeMap.get(String.format("%d:%d", productId, detail.getErrorCode().getId()));
+                    if (errorCode != null) {
+                        errorItem.setErrorCodeId(errorCode.getId());
+                        errorItem.setErrorCode(errorCode.getName());
+                    }
+                    actionCode = errorActionMap.get(String.format("%d:%d", productId, detail.getActionCode().getId()));
+                    if (actionCode != null) {
+                        errorItem.setErrorAnalysisId(actionCode.getId());
+                        errorItem.setErrorAnalysis(actionCode.getAnalysis());
+                        errorItem.setErrorActionId(actionCode.getId());
+                        errorItem.setErrorAction(actionCode.getName());
+                    }
+                    if (errorMap.containsKey(productId)) {
+                        errorMap.get(productId).add(errorItem);
+                    } else {
+                        errorMap.put(productId, Lists.newArrayList(errorItem));
+                    }
+                }
+            }
+
+            //读取配件信息
+            Map<Long, List<B2BOrderCompletedItem.Material>> materialMap = Maps.newConcurrentMap();
+            List<MaterialItem> materials = b2BOrderDao.getOrderMaterials(orderId, quarter);
+            if (materials != null && !materials.isEmpty()) {
+                List<NameValuePair<Long, Long>> materialIds = Lists.newArrayList();
+                for (MaterialItem item : materials) {
+                    productIdSet.add(item.getProduct().getId());
+                    materialIds.add(new NameValuePair<>(item.getProduct().getId(), item.getMaterial().getId()));
+                }
+                List<CustomerMaterial> customerMaterials = msCustomerMaterialService.findListByCustomerAndProductAndMaterialIds(customerId, materialIds);
+                Map<String, String> customerPartCodeMap = Maps.newConcurrentMap();
+                for (CustomerMaterial customerMaterial : customerMaterials) {
+                    customerPartCodeMap.put(String.format("%d:%d", customerMaterial.getProduct().getId(), customerMaterial.getMaterial().getId()), customerMaterial.getCustomerPartCode());
+                }
+                String key;
+                Long productId;
+                Long materialId;
+                String materialCode;
+                B2BOrderCompletedItem.Material material;
+                for (MaterialItem item : materials) {
+                    productId = item.getProduct().getId();
+                    materialId = item.getMaterial().getId();
+                    key = String.format("%d:%d", productId, materialId);
+                    materialCode = customerPartCodeMap.get(key);
+                    material = new B2BOrderCompletedItem.Material();
+                    material.setMaterialId(materialId);
+                    material.setMaterialCode(StringUtils.toString(materialCode));
+                    material.setQty(item.getQty());
+                    if (materialMap.containsKey(productId)) {
+                        materialMap.get(productId).add(material);
+                    } else {
+                        materialMap.put(productId, Lists.newArrayList(material));
+                    }
+                }
+            }
+            //设置维修故障与配件
+            for (Long pId : productIdSet) {
+                B2BOrderCompletedItem newCompletedItem = completedItemMap.get(pId);
+                if (newCompletedItem == null) {
+                    newCompletedItem = new B2BOrderCompletedItem();
+                    newCompletedItem.setProductId(pId);
+                    result.add(newCompletedItem);
+                }
+                List<B2BOrderCompletedItem.ErrorItem> b2bErrorItems = errorMap.get(pId);
+                if (b2bErrorItems != null) {
+                    newCompletedItem.setErrorItems(b2bErrorItems);
+                }
+                List<B2BOrderCompletedItem.Material> b2bMaterials = materialMap.get(pId);
+                if (b2bMaterials != null) {
+                    newCompletedItem.setMaterials(b2bMaterials);
+                }
+                newCompletedItem.setBuyDt(buyDt);
+            }
+        }
+        return result;
+    }
+
+
+    /**
+     * 创建完成请求对象
+     */
+    public TwoTuple<Boolean, B2BOrderStatusUpdateReqEntity.Builder> createCompleteRequestEntity(User updater) {
+        TwoTuple<Boolean, B2BOrderStatusUpdateReqEntity.Builder> result = new TwoTuple<>(false, null);
+        B2BOrderStatusUpdateReqEntity.Builder builder = new B2BOrderStatusUpdateReqEntity.Builder();
+        builder.setUpdaterName(updater != null && StringUtils.isNotBlank(updater.getName()) ? updater.getName() : "");
+        result.setAElement(true);
+        result.setBElement(builder);
+        return result;
+    }
+
+
+    /**
+     * 创建取消请求对象
+     */
+    public TwoTuple<Boolean, B2BOrderStatusUpdateReqEntity.Builder> createCancelRequestEntity(Integer kklCancelType, User updater, String remarks) {
+        TwoTuple<Boolean, B2BOrderStatusUpdateReqEntity.Builder> result = new TwoTuple<>(false, null);
+        if (kklCancelType != null && updater != null && updater.getId() != null && updater.getId() > 0) {
+            updater = MSUserUtils.get(updater.getId());
+            if (updater == null) {
+                updater = KKL_VIOMI_B2B_USER;
+            }
+            String cancelReason = B2BMDUtils.getVioMiCancelReason(kklCancelType);
+            if (StringUtils.isNotBlank(cancelReason)) {
+                String updaterName = StringUtils.isNotBlank(updater.getName()) ? updater.getName() : KKL_VIOMI_B2B_USER.getName();
+                B2BOrderStatusUpdateReqEntity.Builder builder = new B2BOrderStatusUpdateReqEntity.Builder();
+                builder.setUpdaterName(updaterName)
+                        .setB2bReason(cancelReason)
+                        .setRemarks(StringUtils.toString(remarks));
+                result.setAElement(true);
+                result.setBElement(builder);
+            }
+        }
+        return result;
+    }
+
+    //endregion 工单处理
+
+    //region  日志
+
+    /**
+     * 创建云米日志消息实体
+     */
+    public TwoTuple<Boolean, B2BOrderProcessLogReqEntity.Builder> createOrderProcessLogReqEntity(OrderProcessLog log) {
+        TwoTuple<Boolean, B2BOrderProcessLogReqEntity.Builder> result = new TwoTuple<>(false, null);
+        if (log.getCreateBy() != null && StringUtils.isNotBlank(log.getCreateBy().getName())
+                && StringUtils.isNotBlank(log.getActionComment())) {
+            B2BOrderProcessLogReqEntity.Builder builder = new B2BOrderProcessLogReqEntity.Builder();
+            builder.setOperatorName(log.getCreateBy().getName())
+                    .setLogContext(log.getActionComment())
+                    .setDataSourceId(B2BDataSourceEnum.VIOMI.id);
+            result.setAElement(true);
+            result.setBElement(builder);
+        }
+        return result;
+    }
+    //endregion  日志
+
+    //region 验证产品SN
+
+    public MSResponse checkProductSN(String b2bOrderNo, String productSn, User operator) {
+        VioMiOrderSnCode params = new VioMiOrderSnCode();
+        params.setOrderNumber(b2bOrderNo);
+        params.setSnCode(productSn);
+        params.setCreateById(operator.getId());
+        return vioMiOrderFeign.getGradeSn(params);
+    }
+
+    //endregion 验证产品SN
+}

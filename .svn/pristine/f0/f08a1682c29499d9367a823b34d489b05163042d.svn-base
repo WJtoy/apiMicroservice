@@ -1,0 +1,63 @@
+package com.wolfking.jeesite;
+
+import com.spring4all.swagger.EnableSwagger2Doc;
+import com.wolfking.jeesite.common.config.WebProperties;
+import com.wolfking.jeesite.common.utils.RedisUtilsLocal;
+import com.wolfking.jeesite.modules.api.config.RestAuthorizeFilter;
+import com.wolfking.jeesite.modules.sys.service.SystemService;
+import com.wolfking.jeesite.ms.common.config.MicroServicesProperties;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
+import org.springframework.cloud.netflix.eureka.EnableEurekaClient;
+import org.springframework.cloud.netflix.feign.EnableFeignClients;
+import org.springframework.context.annotation.Bean;
+import org.springframework.scheduling.TaskScheduler;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
+
+import java.util.HashMap;
+import java.util.Map;
+
+@EnableSwagger2Doc
+@SpringBootApplication
+@EnableEurekaClient
+@EnableFeignClients
+@EnableConfigurationProperties({MicroServicesProperties.class, WebProperties.class})
+public class ProviderAPIApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(ProviderAPIApplication.class, args);
+        SystemService.printKeyLoadMessage();
+    }
+
+    @Autowired
+    RedisUtilsLocal redisUtilsLocal;
+
+    @Bean
+    public FilterRegistrationBean restAuthorizeFilter() {
+        final FilterRegistrationBean registrationBean = new FilterRegistrationBean();
+        registrationBean.setFilter(new RestAuthorizeFilter(redisUtilsLocal));
+        Map<String, String> m = new HashMap<String, String>();
+        m.put("targetBeanName", "restAuthorizeFilter");
+        m.put("targetFilterLifecycle", "true");
+        registrationBean.setInitParameters(m);
+        registrationBean.addUrlPatterns("/api/*");
+        return registrationBean;
+    }
+
+
+    /**
+     * 定时任务线程池
+     * 根据任务多少修改
+     */
+    @Bean(name = "TaskPool")
+    public TaskScheduler taskScheduler() {
+        ThreadPoolTaskScheduler taskScheduler = new ThreadPoolTaskScheduler();
+        taskScheduler.setPoolSize(5);
+        return taskScheduler;
+    }
+
+
+}

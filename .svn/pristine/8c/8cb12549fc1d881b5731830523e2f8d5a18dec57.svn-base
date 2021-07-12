@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wolfking.jeesite.modules.sys.dao.RoleDao">
+    
+    <resultMap id="roleResult" type="com.wolfking.jeesite.modules.sys.entity.Role">
+		<id property="id" column="id" />
+		<result property="name" column="name" />
+		<result property="enname" column="enname" />
+		<result property="roleType" column="roleType" />
+		<result property="dataScope" column="dataScope" />
+		<result property="remarks" column="remarks" />
+		<result property="useable" column="useable" />
+		<association property="office" column="office" javaType="com.wolfking.jeesite.modules.sys.entity.Office">
+			<result property="id" column="office.id"/>
+			<result property="name" column="office.name"/>
+		</association>
+		<collection property="menuList" ofType="com.wolfking.jeesite.modules.sys.entity.Menu">
+			<id property="id" column="menuList.id" />
+		</collection>
+		<collection property="officeList" ofType="com.wolfking.jeesite.modules.sys.entity.Office">
+			<id property="id" column="officeList.id" />
+		</collection>
+	</resultMap>
+	
+    <sql id="roleColumns">
+    	a.id,
+    	a.office_id AS "office.id",
+    	a.name,
+    	a.enname,
+    	a.role_type AS roleType,
+		a.data_scope AS dataScope,
+		a.remarks,
+		a.create_by AS "createBy.id",
+		a.create_date,
+		a.update_by AS "updateBy.id",
+		a.update_date,
+		a.del_flag,
+    	o.name AS "office.name",
+    	o.code,
+    	a.useable AS useable
+    </sql>
+
+	<sql id="roleColumnsWithoutOffice">
+    	a.id,
+    	a.office_id AS "office.id",
+    	a.name,
+    	a.enname,
+    	a.role_type AS roleType,
+		a.data_scope AS dataScope,
+		a.remarks,
+		a.create_by AS "createBy.id",
+		a.create_date,
+		a.update_by AS "updateBy.id",
+		a.update_date,
+		a.del_flag,
+    	a.useable AS useable
+    </sql>
+
+    <!-- 包含角色的菜单 -->
+	<select id="get_candelete" resultMap="roleResult">
+		SELECT
+			<include refid="roleColumns"/>,
+			rm.menu_id AS "menuList.id",
+			ro.office_id AS "officeList.id"
+		FROM sys_role a
+		LEFT JOIN sys_office o ON o.id = a.office_id
+		LEFT JOIN sys_role_menu rm ON rm.role_id = a.id
+		LEFT JOIN sys_role_office ro ON ro.role_id = a.id
+		WHERE a.id = #{id}
+	</select>
+
+	<select id="findList_candelete" resultMap="roleResult">
+		SELECT <!-- DISTINCT -->
+			<include refid="roleColumns"/>,
+			ro.office_id AS "officeList.id"
+		FROM sys_role a
+		LEFT JOIN sys_office o ON o.id = a.office_id
+		LEFT JOIN sys_role_office ro ON ro.role_id = a.id
+		WHERE a.del_flag = #{DEL_FLAG_NORMAL} AND a.useable=#{useable}
+		<if test="user != null and user.id != null and user.id != ''">
+			and exists(
+				select 1
+				from sys_user_role ur
+				where ur.user_id =  #{user.id}
+				and ur.role_id = a.id
+			)
+		</if>
+		<if test="user != null and user.id == null and user.loginName != null and user.loginName != ''">
+			and exists(
+				select 1
+				from sys_user u,sys_user_role ur
+				where
+					u.login_name = #{user.loginName}
+					and u.id = ur.user_id
+					and ur.role_id = a.id
+			)
+		</if>
+		<if test="office != null and office.id != null and office.id >0">
+			and a.office_id = #{office.id}
+		</if>
+		<!-- 数据范围过滤 -->
+		${sqlMap.dsf}
+		ORDER BY o.code, a.name
+	</select>
+
+	<select id="findAllList" resultType="com.wolfking.jeesite.modules.sys.entity.Role">
+		SELECT
+			<include refid="roleColumns"/>
+		FROM sys_role a
+		LEFT JOIN sys_office o ON o.id = a.office_id
+		WHERE a.del_flag = 0
+		ORDER BY o.code, a.name
+	</select>
+
+	<select id="findAllListNew" resultType="com.wolfking.jeesite.modules.sys.entity.Role">
+		SELECT
+			<include refid="roleColumnsWithoutOffice"/>
+		FROM sys_role a
+		WHERE a.del_flag = 0
+		ORDER BY a.name
+	</select>
+	
+	<insert id="insert" useGeneratedKeys="true" keyProperty="id">
+		INSERT INTO sys_role(
+			office_id, 
+			name, 
+			enname, 
+			role_type, 
+			data_scope, 
+			create_by, 
+			create_date, 
+			update_by, 
+			update_date, 
+			remarks, 
+			del_flag,
+			useable
+		) VALUES (
+			#{office.id}, 
+			#{name}, 
+			#{enname}, 
+			#{roleType}, 
+			#{dataScope}, 
+			#{createBy.id}, 
+			#{createDate}, 
+			#{updateBy.id}, 
+			#{updateDate}, 
+			#{remarks}, 
+			#{delFlag},
+			#{useable}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE sys_role SET 
+			office_id = #{office.id}, 
+			name = #{name}, 
+			enname = #{enname}, 
+			role_type = #{roleType}, 
+			data_scope = #{dataScope}, 
+			update_by = #{updateBy.id}, 
+			update_date = #{updateDate}, 
+			remarks = #{remarks},
+			useable = #{useable}
+		WHERE id = #{id}
+	</update>
+
+	<update id="delete">
+		UPDATE sys_role SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+
+	<!-- 获得用户角色 -->
+	<select id="getUserRoles" resultType="Role">
+		select DISTINCT r.id,r.name,r.enname,data_scope,role_type,office_id
+		from sys_user_role ur
+		inner join sys_role r
+		on ur.role_id = r.id
+		and r.del_flag = 0
+		where ur.user_id = #{userId}
+	</select>
+</mapper>

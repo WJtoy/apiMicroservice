@@ -1,0 +1,36 @@
+syntax="proto3";
+
+option java_package = "com.wolfking.jeesite.modules.mq.dto";
+option java_outer_classname = "MQOrderCharge";
+
+message OrderCharge{
+    //订单ID
+    int64 orderId = 1;
+    //触发者
+    int64 triggerBy = 2;
+    //触发时间
+    int64 triggerDate = 3;
+}
+
+//对账后更新财务扣费同步到订单
+message OrderFeeUpdateAfterCharge{
+    //订单ID
+    int64 orderId = 1;
+    //分片
+    string quarter = 2;
+    //平台费
+    repeated FeeUpdateItem items = 3;
+    //触发者
+    int64 triggerBy = 4;
+    //触发时间
+    int64 triggerDate = 5;
+}
+//跟新item
+message FeeUpdateItem{
+    //网点
+    int64 servicePointId = 1;
+    //平台费
+    double infoFee = 2;
+    //下游扣点
+    double taxFee = 3;
+}

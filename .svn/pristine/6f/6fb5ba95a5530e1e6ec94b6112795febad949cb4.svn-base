@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.wolfking.jeesite.modules.sd.dao.OrderItemDao">
+
+    <select id="getOrderItems" parameterType="java.util.Map" resultType="Order">
+        SELECT
+              a.id,
+              a.orderitem_json AS 'itemsPb'
+        FROM  sd_order_head a
+        <where>
+            <if test="quarter != null and quarter != ''.toString()">
+              a.quarter = #{quarter}
+            </if>
+              AND a.id = #{orderId}
+        </where>
+        limit 1
+    </select>
+
+</mapper>

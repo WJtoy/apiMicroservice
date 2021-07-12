@@ -1,0 +1,15 @@
+syntax="proto3";
+
+option java_package = "com.wolfking.jeesite.modules.mq.dto";
+option java_outer_classname = "MQOrderAutoComplete";
+
+message OrderAutoComplete{
+    //订单ID
+    int64 orderId = 1;
+    //分片
+    string quarter = 2;
+    //触发者
+    int64 triggerBy = 3;
+    //触发时间
+    int64 triggerDate = 4;
+}

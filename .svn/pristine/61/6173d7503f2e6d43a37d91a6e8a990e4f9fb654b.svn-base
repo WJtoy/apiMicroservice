@@ -1,0 +1,19 @@
+syntax="proto3";
+
+option java_outer_classname = "MQCommon";
+
+package com.wolfking.jeesite.modules.mq.dto; //package声明符
+
+//用户
+message User{
+    //ID
+    int64 id = 1;
+    //姓名
+    string name = 2;
+    //用户类型
+    int32 userType = 3;
+    //公司id
+    int64 companyId = 4;
+    //部门id
+    int64 officeId = 5;
+}

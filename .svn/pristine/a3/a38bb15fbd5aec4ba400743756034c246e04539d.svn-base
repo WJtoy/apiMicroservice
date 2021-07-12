@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.wolfking.jeesite.modules.mq.dao.OrderCreateMessageDao">
+
+    <sql id="messageColumns">
+        a.id,
+        a.order_id,
+        a.quarter,
+        a.type,
+        a.retry_times,
+        a.status,
+        a.trigger_by as "trigger_by.id",
+        '' as "trigger_by.name",
+        a.trigger_date,
+        a.retry_times,
+        a.remarks,
+        a.json,
+        a.create_date,
+        a.update_date
+    </sql>
+
+    <insert id="insert">
+        INSERT INTO mq_order_create
+        (
+         id,order_id,quarter,type,retry_times,status,trigger_by,trigger_date,remarks
+         ,json,create_date,update_date
+        )
+        VALUES
+        (
+         #{id},#{orderId},#{quarter},#{type},#{retryTimes},#{status},#{triggerBy.id},#{triggerDate},#{remarks}
+         ,#{json},#{createDate},#{updateDate}
+        )
+    </insert>
+
+    <update id="update">
+        update mq_order_create
+        set
+          <if test="retryTimes != null and retryTimes>0">
+          retry_times = retry_times + 1,
+          </if>
+          status = #{status},
+          remarks = #{remarks},
+          update_date = #{updateDate}
+        where id = #{id}
+    </update>
+
+    <select id="get" resultType="com.wolfking.jeesite.modules.mq.entity.OrderCreateBody">
+        SELECT
+        <include refid="messageColumns"/>
+        FROM
+          mq_order_create a
+        WHERE
+          a.id = #{id}
+          AND a.status = 40
+        limit 1
+    </select>
+
+    <select id="getByOrderId" resultType="com.wolfking.jeesite.modules.mq.entity.OrderCreateBody">
+        SELECT
+        <include refid="messageColumns"/>
+        FROM
+          mq_order_create a
+        <where>
+          <if test="quarter != null and quarter != ''.trim()">
+              a.quarter = #{quarter}
+          </if>
+          AND a.order_id = #{orderId}
+          AND a.status = 40
+        </where>
+        limit 1
+    </select>
+
+</mapper>

@@ -1,0 +1,197 @@
+package com.wolfking.jeesite.modules.sd.entity;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.wolfking.jeesite.common.persistence.LongIDDataEntity;
+import com.wolfking.jeesite.modules.md.entity.Material;
+import com.wolfking.jeesite.modules.md.entity.Product;
+
+import javax.validation.constraints.NotNull;
+
+/**
+ *  配件申请Item 表
+ *
+ * 
+ */
+public class MaterialItem extends LongIDDataEntity<MaterialItem>
+{
+	private static final long serialVersionUID = 1L;
+	private Long materialMasterId = 0L;
+	private Long materialProductId = 0L;
+	private Material material;
+	private int qty = 1 ;
+	private Double price = 0.00;
+	//出厂价
+	private Double factoryPrice = 0.00;
+	private Double totalPrice = 0.00;
+	private String quarter = "";//数据库分片，与订单相同
+	//辅助属性
+	private boolean chooseFlag = false;
+
+	//region 新增字段 2019/05/31
+	// 损坏配件是否需要返件
+	private int returnFlag;
+	// 实际耗费数量
+	private int useQty;
+	// 未损耗配件，返件数量
+	private int rtvQty;
+	// 未损耗配件，返件标记 1:返件
+	private int rtvFlag;
+	// 辅助：申请时用
+	private Product product;
+	//endregion
+	//region 2021-4-20新增
+	//回收标识
+	private int recycleFlag;
+	//回收价格
+	private Double recyclePrice;
+	//回收总价
+	private Double totalRecyclePrice;
+	//endregion
+
+	@NotNull(message="配件申请主表不能为空")
+	public Long getMaterialMasterId() {
+		return materialMasterId;
+	}
+
+	public void setMaterialMasterId(Long materialMasterId) {
+		this.materialMasterId = materialMasterId;
+	}
+
+	@JsonIgnore
+	public Material getMaterial()
+	{
+		return material;
+	}
+
+	public void setMaterial(Material material)
+	{
+		this.material = material;
+	}
+
+	public int getQty()
+	{
+		return qty;
+	}
+
+	public void setQty(int qty)
+	{
+		this.qty = qty;
+	}
+
+	public Double getPrice()
+	{
+		return price;
+	}
+
+	public void setPrice(Double price)
+	{
+		this.price = price;
+	}
+
+	public boolean isChooseFlag()
+	{
+		return chooseFlag;
+	}
+
+	public void setChooseFlag(boolean chooseFlag)
+	{
+		this.chooseFlag = chooseFlag;
+	}
+
+
+	public Double getTotalPrice() {
+		return totalPrice;
+	}
+
+	public void setTotalPrice(Double totalPrice) {
+		this.totalPrice = totalPrice;
+	}
+
+	public String getQuarter() {
+		return quarter;
+	}
+
+	public void setQuarter(String quarter) {
+		this.quarter = quarter;
+	}
+
+	public int getUseQty() {
+		return useQty;
+	}
+
+	public void setUseQty(int useQty) {
+		this.useQty = useQty;
+	}
+
+	public int getRtvQty() {
+		return rtvQty;
+	}
+
+	public void setRtvQty(int rtvQty) {
+		this.rtvQty = rtvQty;
+	}
+
+	public int getRtvFlag() {
+		return rtvFlag;
+	}
+
+	public void setRtvFlag(int rtvFlag) {
+		this.rtvFlag = rtvFlag;
+	}
+
+	public int getReturnFlag() {
+		return returnFlag;
+	}
+
+	public void setReturnFlag(int returnFlag) {
+		this.returnFlag = returnFlag;
+	}
+
+	public Product getProduct() {
+		return product;
+	}
+
+	public void setProduct(Product product) {
+		this.product = product;
+	}
+
+	public Long getMaterialProductId() {
+		return materialProductId;
+	}
+
+	public void setMaterialProductId(Long materialProductId) {
+		this.materialProductId = materialProductId;
+	}
+
+	public Double getFactoryPrice() {
+		return factoryPrice;
+	}
+
+	public void setFactoryPrice(Double factoryPrice) {
+		this.factoryPrice = factoryPrice;
+	}
+
+	public int getRecycleFlag() {
+		return recycleFlag;
+	}
+
+	public void setRecycleFlag(int recycleFlag) {
+		this.recycleFlag = recycleFlag;
+	}
+
+	public Double getRecyclePrice() {
+		return recyclePrice;
+	}
+
+	public void setRecyclePrice(Double recyclePrice) {
+		this.recyclePrice = recyclePrice;
+	}
+
+	public Double getTotalRecyclePrice() {
+		return totalRecyclePrice;
+	}
+
+	public void setTotalRecyclePrice(Double totalRecyclePrice) {
+		this.totalRecyclePrice = totalRecyclePrice;
+	}
+}

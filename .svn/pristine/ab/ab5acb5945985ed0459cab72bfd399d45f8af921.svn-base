@@ -1,0 +1,23 @@
+package com.wolfking.jeesite.ms.b2bcenter.sd.dao;
+
+import com.wolfking.jeesite.common.persistence.BaseDao;
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
+
+
+@Mapper
+public interface B2BOrderDao extends BaseDao {
+    /**
+     * 根据工单ID获取工单的数据源ID
+     */
+    Integer getDataSourceIdByOrderId(@Param("orderId") Long orderId,
+                                     @Param("quarter") String quarter);
+
+    /**
+     * 根据工单ID获取工单的客户ID
+     */
+    Long getCustomerIdByOrderId(@Param("orderId") Long orderId,
+                                @Param("quarter") String quarter);
+
+
+}

@@ -1,0 +1,57 @@
+syntax="proto3";
+
+option java_package = "com.wolfking.jeesite.modules.mq.dto";
+option java_outer_classname = "MQWebSocketMessage";
+
+message WebSocketMessage{
+    //ID
+    int64 id = 1;
+    //分片
+    string quarter = 2;
+    //触发者/发送者
+    User triggerBy = 3;
+    //触发时间
+    int64 triggerDate = 4;
+    //接收者,不为空，则点对点
+    int64 receiver = 5;
+    //主题
+    string title = 6;
+    //消息内容
+    string context = 7;
+    //类型
+    //1: 问题反馈   点对点，订阅：/user/queue/notifications
+    //2: app异常   点对点，订阅：/user/queue/notifications
+    //3: 配件单    点对点，订阅：/user/queue/notifications
+    //4: 返件      点对点，订阅：/user/queue/notifications
+    //9: 客户公告  群发订阅:/topic/customer的客户端
+    //10:公告      群发所有订阅:/topic/notice的客户端
+    int32  noticeType = 8;
+    //订单id
+    int64 orderId = 9;
+    //订单号
+    string orderNo = 10;
+    //客户
+    int64 customerId = 11;
+    //区域
+    int64 areaId = 12;
+    //客服
+    int64 kefuId = 13;
+    //业务
+    int64 salesId = 14;
+    //订单创建者
+    int64 createId = 15;
+}
+
+//用户
+message User{
+    //ID
+    int64 id = 1;
+    //姓名
+    string name = 2;
+    //用户类型
+    int32 userType = 3;
+    //公司id
+    int64 companyId = 4;
+    //部门id
+    int64 officeId = 5;
+}

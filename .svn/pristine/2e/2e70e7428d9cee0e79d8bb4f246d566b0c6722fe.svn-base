@@ -1,0 +1,60 @@
+syntax="proto3";
+
+//option java_package = "com.wolfking.jeesite.modules.mq.dto";
+option java_outer_classname = "MQOrderImportMessage";
+package com.wolfking.jeesite.modules.mq.dto;
+
+//导入订单消息体
+message OrderImportMessage {
+    int64 id = 1;
+    //customer
+    int64 customerId = 2;
+    string customerName = 3;
+    //重复订单号
+    string repeateOrderNo = 4;
+    //用户名
+    string userName = 5;
+    //手机号
+    string phone = 6;
+    //固话
+    string tel = 7;
+    //下单地址
+    string address = 8;
+    //产品
+    int64 productId = 9;
+    string productName = 10;
+    //服务
+    int64 serviceTypeId = 11;
+    string serviceTypeName = 12;
+    // 品牌
+    string brand = 13;
+    //型号/规格
+    string productSpec = 14;
+    // 服务描述
+    string description = 15;
+    // 数量
+    int32 qty = 16;
+    // 错误信息
+    string errorMsg = 17;
+    //物流信息
+    string expressCompanyValue = 18;
+    string expressCompanyLabel = 19;
+    string expressNo = 20;
+    //create
+    int64 createById = 21;
+    string createByName = 22;
+    int32 createByType = 23;
+
+    int64 createDate = 24;
+    //失败次数
+    int32 retryTimes = 25;
+    //第三方单号
+    string workCardId = 26;
+    //导入单转单前id
+    //自动转单错误时，人工批量转单有时间差，如今天导入订单，但没有转单，明天操作
+    //这种情况，为订单排序要求，需转单时，重新生成操作当天的id,导入成功后，
+    //更新用原来的id，即此属性的值
+    int64 tmpId = 27;
+    //店铺id
+    string shopId= 28;
+}

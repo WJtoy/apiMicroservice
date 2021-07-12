@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.wolfking.jeesite.modules.sd.dao.OrderLocationDao">
+
+    <sql id="locationColumns">
+        a.order_id,
+        a.quarter,
+        a.area_id,
+        a.longitude,
+        a.latitude,
+        a.distance
+    </sql>
+
+    <select id="getByOrderId" resultType="OrderLocation">
+        SELECT
+        <include refid="locationColumns"/>
+        FROM    sd_order_location a
+        <where>
+            <if test="quarter != null and quarter != ''.toString()">
+                a.quarter = #{quarter}
+            </if>
+            AND a.order_id = #{orderId}
+        </where>
+        limit 1
+    </select>
+
+</mapper>

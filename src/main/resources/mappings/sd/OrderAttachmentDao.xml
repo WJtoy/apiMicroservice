@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wolfking.jeesite.modules.sd.dao.OrderAttachmentDao">
+
+	<sql id="selectOrderAttachment">
+		SELECT
+		    f.quarter,
+			f.id,
+			f.order_id,
+			f.file_path,
+			f.create_by as "createBy.id",
+			f.del_flag,
+			f.remarks,
+			f.create_date
+		FROM sd_order_attachment f
+	</sql>
+
+	<select id="getByOrderId" resultType="OrderAttachment">
+		SELECT
+			f.quarter,
+			f.id,
+			f.order_id,
+			f.file_path,
+			f.create_by as "createBy.id",
+			'' as "createBy.name",
+			0 as "createBy.userType",
+			f.del_flag,
+			f.remarks,
+			f.create_date
+		FROM sd_order_attachment f
+		<where>
+			<if test="quarter != null and quarter != '' ">
+				AND f.quarter = #{quarter}
+			</if>
+			<if test="orderId != null and orderId >0 ">
+				AND f.order_id = #{orderId}
+			</if>
+			and f.del_flag = 0
+			order by f.create_date
+		</where>
+	</select>
+
+	<insert id="insert" useGeneratedKeys="true" keyProperty="id">
+		insert into sd_order_attachment(
+			quarter,
+			order_id,
+			file_path,
+			remarks,
+			create_by,
+			create_date,
+			del_flag
+		) values(
+			#{quarter},
+			#{orderId},
+			#{filePath},
+			#{remarks},
+			#{createBy.id},
+			#{createDate},
+			#{delFlag}
+		)
+	</insert>
+
+	<delete id="delete">
+		update sd_order_attachment
+		set del_flag = 1
+		where id = #{id}
+		<if test="quarter != null and quarter != '' ">
+			AND quarter = #{quarter}
+		</if>
+	</delete>
+
+</mapper>

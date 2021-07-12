@@ -1,0 +1,822 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 配件 -->
+<mapper namespace="com.wolfking.jeesite.modules.sd.dao.OrderMaterialDao">
+
+    <resultMap id="MaterialFormHead" type="MaterialMaster">
+        <id property="id" column="id"/>
+        <result property="dataSource" column="data_source"/>
+        <result property="quarter" column="quarter"/>
+        <result property="orderId" column="order_id"/>
+        <result property="orderNo" column="order_no"/>
+        <result property="masterNo" column="master_no"/>
+        <result property="thrdNo" column="thrd_no"/>
+        <result property="orderDetailId" column="order_detail_id"/>
+        <result property="productId" column="product_id"/>
+        <result property="applyId" column="apply_id"/>
+        <result property="totalPrice" column="totalprice"/>
+        <result property="expressNo" column="express_no"/>
+        <result property="returnFlag" column="return_flag"/>
+        <result property="remarks" column="remarks"/>
+        <result property="createDate" column="create_date"/>
+        <result property="delFlag" column="del_flag"/>
+        <result property="quarter" column="quarter"/>
+        <result property="returnFlag" column="return_flag"/>
+        <!-- user -->
+        <result property="userName" column="user_name"/>
+        <result property="userPhone" column="user_phone"/>
+        <result property="userAddress" column="user_address"/>
+        <result property="pendingContent" column="pending_content"/>
+        <!-- 收件人信息 -->
+        <result property="receiver" column="receiver"/>
+        <result property="receiverPhone" column="receiver_phone"/>
+        <result property="receiverProvinceId" column="receiver_province_id"/>
+        <result property="receiverCityId" column="receiver_city_id"/>
+        <result property="receiverAreaId" column="receiver_area_id"/>
+        <result property="receiverAddress" column="receiver_address"/>
+        <result property="receiverType" column="receiver_type"/>
+        <association property="customer" column="master_customer" javaType="Customer">
+            <result property="id" column="customer_id"/>
+        </association>
+        <association property="product" column="master_product" javaType="Product">
+            <result property="id" column="product_id"/>
+        </association>
+        <association property="pendingType" column="master_pendingType" javaType="Dict">
+            <result property="value" column="pending_type"/>
+        </association>
+        <association property="area" column="master_area" javaType="Area">
+            <result property="id" column="area_id"/>
+        </association>
+        <association property="subArea" column="master_subArea" javaType="Area">
+            <result property="id" column="sub_area_id"/>
+        </association>
+        <association property="applyType" column="master_applyType" javaType="Dict">
+            <result property="value" column="applyType"/>
+        </association>
+        <association property="status" column="master_status" javaType="Dict">
+            <result property="value" column="status_value"/>
+        </association>
+        <association property="expressCompany" column="master_expressCompany" javaType="Dict">
+            <result property="value" column="express_company"/>
+        </association>
+        <association property="createBy" column="detail_createBy" javaType="User">
+            <id property="id" column="create_by"/>
+        </association>
+    </resultMap>
+
+    <resultMap id="MaterialMasterResult" type="MaterialMaster">
+        <id property="id" column="id"/>
+        <result property="dataSource" column="data_source"/>
+        <result property="quarter" column="quarter"/>
+        <result property="orderId" column="order_id"/>
+        <result property="orderNo" column="order_no"/>
+        <result property="masterNo" column="master_no"/>
+        <result property="thrdNo" column="thrd_no"/>
+        <result property="orderDetailId" column="order_detail_id"/>
+        <result property="productId" column="product_id"/>
+        <result property="productIds" column="product_ids"/>
+        <result property="productNames" column="product_names"/>
+        <result property="applyId" column="apply_id"/>
+        <result property="totalPrice" column="totalprice"/>
+        <result property="expressNo" column="express_no"/>
+        <result property="returnFlag" column="return_flag"/>
+        <result property="recycleFlag" column="recycle_flag"/>
+        <result property="remarks" column="remarks"/>
+        <result property="createDate" column="create_date"/>
+        <result property="delFlag" column="del_flag"/>
+        <result property="quarter" column="quarter"/>
+        <result property="returnFlag" column="return_flag"/>
+        <result property="orderCreator" column="order_creator"/>
+        <result property="signAt" column="sign_at"/>
+        <!-- user -->
+        <result property="userName" column="user_name"/>
+        <result property="userPhone" column="user_phone"/>
+        <result property="userAddress" column="user_address"/>
+        <result property="pendingContent" column="pending_content"/>
+        <!-- 收件人信息 -->
+        <result property="receiver" column="receiver"/>
+        <result property="receiverPhone" column="receiver_phone"/>
+        <result property="receiverProvinceId" column="receiver_province_id"/>
+        <result property="receiverCityId" column="receiver_city_id"/>
+        <result property="receiverAreaId" column="receiver_area_id"/>
+        <result property="receiverAddress" column="receiver_address"/>
+        <result property="receiverType" column="receiver_type"/>
+        <association property="customer" column="master_customer" javaType="Customer">
+            <result property="id" column="customer_id"/>
+        </association>
+        <association property="product" column="master_product" javaType="Product">
+            <result property="id" column="product_id"/>
+        </association>
+        <association property="pendingType" column="master_pendingType" javaType="Dict">
+            <result property="value" column="pending_type"/>
+        </association>
+        <association property="area" column="master_area" javaType="Area">
+            <result property="id" column="area_id"/>
+        </association>
+        <association property="subArea" column="master_subArea" javaType="Area">
+            <result property="id" column="sub_area_id"/>
+        </association>
+        <association property="applyType" column="master_applyType" javaType="Dict">
+            <result property="value" column="applyType"/>
+        </association>
+        <association property="status" column="master_status" javaType="Dict">
+            <result property="value" column="status_value"/>
+        </association>
+        <association property="expressCompany" column="master_expressCompany" javaType="Dict">
+            <result property="value" column="express_company"/>
+            <result property="label" column="expressCompany_label"/>
+        </association>
+        <association property="createBy" column="detail_createBy" javaType="User">
+            <id property="id" column="create_by"/>
+        </association>
+        <collection property="attachments" ofType="MaterialAttachment">
+            <id property="id" column="attachment_id"/>
+            <result property="filePath" column="attachment_filePath"/>
+            <result property="remarks" column="attachment_remarks"/>
+        </collection>
+        <collection property="items" ofType="MaterialItem">
+            <id property="id" column="item_id"/>
+            <result property="qty" column="item_qty"/>
+            <result property="price" column="item_price"/>
+            <result property="totalPrice" column="item_totalprice"/>
+            <result property="returnFlag" column="item_return_flag"/>
+            <result property="recycleFlag" column="item_recycle_flag"/>
+            <result property="recyclePrice" column="item_recycle_price"/>
+            <result property="totalRecyclePrice" column="item_total_recycle_price"/>
+            <association property="material" column="item_material" javaType="Material">
+                <id property="id" column="material_id"/>
+            </association>
+            <association property="product" column="item_product" javaType="Product">
+                <id property="id" column="item_product_id"/>
+            </association>
+        </collection>
+    </resultMap>
+
+    <resultMap id="MaterialMasteItemResult" type="MaterialItem">
+        <id property="id" column="item_id"/>
+        <result property="qty" column="item_qty"/>
+        <result property="price" column="item_price"/>
+        <result property="totalPrice" column="item_totalprice"/>
+        <result property="useQty" column="use_qty"/>
+        <result property="rtvQty" column="rtv_qty"/>
+        <result property="rtvFlag" column="rtv_flag"/>
+        <result property="returnFlag" column="return_flag"/>
+        <association property="material" column="item_material" javaType="Material">
+            <id property="id" column="material_id"/>
+        </association>
+        <association property="product" column="item_product" javaType="Product">
+            <id property="id" column="product_id"/>
+        </association>
+    </resultMap>
+
+    <resultMap id="ToFixResult" type="MaterialMaster">
+        <id property="id" column="id"/>
+        <result property="dataSource" column="data_source"/>
+        <result property="quarter" column="quarter"/>
+        <result property="orderId" column="order_id"/>
+        <result property="createDate" column="create_date"/>
+        <association property="customer" column="master_customer" javaType="Customer">
+            <result property="id" column="customer_id"/>
+        </association>
+        <collection property="items" ofType="MaterialItem">
+            <id property="id" column="item_id"/>
+            <association property="product" column="item_product" javaType="Product">
+                <id property="id" column="item_product_id"/>
+            </association>
+        </collection>
+    </resultMap>
+
+    <!-- 返回订单下的配件列表 -->
+    <select id="findMaterialMastersByOrderId" resultMap="MaterialMasterResult">
+        SELECT
+        m.id,
+        m.data_source,
+        m.quarter,
+        m.order_id,
+        m.order_detail_id,
+        m.master_no,
+        m.product_id,
+        m.product_ids,
+        m.applytype as applyType,
+        m.status AS status_value,
+        m.apply_id,
+        m.totalprice,
+        m.express_company,
+        m.express_no,
+        m.create_by,
+        m.create_date ,
+        m.remarks ,
+        m.return_flag,
+        m.recycle_flag,
+        m.sign_at,
+        m.receiver,
+        m.receiver_phone,
+        m.receiver_province_id,
+        m.receiver_city_id,
+        m.receiver_area_id,
+        m.receiver_address,
+        m.receiver_type,
+        ac.id AS attachment_id,
+        ac.file_path AS attachment_filePath ,
+        ac.remarks AS attachment_remarks ,
+        i.id AS item_id ,
+        i.material_id,
+        i.product_id as item_product_id,
+        i.qty AS item_qty ,
+        i.recycle_flag AS item_recycle_flag,
+        i.recycle_price AS item_recycle_price,
+        i.total_recycle_price AS item_total_recycle_price,
+        i.price AS item_price ,
+        i.totalprice AS item_totalprice,
+        i.return_flag as item_return_flag
+        from sd_materialmaster m
+        inner join sd_materialitem i
+        on m.id = i.materialmaster_id
+        left join sd_materialmaster_attachment ma
+        on m.id = ma.materialmaster_id
+        left join sd_material_attachment ac
+        on ma.attachment_id = ac.id
+        where
+        m.order_id = #{orderId}
+        and m.del_flag = 0
+        <if test="quarter != null and quarter != ''.toString()">
+            and m.quarter = #{quarter}
+        </if>
+        order by m.id
+    </select>
+
+<!--    &lt;!&ndash; 返回订单下的配件列表,不包含图片列表 &ndash;&gt;-->
+<!--    <select id="findMaterialMastersNoAttachByOrderId" resultMap="MaterialMasterResult">-->
+<!--        SELECT-->
+<!--        m.id,-->
+<!--        m.data_source,-->
+<!--        m.quarter,-->
+<!--        m.order_id,-->
+<!--        m.order_detail_id,-->
+<!--        m.master_no,-->
+<!--        m.product_id,-->
+<!--        m.product_ids,-->
+<!--        m.applytype as applyType,-->
+<!--        m.status AS status_value,-->
+<!--        m.apply_id,-->
+<!--        m.totalprice,-->
+<!--        m.express_company,-->
+<!--        m.express_no,-->
+<!--        m.create_by,-->
+<!--        m.create_date ,-->
+<!--        m.remarks ,-->
+<!--        m.return_flag,-->
+<!--        m.sign_at,-->
+<!--        m.receiver,-->
+<!--        m.receiver_phone,-->
+<!--        m.receiver_province_id,-->
+<!--        m.receiver_city_id,-->
+<!--        m.receiver_area_id,-->
+<!--        m.receiver_address,-->
+<!--        i.id AS item_id ,-->
+<!--        i.material_id,-->
+<!--        i.product_id as item_product_id,-->
+<!--        i.qty AS item_qty ,-->
+<!--        i.price AS item_price ,-->
+<!--        i.totalprice AS item_totalprice,-->
+<!--        i.return_flag as item_return_flag-->
+<!--        from sd_materialmaster m-->
+<!--        left join sd_materialitem i-->
+<!--        on m.id = i.materialmaster_id-->
+<!--        where-->
+<!--        m.order_id = #{orderId}-->
+<!--        and m.del_flag = 0-->
+<!--        <if test="quarter != null and quarter != ''.toString()">-->
+<!--            and m.quarter = #{quarter}-->
+<!--        </if>-->
+<!--        order by m.id-->
+<!--    </select>-->
+
+    <!-- 配件申请单单头 -->
+    <select id="findMaterialMasterHeadsByOrderId" resultMap="MaterialFormHead">
+        SELECT
+        m.id ,
+        m.data_source,
+        m.quarter,
+        m.order_id ,
+        m.order_detail_id ,
+        m.product_id,
+        m.applytype as applyType,
+        m.status AS status_value ,
+        m.apply_id ,
+        m.totalprice ,
+        m.express_company,
+        m.express_no ,
+        m.create_by ,
+        m.create_date ,
+        m.remarks ,
+        m.return_flag,
+        m.sign_at
+        from sd_materialmaster m
+        where
+        m.order_id = #{orderId}
+        and m.del_flag = 0
+        <if test="quarter != null and quarter != ''.toString()">
+            and m.quarter = #{quarter}
+        </if>
+    </select>
+
+    <!-- 配件申请单单头 -->
+    <select id="getMaterialMasterHeadById" resultMap="MaterialFormHead">
+        SELECT
+        m.id,
+        m.data_source,
+        m.quarter,
+        m.master_no,
+        m.order_id,
+        m.order_no,
+        m.order_detail_id,
+        m.product_id,
+        m.customer_id,
+        m.user_name,
+        m.user_phone,
+        m.area_id,
+        m.sub_area_id,
+        m.user_address,
+        m.applytype as applyType,
+        m.status AS status_value,
+        m.apply_id,
+        m.totalprice,
+        m.express_company,
+        m.express_no,
+        m.create_by,
+        m.create_date,
+        m.remarks,
+        m.return_flag,
+        m.sign_at,
+        m.pending_type
+        from sd_materialmaster m
+        where
+        m.id = #{masterId}
+        and m.del_flag = 0
+        <if test="quarter != null and quarter != ''.toString()">
+            and m.quarter = #{quarter}
+        </if>
+    </select>
+
+    <!-- 读取订单配件状态信息，判断是否可客评 -->
+    <select id="getMaterialFormsForGrade" resultType="MaterialMaster">
+        select
+        m.id,
+        m.data_source,
+        m.order_no,
+        m.applytype as 'applyType.value',
+        m.status as 'status.value',
+        m.return_flag,
+        m.apply_id
+        from sd_materialmaster m
+        where
+        m.order_id = #{orderId}
+        and m.del_flag = 0
+        <if test="quarter != null and quarter != ''.toString()">
+            and m.quarter = #{quarter}
+        </if>
+    </select>
+
+    <!-- 读取下个申请次序 -->
+    <select id="getNextApplyTime" resultType="java.lang.Integer">
+        select ifnull(max(apply_time),0) + 1 as apply_time
+        from sd_materialmaster
+        where
+            order_id = #{orderId}
+            and quarter = #{quarter}
+    </select>
+
+    <insert id="insertMaterialMaster" useGeneratedKeys="true" keyProperty="id">
+        insert into sd_materialmaster
+        (
+            id,
+            data_source,
+            order_id,
+            order_no,
+            master_no,
+            thrd_no,
+            order_detail_id,
+            product_id,
+            product_ids,
+            product_names,
+            applytype,
+            apply_time,
+            customer_id,
+            user_name,
+            user_phone,
+            area_id,
+            sub_area_id,
+            user_address,
+            status,
+            apply_id,
+            totalprice,
+            express_company,
+            express_no,
+            order_creator,
+            create_by,
+            create_date,
+            remarks,
+            return_flag,
+            can_rush,
+            kefu_type,
+            province_id,
+            city_id,
+            product_category_id,
+            quarter,
+            receiver,
+            receiver_phone,
+            receiver_province_id,
+            receiver_city_id,
+            receiver_area_id,
+            receiver_address,
+            description,
+            receiver_type
+        )
+        values(
+            #{id},
+            #{dataSource},
+            #{orderId},
+            #{orderNo},
+            #{masterNo},
+            #{thrdNo},
+            #{orderDetailId},
+            #{product.id},
+            #{productIds},
+            #{productNames},
+            #{applyType.value},
+            #{applyTime},
+            #{customer.id},
+            #{userName},
+            #{userPhone},
+            #{area.id},
+            #{subArea.id},
+            #{userAddress},
+            #{status.value},
+            #{applyId},
+            #{totalPrice},
+            #{expressCompany.value},
+            #{expressNo},
+            #{orderCreator},
+            #{createBy.id},
+            #{createDate},
+            #{remarks},
+            #{returnFlag},
+            #{canRush},
+            #{kefuType},
+            #{provinceId},
+            #{cityId},
+            #{productCategoryId},
+            #{quarter},
+            #{receiver},
+            #{receiverPhone},
+            #{receiverProvinceId},
+            #{receiverCityId},
+            #{receiverAreaId},
+            #{receiverAddress},
+            #{description},
+            #{receiverType}
+        )
+    </insert>
+
+    <!-- 配件产品信息 -->
+    <insert id="insertMaterialProduct">
+        insert into sd_material_product (
+            id,
+            quarter,
+            materialmaster_id,
+            product_id,
+            item_no,
+            brand,
+            product_spec,
+            service_type_id,
+            warranty_type
+        ) values(
+            #{id},
+            #{quarter},
+            #{materialMasterId},
+            #{product.id},
+            #{itemNo},
+            #{brand},
+            #{productSpec},
+            #{serviceType.id},
+            #{warrantyType}
+        )
+    </insert>
+
+    <insert id="insertMaterialItem">
+        insert into sd_materialitem
+        (
+            id,
+            materialmaster_id,
+            material_product_id,
+            material_id,
+            product_id,
+            return_flag,
+            qty,
+            use_qty,
+            price,
+            factory_price,
+            totalprice,
+            create_by,
+            create_date,
+            quarter
+        )
+        values
+        (
+            #{id},
+            #{materialMasterId},
+            #{materialProductId},
+            #{material.id},
+            #{product.id},
+            #{returnFlag},
+            #{qty},
+            #{useQty},
+            #{price},
+            #{factoryPrice},
+            #{totalPrice},
+            #{createBy.id},
+            #{createDate},
+            #{quarter}
+        )
+    </insert>
+
+    <select id="getMaterialMasterCountByOrderId" resultType="java.lang.Integer">
+        select count(1)
+        from sd_materialmaster
+        where
+        order_id = #{orderId}
+        <if test="status != null">
+            and status = #{status}
+        </if>
+        and del_flag = 0
+        <if test="quarter != null and quarter != ''.toString()">
+            and quarter = #{quarter}
+        </if>
+    </select>
+
+    <!-- 更新配件申请 -->
+    <update id="updateMaterialMaster" parameterType="java.util.HashMap">
+        update
+        sd_materialmaster
+        <set>
+            <if test="orderDetailId != null and orderDetailId>0">
+                order_detail_id = #{orderDetailId},
+            </if>
+            <if test="status != null and status.value != null and status.value != ''.toString()">
+                status = CONVERT(#{status.value},SIGNED),
+            </if>
+            <if test="returnFlag != null">
+                return_flag = #{returnFlag},
+            </if>
+            <if test="expressCompany != null">
+                express_company = #{expressCompany.value},
+            </if>
+            <if test="expressNo != null">
+                express_no = #{expressNo},
+            </if>
+            <if test="sendBy != null">
+                send_by = #{sendBy.id},
+            </if>
+            <if test="sendDate != null">
+                send_date = #{sendDate},
+            </if>
+            <if test="delFlag != null">
+                del_flag = #{delFlag},
+            </if>
+            <if test="updateBy != null">
+                update_by = #{updateBy.id},
+            </if>
+            <if test="updateDate != null">
+                update_date = #{updateDate},
+            </if>
+            <if test="closeBy != null">
+                close_by = #{closeBy.id},
+            </if>
+            <if test="closeDate != null">
+                close_date = #{closeDate},
+            </if>
+            <if test="closeRemark != null and closeRemark != ''.trim()">
+                close_remark = #{closeRemark},
+            </if>
+        </set>
+        where
+        id = #{id}
+        <if test="prevStatus != null">
+            and status = ${prevStatus}
+        </if>
+        <if test="quarter != null and quarter != ''.toString()">
+            and quarter = #{quarter}
+        </if>
+    </update>
+
+    <insert id="insertMaterialAttach">
+        insert into sd_material_attachment(
+        id,
+            order_id,
+            file_path,
+            remarks,
+            create_by,
+            create_date,
+            quarter
+        ) values(
+            #{id},
+            #{orderId},
+            #{filePath},
+            #{remarks},
+            #{createBy.id},
+            #{createDate},
+            #{quarter}
+        )
+    </insert>
+
+    <insert id="insertMaterialMasterAttachMap">
+        insert into sd_materialmaster_attachment (
+            materialmaster_id,
+            attachment_id,
+            quarter
+        ) values(
+            #{materialMasterId},
+            #{attachmentId},
+            #{quarter}
+        )
+    </insert>
+
+    <!-- 物流接口自动更新签到时间 -->
+    <update id="updateLogisticSignAt">
+        update sd_materialmaster
+        set
+           sign_at = #{signAt},
+           update_date = #{updateDate},
+        where
+            order_id = #{orderId}
+            and express_no = #{expressNo}
+            and quarter = #{quarter}
+    </update>
+
+    <!-- Kefu列表 -->
+    <!-- 用户负责区域 -->
+    <sql id="RegionFilter">
+        <choose>
+            <when test="regionFilterType == 'province'.toString() and provinceList != null and provinceList.size > 0">
+                <choose>
+                    <when test="provinceList.size == 1">
+                        and m.province_id = #{provinceList[0]}
+                    </when>
+                    <otherwise>
+                        AND m.province_id IN
+                        <foreach collection="provinceList" item="provinceId" index="index" open="(" close=")"
+                                 separator=",">${provinceId}
+                        </foreach>
+                    </otherwise>
+                </choose>
+            </when>
+            <when test="regionFilterType == 'city'.toString() and cityList != null and cityList.size > 0">
+                <choose>
+                    <when test="cityList.size == 1">
+                        and m.city_id = #{cityList[0]}
+                    </when>
+                    <otherwise>
+                        AND m.city_id IN
+                        <foreach collection="cityList" item="cityId" index="index" open="(" close=")" separator=",">
+                            ${cityId}
+                        </foreach>
+                    </otherwise>
+                </choose>
+            </when>
+            <when test="regionFilterType == 'area'.toString() and areaList != null and areaList.size > 0">
+                <choose>
+                    <when test="areaList.size == 1">
+                        and m.area_id = #{areaList[0]}
+                    </when>
+                    <otherwise>
+                        AND m.area_id IN
+                        <foreach collection="areaList" item="areaId" index="index" open="(" close=")" separator=",">
+                            ${areaId}
+                        </foreach>
+                    </otherwise>
+                </choose>
+            </when>
+        </choose>
+    </sql>
+    <!-- 客户类型 -->
+    <sql id="customerTypeFilter">
+        <if test="customerType != null">
+            inner join md_customer_info ci on ci.vip_flag = #{customerType} and ci.customer_id = m.customer_id
+        </if>
+    </sql>
+    <!-- 可突击订单 -->
+    <sql id="rushFilter">
+        <if test="rushType != null">
+            and m.can_rush = #{rushType}
+        </if>
+    </sql>
+
+    <sql id="kefuListSql">
+        SELECT
+        m.id,
+        m.data_source,
+        m.quarter,
+        m.order_id,
+        m.master_no,
+        m.thrd_no,
+        m.order_no,
+        m.customer_id as 'customer.id',
+        m.product_ids,
+        m.product_names,
+        m.applytype as 'applyType.value',
+        m.status AS 'status.value',
+        m.totalprice,
+        m.user_name,
+        m.user_phone,
+        m.area_id as 'area.id',
+        m.sub_area_id as 'subArea.id',
+        m.user_address,
+        m.create_by as 'createBy.id',
+        m.create_date,
+        m.update_by as 'updateBy.id',
+        m.update_date,
+        m.close_by as 'closeBy.id',
+        m.close_date,
+        m.close_remark,
+        m.remarks,
+        m.return_flag,
+        m.pending_type as 'pendingType.value',
+        m.pending_date,
+        m.pending_content,
+        m.order_creator,
+        m.express_no
+        from sd_materialmaster m
+        <if test="createBy != null and createBy.id != null and createBy.id != 0">
+            INNER JOIN md_productcategory_user mpu
+            ON mpu.product_category_id = m.product_category_id AND mpu.user_id = #{createBy.id}
+            <choose>
+                <when test="customerType != null and customerType == 1">
+                    inner join sys_user_customer uc
+                    on uc.user_id = #{createBy.id} and m.customer_id = uc.customer_id
+                </when>
+                <when test="customerType != null">
+                    inner join md_customer_info ci on ci.vip_flag = #{customerType} and ci.customer_id = m.customer_id
+                </when>
+            </choose>
+        </if>
+        <where>
+            <choose>
+                <when test="orderNoSearchType == 1 or isPhone == 1">
+                    <if test="orderNoSearchType == 1">
+                        AND m.order_no = #{orderNo}
+                    </if>
+                    <if test="isPhone == 1">
+                        AND m.user_phone = #{userPhone}
+                    </if>
+                    <if test="status != null and status > 0">
+                        <choose>
+                            <!-- 完成包含关闭和异常收件 -->
+                            <when test="status == 4">
+                                and m.status in (4,6)
+                            </when>
+                            <otherwise>
+                                and m.status = #{status}
+                            </otherwise>
+                        </choose>
+                    </if>
+                    <if test="quarter != null and quarter != ''.toString()">
+                        AND m.quarter = #{quarter}
+                    </if>
+                </when>
+                <otherwise>
+                    m.create_date between #{beginDate} and #{endDate}
+                    <if test="status != null and status > 0">
+                        <choose>
+                            <!-- 完成包含关闭和异常收件 -->
+                            <when test="status == 4">
+                                and m.status in (4,6)
+                            </when>
+                            <otherwise>
+                                and m.status = #{status}
+                            </otherwise>
+                        </choose>
+                    </if>
+                    <if test="expressNo != null and expressNo != ''.trim()">
+                        AND m.express_no = #{expressNo}
+                    </if>
+                    <if test="customer != null and customer.id != null and customer.id >0">
+                        and m.customer_id = #{customer.id}
+                    </if>
+                    <if test="pendingType != null and pendingType >= 0">
+                        and m.pending_type = #{pendingType}
+                    </if>
+                    <if test="applyType != null and applyType > 0">
+                        and m.applytype = #{applyType}
+                    </if>
+                    <!-- 账号负责区域 -->
+                    <include refid="RegionFilter"/>
+                </otherwise>
+            </choose>
+            <!-- 可突击订单 -->
+            <include refid="rushFilter"/>
+            and m.del_flag = 0
+        </where>
+    </sql>
+
+</mapper>

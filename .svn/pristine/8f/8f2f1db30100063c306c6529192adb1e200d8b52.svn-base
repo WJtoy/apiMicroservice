@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wolfking.jeesite.ms.b2bcenter.sd.dao.B2BOrderDao">
+
+    <select id="getDataSourceIdByOrderId" resultType="Integer">
+        SELECT data_source
+        FROM sd_order a
+        <where>
+            <if test="quarter != null and quarter !=''.toString()">
+                AND a.quarter = #{quarter}
+            </if>
+            AND a.id = #{orderId}
+        </where>
+        LIMIT 1
+    </select>
+
+    <select id="getCustomerIdByOrderId" resultType="Long">
+        SELECT a.customer_id
+        FROM sd_order_condition a
+        <where>
+            <if test="quarter != null and quarter !=''.toString()">
+                AND a.quarter = #{quarter}
+            </if>
+            AND a.order_id = #{orderId}
+        </where>
+        LIMIT 1
+    </select>
+
+</mapper>

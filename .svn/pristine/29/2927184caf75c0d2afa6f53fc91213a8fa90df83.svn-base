@@ -1,0 +1,457 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wolfking.jeesite.modules.sd.dao.AppPrimaryAccountNoSubOrderListDao">
+
+    <!-- app待预约工单列表 -->
+    <select id="getWaitingAppointmentOrderList" resultType="com.wolfking.jeesite.modules.api.entity.sd.RestOrder">
+        SELECT
+            soc.order_id,
+            soc.quarter,
+            soc.order_no,
+            soc.user_name,
+            soc.service_phone,
+            soc.area_id,
+            soc.area_name,
+            soc.sub_area_id,
+            soc.service_address     AS "serviceAddress",
+            soc.status              AS "status.value",
+            soc.engineer_id         AS "engineer.id",
+            soc.charge_flag,
+            soc.appointment_date    AS "appointDate",
+            sos.plan_date           AS "acceptDate",
+            soc.order_service_type,
+            soc.app_complete_type,
+            soc.app_abnormaly_flag,
+            soc.pending_type,
+            soc.create_date,
+            soc.urgent_level_id,
+            soc.reminder_flag       AS reminder_flag,
+            sos.complain_flag       AS "isComplained",
+            so.data_source,
+            soc.suspend_type,
+            soc.suspend_flag,
+              case when soc.reminder_flag = 1 then 1 else 0 end as reminder_sort
+        FROM  sd_order_condition soc
+              INNER JOIN sd_order_head so ON so.id = soc.order_id
+              INNER JOIN sd_order_status sos ON sos.order_id = soc.order_id
+        <where>
+
+
+            <choose>
+                <when test="orderNoSearchType == 1 or isPhone == 1">
+                    <if test="quarter != null and quarter != ''.toString()">
+                        AND soc.quarter = #{quarter}
+                    </if>
+                    <if test="orderNoSearchType == 1">
+                        AND soc.order_no = #{orderNo}
+                    </if>
+                    <if test="isPhone == 1">
+                        AND soc.service_phone = #{userPhone}
+                    </if>
+                </when>
+                <otherwise>
+                    <if test="quarters != null and quarters.size > 0">
+                        <choose>
+                            <when test="quarters.size == 1">
+                                AND soc.quarter = #{quarters[0]}
+                            </when>
+                            <otherwise>
+                                AND soc.quarter IN <foreach collection="quarters" item="quarter" index="index" open="(" close=")" separator=",">${quarter}</foreach>
+                            </otherwise>
+                        </choose>
+                    </if>
+                </otherwise>
+            </choose>
+            <![CDATA[ AND soc.status < 80 AND soc.sub_status = 10 AND soc.pending_type = 0 ]]>
+            <if test="servicePointId != null">
+                AND soc.servicepoint_id = #{servicePointId}
+            </if>
+            <if test="engineerId != null">
+                AND soc.engineer_id = #{engineerId}
+            </if>
+            <if test="orderServiceType != null and orderServiceType > 0">
+                AND soc.order_service_type = #{orderServiceType}
+            </if>
+          </where>
+          ORDER BY reminder_sort DESC,soc.urgent_level_id DESC, soc.order_no
+      </select>
+
+      <!-- app处理中工单列表 -->
+    <select id="getProcessingOrderList" resultType="com.wolfking.jeesite.modules.api.entity.sd.RestOrder">
+        SELECT
+            soc.order_id,
+            soc.quarter,
+            soc.order_no,
+            soc.user_name,
+            soc.service_phone,
+            soc.area_id,
+            soc.area_name,
+            soc.sub_area_id,
+            soc.service_address     AS "serviceAddress",
+            soc.status              AS "status.value",
+            soc.engineer_id         AS "engineer.id",
+            soc.charge_flag,
+            soc.appointment_date    AS "appointDate",
+            sos.plan_date           AS "acceptDate",
+            soc.order_service_type,
+            soc.app_complete_type,
+            soc.app_abnormaly_flag,
+            soc.pending_type,
+            soc.create_date,
+            soc.urgent_level_id,
+            soc.reservation_date,
+            soc.reminder_flag   AS reminder_flag,
+            sos.complain_flag     AS "isComplained",
+            soc.suspend_type,
+            soc.suspend_flag,
+            case when soc.reminder_flag > 1 then 0 else soc.reminder_flag end as reminder_sort
+        FROM  sd_order_condition soc
+              INNER JOIN sd_order_status sos ON sos.order_id = soc.order_id
+        <where>
+
+            <choose>
+                <when test="orderNoSearchType == 1 or isPhone == 1">
+                    <if test="quarter != null and quarter != ''.toString()">
+                        AND soc.quarter = #{quarter}
+                    </if>
+                    <if test="orderNoSearchType == 1">
+                        AND soc.order_no = #{orderNo}
+                    </if>
+                    <if test="isPhone == 1">
+                        AND soc.service_phone = #{userPhone}
+                    </if>
+                </when>
+                <otherwise>
+                    <if test="quarters != null and quarters.size > 0">
+                        <choose>
+                            <when test="quarters.size == 1">
+                                AND soc.quarter = #{quarters[0]}
+                            </when>
+                            <otherwise>
+                                AND soc.quarter IN <foreach collection="quarters" item="quarter" index="index" open="(" close=")" separator=",">${quarter}</foreach>
+                            </otherwise>
+                        </choose>
+                    </if>
+                </otherwise>
+            </choose>
+            <![CDATA[
+                AND soc.status < 80
+                AND soc.sub_status between 11 AND 59
+                AND soc.reservation_date <= #{appointmentDate}
+            ]]>
+            <if test="servicePointId != null">
+                AND soc.servicepoint_id = #{servicePointId}
+            </if>
+            <if test="engineerId != null">
+                AND soc.engineer_id = #{engineerId}
+            </if>
+            <if test="orderServiceType != null and orderServiceType > 0">
+                AND soc.order_service_type = #{orderServiceType}
+            </if>
+          </where>
+          ORDER BY reminder_sort DESC,soc.urgent_level_id DESC, soc.reservation_date, soc.order_no
+      </select>
+
+    <!-- app催单待回复工单列表 -->
+    <select id="getWaitReplyReminderOrderList" resultType="com.wolfking.jeesite.modules.api.entity.sd.RestOrder">
+        SELECT
+              soc.order_id,
+              soc.quarter,
+              soc.order_no,
+              soc.user_name,
+              soc.service_phone,
+              soc.area_id,
+              soc.area_name,
+              soc.sub_area_id,
+              soc.service_address     AS "serviceAddress",
+              soc.status              AS "status.value",
+              soc.engineer_id         AS "engineer.id",
+              soc.charge_flag,
+              soc.appointment_date    AS "appointDate",
+              sos.plan_date           AS "acceptDate",
+              soc.order_service_type,
+              soc.app_complete_type,
+              soc.app_abnormaly_flag,
+              soc.pending_type,
+              soc.create_date,
+              soc.urgent_level_id,
+              soc.reservation_date,
+              soc.reminder_flag   AS reminder_flag,
+              sos.complain_flag     AS "isComplained",
+              soc.suspend_type,
+              soc.suspend_flag
+        FROM  sd_order_condition soc
+              INNER JOIN sd_order_status sos ON sos.order_id = soc.order_id
+        <where>
+            <choose>
+                <when test="orderNoSearchType == 1 or isPhone == 1">
+                    <if test="quarter != null and quarter != ''.toString()">
+                        AND soc.quarter = #{quarter}
+                    </if>
+                    <if test="orderNoSearchType == 1">
+                        AND soc.order_no = #{orderNo}
+                    </if>
+                    <if test="isPhone == 1">
+                        AND soc.service_phone = #{userPhone}
+                    </if>
+                    and soc.reminder_flag = 1
+                </when>
+                <otherwise>
+                    <if test="quarters != null and quarters.size > 0">
+                        <choose>
+                            <when test="quarters.size == 1">
+                                AND soc.quarter = #{quarters[0]}
+                            </when>
+                            <otherwise>
+                                AND soc.quarter IN <foreach collection="quarters" item="quarter" index="index" open="(" close=")" separator=",">${quarter}</foreach>
+                            </otherwise>
+                        </choose>
+                    </if>
+                </otherwise>
+            </choose>
+            <![CDATA[
+                AND soc.status between 10 and 79
+                AND soc.reminder_flag = 1
+            ]]>
+            <if test="servicePointId != null">
+                AND soc.servicepoint_id = #{servicePointId}
+            </if>
+            <if test="engineerId != null">
+                AND soc.engineer_id = #{engineerId}
+            </if>
+            <if test="orderServiceType != null and orderServiceType > 0">
+                AND soc.order_service_type = #{orderServiceType}
+            </if>
+
+          </where>
+          ORDER BY soc.urgent_level_id DESC, soc.reservation_date, soc.order_no
+      </select>
+
+      <!-- app已预约工单列表 -->
+    <select id="getAppointedOrderList" resultType="com.wolfking.jeesite.modules.api.entity.sd.RestOrder">
+        SELECT
+            soc.order_id,
+            soc.quarter,
+            soc.order_no,
+            soc.user_name,
+            soc.service_phone,
+            soc.area_id,
+            soc.area_name,
+            soc.sub_area_id,
+            soc.service_address     AS "serviceAddress",
+            soc.status              AS "status.value",
+            soc.engineer_id         AS "engineer.id",
+            soc.charge_flag,
+            soc.appointment_date    AS "appointDate",
+            sos.plan_date           AS "acceptDate",
+            soc.order_service_type,
+            soc.app_complete_type,
+            soc.app_abnormaly_flag,
+            soc.pending_type,
+            soc.create_date,
+            soc.urgent_level_id,
+            soc.reservation_date,
+            soc.reminder_flag AS reminder_flag,
+            sos.complain_flag   AS "isComplained",
+            soc.suspend_type,
+            soc.suspend_flag,
+            case when soc.reminder_flag = 1 then 1 else 0 end as reminder_sort
+        FROM  sd_order_condition soc
+              INNER JOIN sd_order_status sos ON sos.order_id = soc.order_id
+        <where>
+            <choose>
+                <when test="orderNoSearchType == 1 or isPhone == 1">
+                    <if test="quarter != null and quarter != ''.toString()">
+                        AND soc.quarter = #{quarter}
+                    </if>
+                    <if test="orderNoSearchType == 1">
+                        AND soc.order_no = #{orderNo}
+                    </if>
+                    <if test="isPhone == 1">
+                        AND soc.service_phone = #{userPhone}
+                    </if>
+                </when>
+                <otherwise>
+                    <if test="quarters != null and quarters.size > 0">
+                        <choose>
+                            <when test="quarters.size == 1">
+                                AND soc.quarter = #{quarters[0]}
+                            </when>
+                            <otherwise>
+                                AND soc.quarter IN <foreach collection="quarters" item="quarter" index="index" open="(" close=")" separator=",">${quarter}</foreach>
+                            </otherwise>
+                        </choose>
+                    </if>
+                </otherwise>
+            </choose>
+            <![CDATA[
+                AND soc.status < 80
+                AND soc.sub_status between 11 AND 59
+                AND soc.pending_type = 3
+                AND soc.reservation_date > #{appointmentDate}
+            ]]>
+            <if test="servicePointId != null">
+                AND soc.servicepoint_id = #{servicePointId}
+            </if>
+            <if test="engineerId != null">
+                AND soc.engineer_id = #{engineerId}
+            </if>
+            <if test="orderServiceType != null and orderServiceType > 0">
+                AND soc.order_service_type = #{orderServiceType}
+            </if>
+        </where>
+          ORDER BY reminder_sort DESC,soc.urgent_level_id DESC, soc.reservation_date, soc.order_no
+      </select>
+
+      <!-- app等配件工单列表 -->
+    <select id="getWaitingPartOrderList" resultType="com.wolfking.jeesite.modules.api.entity.sd.RestOrder">
+        SELECT
+            soc.order_id,
+            soc.quarter,
+            soc.order_no,
+            soc.user_name,
+            soc.service_phone,
+            soc.area_id,
+            soc.area_name,
+            soc.sub_area_id,
+            soc.service_address     AS "serviceAddress",
+            soc.status              AS "status.value",
+            soc.engineer_id         AS "engineer.id",
+            soc.charge_flag,
+            soc.appointment_date    AS "appointDate",
+            sos.plan_date           AS "acceptDate",
+            soc.order_service_type,
+            soc.app_complete_type,
+            soc.app_abnormaly_flag,
+            soc.pending_type,
+            soc.create_date,
+            soc.urgent_level_id,
+            soc.reservation_date,
+            soc.reminder_flag AS reminder_flag,
+            sos.complain_flag   AS "isComplained",
+            soc.suspend_type,
+            soc.suspend_flag,
+            case when soc.reminder_flag = 1 then 1 else 0 end as reminder_sort
+        FROM  sd_order_condition soc
+              INNER JOIN sd_order_status sos ON sos.order_id = soc.order_id
+        <where>
+            <choose>
+                <when test="orderNoSearchType == 1 or isPhone == 1">
+                    <if test="quarter != null and quarter != ''.toString()">
+                        AND soc.quarter = #{quarter}
+                    </if>
+                    <if test="orderNoSearchType == 1">
+                        AND soc.order_no = #{orderNo}
+                    </if>
+                    <if test="isPhone == 1">
+                        AND soc.service_phone = #{userPhone}
+                    </if>
+                </when>
+                <otherwise>
+                    <if test="quarters != null and quarters.size > 0">
+                        <choose>
+                            <when test="quarters.size == 1">
+                                AND soc.quarter = #{quarters[0]}
+                            </when>
+                            <otherwise>
+                                AND soc.quarter IN <foreach collection="quarters" item="quarter" index="index" open="(" close=")" separator=",">${quarter}</foreach>
+                            </otherwise>
+                        </choose>
+                    </if>
+                </otherwise>
+            </choose>
+            <![CDATA[
+             AND soc.status < 80
+             AND soc.sub_status between 11 AND 59
+             AND soc.pending_type = 2
+             AND soc.reservation_date > #{appointmentDate}
+             ]]>
+            <if test="servicePointId != null">
+                AND soc.servicepoint_id = #{servicePointId}
+            </if>
+            <if test="engineerId != null">
+                AND soc.engineer_id = #{engineerId}
+            </if>
+            <if test="orderServiceType != null and orderServiceType > 0">
+                AND soc.order_service_type = #{orderServiceType}
+            </if>
+           </where>
+           ORDER BY reminder_sort DESC,soc.urgent_level_id DESC, soc.reservation_date, soc.order_no
+       </select>
+
+       <!-- app停滞工单列表 -->
+    <select id="getPendingOrderList" resultType="com.wolfking.jeesite.modules.api.entity.sd.RestOrder">
+        SELECT
+            soc.order_id,
+            soc.quarter,
+            soc.order_no,
+            soc.user_name,
+            soc.service_phone,
+            soc.area_id,
+            soc.area_name,
+            soc.sub_area_id,
+            soc.service_address     AS "serviceAddress",
+            soc.status              AS "status.value",
+            soc.engineer_id         AS "engineer.id",
+            soc.charge_flag,
+            soc.appointment_date    AS "appointDate",
+            sos.plan_date           AS "acceptDate",
+            soc.order_service_type,
+            soc.app_complete_type,
+            soc.app_abnormaly_flag,
+            soc.pending_type,
+            soc.create_date,
+            soc.urgent_level_id,
+            soc.reservation_date,
+            soc.reminder_flag AS reminder_flag,
+            sos.complain_flag   AS "isComplained",
+            soc.suspend_type,
+            soc.suspend_flag,
+            case when soc.reminder_flag = 1 then 1 else 0 end as reminder_sort
+        FROM  sd_order_condition soc
+              INNER JOIN sd_order_status sos ON sos.order_id = soc.order_id
+        <where>
+            <choose>
+                <when test="orderNoSearchType == 1 or isPhone == 1">
+                    <if test="quarter != null and quarter != ''.toString()">
+                        AND soc.quarter = #{quarter}
+                    </if>
+                    <if test="orderNoSearchType == 1">
+                        AND soc.order_no = #{orderNo}
+                    </if>
+                    <if test="isPhone == 1">
+                        AND soc.service_phone = #{userPhone}
+                    </if>
+                </when>
+                <otherwise>
+                    <if test="quarters != null and quarters.size > 0">
+                        <choose>
+                            <when test="quarters.size == 1">
+                                AND soc.quarter = #{quarters[0]}
+                            </when>
+                            <otherwise>
+                                AND soc.quarter IN <foreach collection="quarters" item="quarter" index="index" open="(" close=")" separator=",">${quarter}</foreach>
+                            </otherwise>
+                        </choose>
+                    </if>
+                </otherwise>
+            </choose>
+            <![CDATA[
+                AND soc.status < 80
+                AND soc.sub_status between 11 AND 59
+                AND soc.pending_type NOT IN (0,2,3)
+                AND soc.reservation_date > #{appointmentDate} ]]>
+            <if test="servicePointId != null">
+                AND soc.servicepoint_id = #{servicePointId}
+            </if>
+            <if test="engineerId != null">
+                AND soc.engineer_id = #{engineerId}
+            </if>
+            <if test="orderServiceType != null and orderServiceType > 0">
+                AND soc.order_service_type = #{orderServiceType}
+            </if>
+        </where>
+        ORDER BY reminder_sort DESC,soc.urgent_level_id DESC, soc.reservation_date, soc.order_no
+    </select>
+
+</mapper>

@@ -1,0 +1,47 @@
+package com.wolfking.jeesite.modules.sd.service;
+
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.wolfking.jeesite.common.utils.QuarterUtils;
+import com.kkl.kklplus.utils.StringUtils;
+import com.wolfking.jeesite.modules.md.entity.CacheDataTypeEnum;
+import com.wolfking.jeesite.modules.md.entity.Product;
+import com.wolfking.jeesite.modules.md.entity.ServiceType;
+import com.wolfking.jeesite.modules.md.service.ServiceTypeService;
+import com.wolfking.jeesite.modules.md.utils.ProductUtils;
+import com.wolfking.jeesite.modules.md.utils.ServiceTypeSimpleAdapter;
+import com.wolfking.jeesite.modules.sd.dao.OrderItemDao;
+import com.wolfking.jeesite.modules.sd.entity.Order;
+import com.wolfking.jeesite.modules.sd.entity.OrderItem;
+import com.wolfking.jeesite.modules.sd.utils.OrderItemUtils;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import javax.annotation.Resource;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+@Transactional(propagation = Propagation.NOT_SUPPORTED)
+@Service
+@Slf4j
+public class OrderItemService {
+
+    @Resource
+    private OrderItemDao orderItemDao;
+
+    /**
+     * 查询工单的orderitem列表
+     */
+    public Order getOrderItems(String quarter, long orderId) {
+        Order order = orderItemDao.getOrderItems(quarter, orderId);
+        if (order != null) {
+            order.setItems(OrderItemUtils.pbToItems(order.getItemsPb()));//2020-12-19 sd_order -> sd_order_head
+        }
+        return order;
+    }
+}
